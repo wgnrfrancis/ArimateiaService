@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nome da Página - Arimateia Service</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <div class="logo-square">A</div>
+      <h1>ARIMATEIA<br><small>SERVICE</small></h1>
+    </div>
+
+  <h2>Gestão de Usuários</h2>
+  
+  <div id="usuario">Carregando usuário...</div>
+
+  <div id="usuariosTable"></div>
+  <hr>
+
+  <h3>Chamados Recentes (todas regiões)</h3>
+  <div style="text-align:center; margin-bottom:1rem;">
+    <button onclick="exportarCSV()">📤 Exportar para CSV</button>
+  </div>
+  <div id="chamadosTable"></div>
+
+  <div id="graficoChamados"></div>
+
+  <hr>
+
+  <h3>📜 Histórico de Ações</h3>
+  <div id="logTable"></div>
+
+  <div style="text-align:center; margin-top: 1.5rem;">
+    <button onclick="voltarDashboard()">Voltar</button>
+  </div>
+
+  <script>
+    let usuarios = [], chamados = [];
+
+    function carregarUsuario() {
+      google.script.run.withSuccessHandler(function(usuario) {
+        if (!usuario) {
+          document.getElementById("usuario").textContent = "Usuário não autenticado.";
+          return;
+        }
+        document.getElementById("usuario").innerHTML =
+          `<p><strong>${usuario.nome}</strong> (${usuario.funcao}) - ${usuario.regiao}</p>`;
+        carregarUsuarios();
+        carregarChamados();
+        carregarLogs();
+      }).getUsuarioLogado();
+    }
+
+    function carregarUsuarios() {
+      google.script.run.withSuccessHandler(function(lista) {
+        usuarios = lista;
+        let html = "<table><thead><tr><th>Nome</th><th>Email</th><th>Função</th><th>Status</th><th>Região</th><th>Ações</th></tr></thead><tbody>";
+        lista.forEach(u => {
+          html += `<tr>
+            <td>${u.nome}</td>
+            <td>${u.email}</td>
+            <td>
+              <select id="funcao-${u.email}">
+                <option${u.funcao === 'Voluntario' ? ' selected' : ''}>Voluntario</option>
+                <option${u.funcao === 'Secretaria' ? ' selected' : ''}>Secretaria</option>
+                <option${u.funcao === 'Coordenador' ? ' selected' : ''}>Coordenador</option>
+              </select>
+            </td>
+            <td>
+              <select id="status-${u.email}">
+                <option${u.status === 'Ativo' ? ' selected' : ''}>Ativo</option>
+                <option${u.status === 'Inativo' ? ' selected' : ''}>Inativo</option>
+              </select>
+            </td>
+            <td>${u.regiao}</td>
+            <td>
+              <button onclick="atualizarUsuario('${u.email}')">Salvar</button>
+              <button onclick="excluirUsuario('${u.email}')">Excluir</button>
+            </td>
+          </tr>`;
+        });
+        html += "</tbody></table>";
+        document.getElementById("usuariosTable").innerHTML = html;
+      }).listarUsuarios();
+    }
+
+    function atualizarUsuario(email) {
+      const novaFuncao = document.getElementById(`funcao-${email}`).value;
+      const novoStatus = document.getElementById(`status-${email}`).value;
+
+      google.script.run
+        .withSuccessHandler(() => {
+          alert("Atualizado com sucesso.");
+          carregarUsuarios();
+        })
+        .atualizarUsuario(email, novaFuncao, novoStatus);
+    }
+
+    function excluirUsuario(email) {
+      if (confirm("Deseja realmente excluir este usuário?")) {
+        google.script.run
+          .withSuccessHandler(() => {
+            alert("Usuário excluído.");
+            carregarUsuarios();
+          })
+          .excluirUsuario(email);
+      }
+    }
+
+    function carregarChamados() {
+      google.script.run.withSuccessHandler(function(lista) {
+        chamados = lista;
+        let html = "<table><thead><tr><th>Nome</th><th>Descrição</th><th>Região</th><th>Status</th></tr></thead><tbody>";
+        lista.forEach(c => {
+          html += `<tr>
+            <td>${c.nome}</td>
+            <td>${c.descricao}</td>
+            <td>${c.regiao}</td>
+            <td>${c.status}</td>
+          </tr>`;
+        });
+        html += "</tbody></table>";
+        document.getElementById("chamadosTable").innerHTML = html;
+
+        desenharGrafico(lista);
+      }).listarTodosChamados();
+    }
+
+    function desenharGrafico(lista) {
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(function () {
+        const contagem = {};
+        lista.forEach(c => {
+          contagem[c.status] = (contagem[c.status] || 0) + 1;
+        });
+
+        const dataArray = [['Status', 'Quantidade']];
+        for (const status in contagem) {
+          dataArray.push([status, contagem[status]]);
+        }
+
+        const data = google.visualization.arrayToDataTable(dataArray);
+        const options = { title: 'Distribuição dos Chamados', backgroundColor: 'transparent', legendTextStyle: {color: '#fff'}, titleTextStyle: {color: '#4dabf7'} };
+        const chart = new google.visualization.PieChart(document.getElementById('graficoChamados'));
+        chart.draw(data, options);
+      });
+    }
+
+    function exportarCSV() {
+      google.script.run.exportarChamadosCSV();
+    }
+
+    function carregarLogs() {
+      google.script.run.withSuccessHandler(function(logs) {
+        let html = "<table><thead><tr><th>Data</th><th>Usuário</th><th>Ação</th></tr></thead><tbody>";
+        logs.forEach(l => {
+          html += `<tr>
+            <td>${l.data}</td>
+            <td>${l.usuario}</td>
+            <td>${l.acao}</td>
+          </tr>`;
+        });
+        html += "</tbody></table>";
+        document.getElementById("logTable").innerHTML = html;
+      }).listarLogs();
+    }
+
+    function voltarDashboard() {
+      window.location.href = "dashboard.html";
+    }
+
+    carregarUsuario();
+  </script>
+</body>
+</html>

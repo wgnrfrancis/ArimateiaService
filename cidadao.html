@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nome da Página - Arimateia Service</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <div class="logo-square">A</div>
+      <h1>ARIMATEIA<br><small>SERVICE</small></h1>
+    </div>
+
+  <h2>Cadastro de Atendimento</h2>
+  
+  <div id="usuario">Carregando usuário...</div>
+
+  <form id="formChamado" onsubmit="return false;">
+    <label>Nome do Cidadão:
+      <input type="text" name="nome" placeholder="Nome completo" required />
+    </label>
+
+    <label>Telefone:
+      <input type="tel" name="telefone" placeholder="(XX) XXXX-XXXX" required />
+    </label>
+
+    <label>WhatsApp:
+      <input type="tel" name="whatsapp" placeholder="(XX) XXXXX-XXXX" required />
+    </label>
+
+    <label>E-mail:
+      <input type="email" name="email" placeholder="email@exemplo.com" />
+    </label>
+
+    <label>Igreja:
+      <input type="text" name="igreja" placeholder="Nome da igreja" required />
+    </label>
+
+    <label>Região:
+      <select name="regiao" required>
+        <option value="">-- Selecione a região --</option>
+        <option value="Zona Norte">Zona Norte</option>
+        <option value="Zona Sul">Zona Sul</option>
+        <option value="Zona Leste">Zona Leste</option>
+        <option value="Zona Oeste">Zona Oeste</option>
+      </select>
+    </label>
+
+    <label>Descrição do Atendimento:
+      <textarea name="descricao" rows="4" placeholder="Detalhe o atendimento..." required></textarea>
+    </label>
+
+    <div class="botoes">
+      <button type="button" onclick="salvar()">Salvar</button>
+      <button type="button" onclick="voltar()">Voltar</button>
+    </div>
+  </form>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailUser = urlParams.get('email');
+
+    function salvar() {
+      const form = document.getElementById("formChamado");
+      const data = Object.fromEntries(new FormData(form).entries());
+
+      google.script.run
+        .withSuccessHandler(() => alert("Chamado registrado com sucesso!"))
+        .withFailureHandler(e => alert("Erro ao registrar: " + e.message))
+        .salvarChamado(data);
+    }
+
+    function voltar() {
+      window.location.href = "dashboard.html?email=" + encodeURIComponent(emailUser || '');
+    }
+
+    google.script.run.withSuccessHandler(function(usuario) {
+      if (!usuario) {
+        document.getElementById("usuario").textContent = "Usuário não autenticado";
+        return;
+      }
+      document.getElementById("usuario").innerHTML =
+        `<p><strong>${usuario.nome}</strong> (${usuario.funcao})</p>`;
+    }).getUsuarioLogado();
+  </script>
+</body>
+</html>

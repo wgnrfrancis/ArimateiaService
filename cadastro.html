@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nome da Página - Arimateia Service</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <div class="logo-square">A</div>
+      <h1>ARIMATEIA<br><small>SERVICE</small></h1>
+    </div>
+
+    <div class="form-title">Cadastro</div>
+
+    <form id="cadastro-form" onsubmit="return false;">
+      <label for="nome">Nome</label>
+      <input type="text" id="nome" placeholder="Nome completo" />
+
+      <label for="email">E-mail</label>
+      <input type="email" id="email" placeholder="E-mail" />
+
+      <label for="regiao">Região</label>
+      <input type="text" id="regiao" placeholder="Região" required />
+
+      <label for="igreja">Igreja</label>
+      <input type="text" id="igreja" placeholder="Nome da Igreja" required />
+
+      <label for="whatsapp">WhatsApp</label>
+      <input type="tel" id="whatsapp" placeholder="(99) 99999-9999" required />
+
+      <div class="buttons">
+        <button class="btn btn-primary" onclick="enviarCadastro()">Cadastrar</button>
+        <button class="btn btn-secondary" onclick="window.location.href='login.html'">Entrar</button>
+      </div>
+      <p id="cad-msg"></p>
+    </form>
+  </div>
+
+  <script src="scripts/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nome da Página - Arimateia Service</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <div class="logo-square">A</div>
+      <h1>ARIMATEIA<br><small>SERVICE</small></h1>
+    </div>
+  <main>
+    <div class="logo">A</div>
+
+    <div id="user-info">
+      <img id="user-photo" src="assets/logo.png" alt="Foto do usuário" />
+      <div>
+        <div id="user-name">Carregando...</div>
+        <div id="user-role"></div>
+      </div>
+    </div>
+
+    <div id="buttons-area">
+      <!-- Botões inseridos via JS -->
+    </div>
+
+    <button id="logout" class="btn-funcao" onclick="logout()">Sair</button>
+  </main>
+
+  <script>
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    const email = getQueryParam("email");
+    const buttonsArea = document.getElementById("buttons-area");
+    const userNameEl = document.getElementById("user-name");
+    const userRoleEl = document.getElementById("user-role");
+    const userPhotoEl = document.getElementById("user-photo");
+
+    if (!email) {
+      alert("Usuário não autenticado. Redirecionando para login.");
+      window.location.href = "login.html";
+    } else {
+      google.script.run.withSuccessHandler(setUserData).getUsuarioPorEmail(email);
+    }
+
+    function setUserData(user) {
+      if (!user) {
+        alert("Usuário não encontrado. Redirecionando para login.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      userNameEl.textContent = user.Nome || "Sem nome";
+      userRoleEl.textContent = user.Cargo || "Sem função definida";
+
+      if (user.FotoURL) {
+        userPhotoEl.src = user.FotoURL;
+      } else {
+        userPhotoEl.src = "assets/logo.png";
+      }
+
+      const cargo = (user.Cargo || "").toLowerCase();
+      buttonsArea.innerHTML = "";
+
+      // Liberação por função
+      if (["voluntário", "voluntario"].includes(cargo)) {
+        buttonsArea.appendChild(createButton("Balcão da Cidadania", `cidadao.html?email=${encodeURIComponent(email)}`));
+      }
+      if (cargo === "secretaria") {
+        buttonsArea.appendChild(createButton("Balcão da Cidadania", `cidadao.html?email=${encodeURIComponent(email)}`));
+        buttonsArea.appendChild(createButton("Secretaria", `secretaria.html?email=${encodeURIComponent(email)}`));
+      }
+      if (cargo === "coordenador") {
+        buttonsArea.appendChild(createButton("Balcão da Cidadania", `cidadao.html?email=${encodeURIComponent(email)}`));
+        buttonsArea.appendChild(createButton("Secretaria", `secretaria.html?email=${encodeURIComponent(email)}`));
+        buttonsArea.appendChild(createButton("Coordenador", `coordenador.html?email=${encodeURIComponent(email)}`));
+      }
+    }
+
+    function createButton(text, url) {
+      const btn = document.createElement("button");
+      btn.textContent = text;
+      btn.className = "btn-funcao";
+      btn.onclick = () => window.location.href = url;
+      return btn;
+    }
+
+    function logout() {
+      window.location.href = "login.html";
+    }
+  </script>
+</body>
+</html>

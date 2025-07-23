@@ -1,0 +1,205 @@
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(to bottom right, #0a0f2c, #08192d);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.container {
+  width: 90%;
+  max-width: 400px;
+  padding: 2rem;
+  background: rgba(20, 30, 60, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.logo img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  margin-bottom: 0.5rem;
+}
+
+.logo-square {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #00c6ff, #0078d4);
+  color: white;
+  font-size: 2.5rem;
+  font-weight: bold;
+  border-radius: 18px;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  /* Garante centralização absoluta */
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  letter-spacing: 0;
+}
+
+.logo h1 {
+  font-size: 1.6rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.logo small {
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  display: block;
+  margin-top: -4px;
+}
+
+.form-title {
+  text-align: center;
+  font-size: 1.4rem;
+  margin-bottom: 1.5rem;
+  font-weight: bold;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.3rem;
+  margin-top: 1rem;
+}
+
+input {
+  width: 100%;
+  padding: 0.6rem;
+  background: transparent;
+  border: 1.5px solid #00bfff;
+  border-radius: 6px;
+  color: white;
+  font-size: 1rem;
+}
+
+input::placeholder {
+  color: #999;
+}
+
+.buttons {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  flex: 1 1 45%;
+  padding: 0.8rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(45deg, #00c6ff, #00d2ff);
+  border: none;
+  color: white;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1.5px solid white;
+  color: white;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#cad-msg, #login-msg {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 600px) {
+  .container {
+    max-width: 98vw;
+    padding: 1rem 2vw;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  }
+  .logo img, .logo-square {
+    width: 44px;
+    height: 44px;
+    font-size: 2rem;
+  }
+  .form-title {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+  input {
+    font-size: 0.95rem;
+    padding: 0.5rem;
+  }
+  .btn {
+    font-size: 0.95rem;
+    padding: 0.6rem;
+  }
+}
+
+/* Responsividade para telas médias (tablets) */
+@media (min-width: 601px) and (max-width: 900px) {
+  .container {
+    max-width: 70vw;
+    padding: 2rem 4vw;
+    border-radius: 14px;
+  }
+  .logo img, .logo-square {
+    width: 56px;
+    height: 56px;
+    font-size: 2.2rem;
+  }
+}
+
+/* Rotação de tela: paisagem */
+@media (orientation: landscape) {
+  body {
+    background: linear-gradient(to bottom right, #0a0f2c, #08192d);
+  }
+  .container {
+    max-width: 60vw;
+    padding: 1.5rem 8vw;
+    border-radius: 18px;
+  }
+}
+
+/* Responsividade para telas grandes (desktop) */
+@media (min-width: 901px) {
+  .container {
+    max-width: 400px;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  }
+  .logo img, .logo-square {
+    width: 64px;
+    height: 64px;
+    font-size: 2.5rem;
+  }
+}
+</style>

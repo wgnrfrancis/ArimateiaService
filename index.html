@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nome da Página - Arimateia Service</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <div class="logo-square">A</div>
+      <h1>ARIMATEIA<br><small>SERVICE</small></h1>
+    </div>
+
+    <div class="form-title">Login</div>
+
+    <form id="login-form" onsubmit="return false;">
+      <label for="login-email">E-mail</label>
+      <input type="email" id="login-email" placeholder="E-mail" required />
+
+      <label for="login-senha">Senha</label>
+      <input type="password" id="login-senha" placeholder="Senha" value="Arimateia1" required />
+
+      <div class="buttons">
+        <button class="btn" onclick="login()">Entrar</button>
+      </div>
+      <p id="login-msg"></p>
+    </form>
+
+    <div class="link">
+      Não tem conta? <a href="cadastro.html">Cadastre-se</a>
+    </div>
+  </div>
+
+  <script>
+    function login() {
+      const email = document.getElementById("login-email").value.trim();
+      const senha = document.getElementById("login-senha").value.trim();
+      const msg = document.getElementById("login-msg");
+      const btn = document.querySelector(".btn");
+
+      if (!email || !senha) {
+        msg.style.color = "red";
+        msg.textContent = "Preencha todos os campos.";
+        return;
+      }
+
+      msg.style.color = "white";
+      msg.textContent = "⏳ Verificando...";
+      btn.disabled = true;
+
+      fetch("https://script.google.com/macros/s/AKfycbzQkIBCS1iV03v8Y2FQN4bwXLcnsBwgNigg3zDOAOW9dPh-FRjdJXx7_hyX5OG1Ip36/exec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, senha })
+      })
+        .then(response => response.json())
+        .then(res => {
+          if (res.sucesso) {
+            msg.style.color = "lightgreen";
+            msg.textContent = "✅ Login realizado. Redirecionando...";
+            window.location.href = "dashboard.html?email=" + encodeURIComponent(email);
+          } else {
+            msg.style.color = "red";
+            msg.textContent = res.mensagem;
+          }
+          btn.disabled = false;
+        })
+        .catch(() => {
+          msg.style.color = "red";
+          msg.textContent = "Erro ao conectar ao servidor.";
+          btn.disabled = false;
+        });
+    }
+  </script>
+</body>
+</html>
