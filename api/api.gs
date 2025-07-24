@@ -74,6 +74,7 @@ function salvarChamado(data) {
 
 const CONFIG = {
   ID_PLANILHA: "1M3N_Ka5tDpt8XEkGhoV33kYUTppHPymd5C_4UnbQXqM", 
+  URL_PLANILHA: "https://docs.google.com/spreadsheets/d/1M3N_Ka5tDpt8XEkGhoV33kYUTppHPymd5C_4UnbQXqM/edit",
   ABA_USUARIOS: "UsuariosAutorizados",
   ABA_CHAMADOS: "Chamados",
   ABA_CHAMADOS_EXCLUIDOS: "Chamados_Excluidos",
@@ -201,63 +202,160 @@ function getUserData(email) {
 
 function doPost(e) {
   try {
+    // Log para debug
+    console.log("doPost chamado");
+    console.log("Dados recebidos:", e.postData);
+    
+    if (!e.postData || !e.postData.contents) {
+      console.log("Erro: Nenhum dado POST recebido");
+      return ContentService.createTextOutput(
+        JSON.stringify({ sucesso: false, mensagem: "Nenhum dado recebido" })
+      ).setMimeType(ContentService.MimeType.JSON);
+    }
+    
     const dados = JSON.parse(e.postData.contents);
+    console.log("Dados parseados:", dados);
 
     // Cadastro
     if (dados.acao === "cadastro") {
+      console.log("Processando cadastro para:", dados.email);
+      const resultado = salvarUsuario(dados);
+      console.log("Resultado do cadastro:", resultado);
       return ContentService.createTextOutput(
-        JSON.stringify(salvarUsuario(dados))
+        JSON.stringify(resultado)
+      ).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // Cadastro alternativo com openByUrl
+    if (dados.acao === "cadastro_url") {
+      console.log("Processando cadastro (openByUrl) para:", dados.email);
+      const resultado = salvarUsuarioByUrl(dados);
+      console.log("Resultado do cadastro (openByUrl):", resultado);
+      return ContentService.createTextOutput(
+        JSON.stringify(resultado)
       ).setMimeType(ContentService.MimeType.JSON);
     }
 
     // Login
     if (dados.email && dados.senha) {
+      console.log("Processando login para:", dados.email);
+      const resultado = login(dados.email, dados.senha);
+      console.log("Resultado do login:", resultado);
       return ContentService.createTextOutput(
-        JSON.stringify(login(dados.email, dados.senha))
+        JSON.stringify(resultado)
       ).setMimeType(ContentService.MimeType.JSON);
     }
 
     // Outros endpoints...
+    console.log("Ação inválida recebida:", dados);
     return ContentService.createTextOutput(
       JSON.stringify({ sucesso: false, mensagem: "Ação inválida." })
     ).setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
+    console.error("Erro no doPost:", err);
     return ContentService.createTextOutput(
-      JSON.stringify({ sucesso: false, mensagem: "Erro interno: " + err })
+      JSON.stringify({ sucesso: false, mensagem: "Erro interno: " + err.toString() })
     ).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
-// Função para salvar usuário (cadastro)
+// Função para salvar usuário (cadastro) - Versão com openById
 function salvarUsuario(dados) {
-  const planilha = SpreadsheetApp.openById(CONFIG.ID_PLANILHA);
-  const aba = planilha.getSheetByName(CONFIG.ABA_USUARIOS);
-  const linhas = aba.getDataRange().getValues();
+  try {
+    console.log("Iniciando salvarUsuario com dados:", dados);
+    
+    const planilha = SpreadsheetApp.openById(CONFIG.ID_PLANILHA);
+    console.log("Planilha aberta com sucesso (openById)");
+    
+    const aba = planilha.getSheetByName(CONFIG.ABA_USUARIOS);
+    console.log("Aba encontrada:", CONFIG.ABA_USUARIOS);
+    
+    const linhas = aba.getDataRange().getValues();
+    console.log("Dados carregados, total de linhas:", linhas.length);
 
-  // Verifica se já existe
-  for (let i = 1; i < linhas.length; i++) {
-    if (linhas[i][2] === dados.email) {
-      return { sucesso: false, mensagem: "E-mail já cadastrado." };
+    // Verifica se já existe
+    for (let i = 1; i < linhas.length; i++) {
+      if (linhas[i][2] === dados.email) {
+        console.log("Email já existe:", dados.email);
+        return { sucesso: false, mensagem: "E-mail já cadastrado." };
+      }
     }
+
+    // Adiciona novo usuário
+    const novoId = gerarIdUnico();
+    console.log("Gerando novo ID:", novoId);
+    
+    aba.appendRow([
+      novoId,
+      dados.nome,
+      dados.email,
+      CONFIG.SENHA_PADRAO,
+      dados.whatsapp,
+      dados.regiao,
+      dados.igreja,
+      "Cidadao", // Função padrão
+      "Aguardando", // Status padrão
+      "Sim", // Ativo
+      new Date() // Data cadastro
+    ]);
+    
+    console.log("Usuário salvo com sucesso!");
+    return { sucesso: true, mensagem: "Usuário cadastrado com sucesso!" };
+    
+  } catch (error) {
+    console.error("Erro em salvarUsuario:", error);
+    return { sucesso: false, mensagem: "Erro ao salvar: " + error.toString() };
   }
+}
 
-  // Adiciona novo usuário
-  aba.appendRow([
-    gerarIdUnico(),
-    dados.nome,
-    dados.email,
-    CONFIG.SENHA_PADRAO,
-    dados.whatsapp,
-    dados.regiao,
-    dados.igreja,
-    "Cidadao", // Função padrão
-    "Aguardando", // Status padrão
-    "Sim", // Ativo
-    new Date() // Data cadastro
-  ]);
+// Função alternativa usando openByUrl (como no código que funciona)
+function salvarUsuarioByUrl(dados) {
+  try {
+    console.log("Iniciando salvarUsuarioByUrl com dados:", dados);
+    
+    const planilha = SpreadsheetApp.openByUrl(CONFIG.URL_PLANILHA);
+    console.log("Planilha aberta com sucesso (openByUrl)");
+    
+    const aba = planilha.getSheetByName(CONFIG.ABA_USUARIOS);
+    console.log("Aba encontrada:", CONFIG.ABA_USUARIOS);
+    
+    const linhas = aba.getDataRange().getValues();
+    console.log("Dados carregados, total de linhas:", linhas.length);
 
-  return { sucesso: true };
+    // Verifica se já existe
+    for (let i = 1; i < linhas.length; i++) {
+      if (linhas[i][2] === dados.email) {
+        console.log("Email já existe:", dados.email);
+        return { sucesso: false, mensagem: "E-mail já cadastrado." };
+      }
+    }
+
+    // Adiciona novo usuário
+    const novoId = gerarIdUnico();
+    console.log("Gerando novo ID:", novoId);
+    
+    aba.appendRow([
+      novoId,
+      dados.nome,
+      dados.email,
+      CONFIG.SENHA_PADRAO,
+      dados.whatsapp,
+      dados.regiao,
+      dados.igreja,
+      "Cidadao", // Função padrão
+      "Aguardando", // Status padrão
+      "Sim", // Ativo
+      new Date() // Data cadastro
+    ]);
+    
+    console.log("Usuário salvo com sucesso (openByUrl)!");
+    return { sucesso: true, mensagem: "Usuário cadastrado com sucesso!" };
+    
+  } catch (error) {
+    console.error("Erro em salvarUsuarioByUrl:", error);
+    return { sucesso: false, mensagem: "Erro ao salvar: " + error.toString() };
+  }
 }
 
 // Função para gerar ID único
@@ -266,6 +364,77 @@ function gerarIdUnico() {
 }
 
 function doGet(e) {
+  console.log("doGet chamado com parâmetros:", e.parameter);
+  
+  // Endpoint de teste simples
+  if (!e.parameter || !e.parameter.acao) {
+    return ContentService.createTextOutput(
+      JSON.stringify({ 
+        sucesso: true, 
+        mensagem: "API Arimateia funcionando!", 
+        timestamp: new Date().toISOString(),
+        versao: "1.0"
+      })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  if (e.parameter.acao === "test") {
+    return ContentService.createTextOutput(
+      JSON.stringify({ 
+        sucesso: true, 
+        mensagem: "Teste de conexão bem-sucedido!",
+        timestamp: new Date().toISOString()
+      })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  // Cadastro via GET (alternativa ao POST que falha)
+  if (e.parameter.acao === "cadastro_get") {
+    console.log("Processando cadastro via GET");
+    console.log("Parâmetros recebidos:", e.parameter);
+    
+    try {
+      // Validação de parâmetros obrigatórios
+      if (!e.parameter.nome || !e.parameter.email || !e.parameter.regiao || 
+          !e.parameter.igreja || !e.parameter.whatsapp) {
+        return ContentService.createTextOutput(
+          JSON.stringify({ 
+            sucesso: false, 
+            mensagem: "Parâmetros obrigatórios: nome, email, regiao, igreja, whatsapp" 
+          })
+        ).setMimeType(ContentService.MimeType.JSON);
+      }
+      
+      // Monta objeto de dados como no POST
+      const dados = {
+        nome: decodeURIComponent(e.parameter.nome),
+        email: decodeURIComponent(e.parameter.email),
+        regiao: decodeURIComponent(e.parameter.regiao),
+        igreja: decodeURIComponent(e.parameter.igreja),
+        whatsapp: decodeURIComponent(e.parameter.whatsapp)
+      };
+      
+      console.log("Dados decodificados:", dados);
+      
+      // Chama a função de salvar usuário
+      const resultado = salvarUsuario(dados);
+      console.log("Resultado do cadastro via GET:", resultado);
+      
+      return ContentService.createTextOutput(
+        JSON.stringify(resultado)
+      ).setMimeType(ContentService.MimeType.JSON);
+      
+    } catch (error) {
+      console.error("Erro no cadastro via GET:", error);
+      return ContentService.createTextOutput(
+        JSON.stringify({ 
+          sucesso: false, 
+          mensagem: "Erro interno: " + error.toString() 
+        })
+      ).setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+  
   if (e.parameter.acao === "usuarios") {
     // Protege com token
     if (!validarToken(e.parameter.token)) {
@@ -277,6 +446,7 @@ function doGet(e) {
       JSON.stringify(listarUsuarios())
     ).setMimeType(ContentService.MimeType.JSON);
   }
+  
   return ContentService.createTextOutput(
     JSON.stringify({ sucesso: false, mensagem: "Ação inválida." })
   ).setMimeType(ContentService.MimeType.JSON);
@@ -295,5 +465,5 @@ function validarToken(token) {
 }
 
 
-
+//revisado
 

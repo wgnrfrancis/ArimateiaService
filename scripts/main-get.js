@@ -1,4 +1,4 @@
-function enviarCadastro() {
+function enviarCadastroGET() {
   const nome = document.getElementById("nome").value.trim();
   const email = document.getElementById("email").value.trim();
   const regiao = document.getElementById("regiao").value.trim();
@@ -20,28 +20,27 @@ function enviarCadastro() {
   // URL do Google Apps Script - NOVA IMPLANTAÇÃO
   const scriptUrl = "https://script.google.com/macros/s/AKfycbza7MtqMZMARSCS2F3CwGHlCcJgpSbslaBwavE1HgPc6jliD7vq51fH4rXuedUMfpJy/exec";
   
-  console.log("Enviando dados para:", scriptUrl);
+  console.log("Enviando dados via GET para:", scriptUrl);
   console.log("Dados:", { nome, email, regiao, igreja, whatsapp });
 
-  fetch(scriptUrl, {
-    method: "POST",
-    mode: "cors",
+  // Constrói URL com parâmetros (método GET)
+  const params = new URLSearchParams({
+    acao: "cadastro_get",
+    nome: encodeURIComponent(nome),
+    email: encodeURIComponent(email),
+    regiao: encodeURIComponent(regiao),
+    igreja: encodeURIComponent(igreja),
+    whatsapp: encodeURIComponent(whatsapp)
+  });
+  
+  const urlCompleta = `${scriptUrl}?${params.toString()}`;
+  console.log("URL completa:", urlCompleta);
+
+  fetch(urlCompleta, {
+    method: "GET",
     headers: { 
-      "Content-Type": "application/json",
       "Accept": "application/json"
-    },
-    body: JSON.stringify({
-      nome,
-      email,
-      regiao,
-      igreja,
-      whatsapp,
-      senha: "Arimateia1",
-      funcao: "Voluntário",
-      status: "Ativo",
-      ativo: "Sim",
-      acao: "cadastro"
-    })
+    }
   })
   .then(response => {
     console.log("Status da resposta:", response.status);
@@ -62,7 +61,7 @@ function enviarCadastro() {
       
       if (res.sucesso) {
         msg.style.color = "lightgreen";
-        msg.textContent = "✅ Cadastro realizado!";
+        msg.textContent = "✅ Cadastro realizado com sucesso!";
         document.getElementById("cadastro-form").reset();
       } else {
         msg.style.color = "red";
