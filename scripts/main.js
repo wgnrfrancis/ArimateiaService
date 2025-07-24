@@ -23,16 +23,14 @@ function enviarCadastro() {
   
   console.log("✅ Enviando cadastro via GET (método validado):", { nome, email, regiao, igreja, whatsapp });
 
-  // Usando método GET que foi testado e funciona
+  // ✅ SOLUÇÃO DEFINITIVA: Endpoint cadastro_get (código pronto, precisa deploy)
   const params = new URLSearchParams({
-    acao: "test", // Endpoint que sabemos que existe e funciona
+    acao: "cadastro_get", // Endpoint que salva dados na planilha
     nome: encodeURIComponent(nome),
     email: encodeURIComponent(email),
     regiao: encodeURIComponent(regiao),
     igreja: encodeURIComponent(igreja),
-    whatsapp: encodeURIComponent(whatsapp),
-    tipo: "cadastro",
-    timestamp: Date.now()
+    whatsapp: encodeURIComponent(whatsapp)
   });
   
   const urlCompleta = `${scriptUrl}?${params.toString()}`;
@@ -58,26 +56,46 @@ function enviarCadastro() {
       const resultado = JSON.parse(text);
       console.log("📋 Resultado parseado:", resultado);
       
-      // Como estamos usando o endpoint 'test' que funciona,
-      // consideramos sucesso se recebemos uma resposta válida
-      if (resultado && (resultado.sucesso || resultado.mensagem)) {
+      // ✅ VALIDAÇÃO PARA ENDPOINT cadastro_get
+      if (resultado && resultado.sucesso === true) {
+        // Cadastro salvo com sucesso na planilha
         msg.style.color = "lightgreen";
-        msg.textContent = "✅ Cadastro enviado com sucesso!";
+        msg.textContent = "✅ Cadastro realizado com sucesso na planilha!";
         document.getElementById("cadastro-form").reset();
         
         // Log dos dados para verificação
-        console.log("🎉 Dados do cadastro enviados:");
+        console.log("🎉 Cadastro salvo na planilha com sucesso!");
         console.log("👤 Nome:", nome);
         console.log("📧 Email:", email);
         console.log("🌍 Região:", regiao);
         console.log("⛪ Igreja:", igreja);
         console.log("📱 WhatsApp:", whatsapp);
         console.log("🕐 Timestamp:", new Date().toLocaleString());
+        console.log("📝 Mensagem do servidor:", resultado.mensagem);
         
-        // Opcional: Salvar no localStorage para backup
-        const dadosCadastro = { nome, email, regiao, igreja, whatsapp, timestamp: new Date().toISOString() };
+        // Backup no localStorage
+        const dadosCadastro = {
+          id: `USR-${Date.now()}`,
+          nome, email, regiao, igreja, whatsapp,
+          timestamp: new Date().toISOString(),
+          status: 'salvo_planilha',
+          metodo: 'cadastro_get'
+        };
         localStorage.setItem(`cadastro_${Date.now()}`, JSON.stringify(dadosCadastro));
-        console.log("💾 Dados salvos no localStorage como backup");
+        console.log("💾 Backup salvo no localStorage");
+        
+      } else if (resultado && resultado.sucesso === false) {
+        // Erro específico do servidor (ex: email já existe)
+        msg.style.color = "orange";
+        msg.textContent = `⚠️ ${resultado.mensagem || 'Erro no cadastro'}`;
+        console.warn("⚠️ Erro reportado pelo servidor:", resultado);
+        
+      } else if (resultado && resultado.mensagem === "Ação inválida.") {
+        // Endpoint ainda não foi deployado
+        msg.style.color = "orange";
+        msg.textContent = "⚠️ Endpoint não deployado. Faça deploy do api.gs!";
+        console.warn("⚠️ ATENÇÃO: Endpoint cadastro_get não foi deployado ainda!");
+        console.warn("🔗 URL tentada:", urlCompleta);
         
       } else {
         throw new Error("Resposta inválida do servidor");
