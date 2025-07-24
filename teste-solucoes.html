@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Teste de Soluções - Cadastro Arimateia</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .solution-section {
+            margin: 25px 0;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .hybrid { border-color: #28a745; background: #f8fff9; }
+        .simple { border-color: #007bff; background: #f8f9ff; }
+        .manual { border-color: #ffc107; background: #fffdf8; }
+        
+        h1 { color: #333; text-align: center; }
+        h3 { color: #555; margin-top: 0; }
+        
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,123,255,0.3); }
+        button:disabled { background: #6c757d; cursor: not-allowed; transform: none; }
+        
+        .msg {
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 5px;
+            font-weight: bold;
+            min-height: 20px;
+            border: 1px solid transparent;
+        }
+        .success { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border-color: #bee5eb; }
+        
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status-success { background: #28a745; color: white; }
+        .status-error { background: #dc3545; color: white; }
+        .status-pending { background: #ffc107; color: black; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Teste de Soluções - Cadastro Arimateia</h1>
+        
+        <div class="solution-section info">
+            <h3>📋 Informações do Sistema</h3>
+            <p><strong>URL do Script:</strong> <span id="script-url"></span></p>
+            <p><strong>Timestamp:</strong> <span id="timestamp"></span></p>
+            <p><strong>Status Geral:</strong> <span id="status-geral">Aguardando teste...</span></p>
+        </div>
+
+        <!-- Formulário Único -->
+        <div class="solution-section">
+            <h3>📝 Dados para Teste</h3>
+            <form id="teste-form">
+                <div class="form-group">
+                    <label for="nome">Nome Completo:</label>
+                    <input type="text" id="nome" value="João Silva Teste" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="regiao">Região:</label>
+                    <input type="text" id="regiao" value="São Paulo" required>
+                </div>
+                <div class="form-group">
+                    <label for="igreja">Igreja:</label>
+                    <input type="text" id="igreja" value="Igreja Teste" required>
+                </div>
+                <div class="form-group">
+                    <label for="whatsapp">WhatsApp:</label>
+                    <input type="tel" id="whatsapp" value="11999999999" required>
+                </div>
+            </form>
+        </div>
+
+        <!-- Solução 1: Híbrida -->
+        <div class="solution-section hybrid">
+            <h3>🎯 Solução 1: Híbrida (POST → GET) <span id="status-hibrida" class="status-badge status-pending">Aguardando</span></h3>
+            <p>Tenta POST primeiro, se falhar usa GET automaticamente.</p>
+            <button onclick="testarSolucaoHibrida()">Testar Solução Híbrida</button>
+            <div id="msg-hibrida" class="msg"></div>
+            <div id="log-hibrida" class="log"></div>
+        </div>
+
+        <!-- Solução 2: GET Simples -->
+        <div class="solution-section simple">
+            <h3>🔗 Solução 2: GET Simples <span id="status-simples" class="status-badge status-pending">Aguardando</span></h3>
+            <p>Usa apenas GET request (método que sabemos que funciona).</p>
+            <button onclick="testarSolucaoSimples()">Testar GET Simples</button>
+            <div id="msg-simples" class="msg"></div>
+            <div id="log-simples" class="log"></div>
+        </div>
+
+        <!-- Solução 3: Manual -->
+        <div class="solution-section manual">
+            <h3>📋 Solução 3: URL Manual <span id="status-manual" class="status-badge status-pending">Aguardando</span></h3>
+            <p>Gera URL completa para você copiar e colar no navegador.</p>
+            <button onclick="gerarURLManual()">Gerar URL Manual</button>
+            <div id="msg-manual" class="msg"></div>
+            <div id="url-manual" class="log"></div>
+        </div>
+
+        <!-- Botão para testar todas -->
+        <div class="solution-section">
+            <h3>🚀 Teste Completo</h3>
+            <button onclick="testarTodasSolucoes()" style="background: linear-gradient(45deg, #28a745, #20c997); font-size: 18px; padding: 15px 30px;">
+                Testar Todas as Soluções
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const scriptUrl = "https://script.google.com/macros/s/AKfycbza7MtqMZMARSCS2F3CwGHlCcJgpSbslaBwavE1HgPc6jliD7vq51fH4rXuedUMfpJy/exec";
+        
+        // Inicialização
+        document.getElementById('script-url').textContent = scriptUrl;
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+        
+        // Gera email único para cada teste
+        function gerarEmailUnico() {
+            return `teste${Date.now()}@exemplo.com`;
+        }
+        
+        // Atualiza email automaticamente
+        function atualizarEmail() {
+            document.getElementById('email').value = gerarEmailUnico();
+        }
+        
+        // Função de log
+        function log(elementId, message) {
+            const logElement = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        // Limpa log
+        function clearLog(elementId) {
+            document.getElementById(elementId).textContent = '';
+        }
+        
+        // Atualiza status
+        function updateStatus(statusId, status, success) {
+            const element = document.getElementById(statusId);
+            element.textContent = status;
+            element.className = `status-badge ${success ? 'status-success' : 'status-error'}`;
+        }
+        
+        // Coleta dados do formulário
+        function coletarDados() {
+            return {
+                nome: document.getElementById('nome').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                regiao: document.getElementById('regiao').value.trim(),
+                igreja: document.getElementById('igreja').value.trim(),
+                whatsapp: document.getElementById('whatsapp').value.trim()
+            };
+        }
+        
+        // Valida dados
+        function validarDados(dados) {
+            return dados.nome && dados.email && dados.regiao && dados.igreja && dados.whatsapp;
+        }
+        
+        // Solução 1: Híbrida
+        async function testarSolucaoHibrida() {
+            clearLog('log-hibrida');
+            atualizarEmail();
+            
+            const dados = coletarDados();
+            if (!validarDados(dados)) {
+                document.getElementById('msg-hibrida').className = 'msg error';
+                document.getElementById('msg-hibrida').textContent = 'Preencha todos os campos!';
+                return;
+            }
+            
+            log('log-hibrida', '🚀 Iniciando solução híbrida...');
+            document.getElementById('msg-hibrida').className = 'msg info';
+            document.getElementById('msg-hibrida').textContent = '⏳ Testando POST primeiro...';
+            
+            try {
+                // Tenta POST
+                log('log-hibrida', '📤 Tentando POST...');
+                const resultadoPOST = await tentarPOST(dados);
+                log('log-hibrida', '✅ POST funcionou!');
+                document.getElementById('msg-hibrida').className = 'msg success';
+                document.getElementById('msg-hibrida').textContent = '✅ Sucesso via POST!';
+                updateStatus('status-hibrida', 'POST OK', true);
+                
+            } catch (erroPOST) {
+                log('log-hibrida', `❌ POST falhou: ${erroPOST.message}`);
+                log('log-hibrida', '🔄 Tentando GET...');
+                document.getElementById('msg-hibrida').textContent = '⏳ POST falhou, tentando GET...';
+                
+                try {
+                    const resultadoGET = await tentarGET(dados);
+                    log('log-hibrida', '✅ GET funcionou!');
+                    document.getElementById('msg-hibrida').className = 'msg success';
+                    document.getElementById('msg-hibrida').textContent = '✅ Sucesso via GET (fallback)!';
+                    updateStatus('status-hibrida', 'GET OK', true);
+                    
+                } catch (erroGET) {
+                    log('log-hibrida', `❌ GET também falhou: ${erroGET.message}`);
+                    document.getElementById('msg-hibrida').className = 'msg error';
+                    document.getElementById('msg-hibrida').textContent = '❌ Ambos os métodos falharam';
+                    updateStatus('status-hibrida', 'Falhou', false);
+                }
+            }
+        }
+        
+        // Solução 2: GET Simples
+        async function testarSolucaoSimples() {
+            clearLog('log-simples');
+            atualizarEmail();
+            
+            const dados = coletarDados();
+            if (!validarDados(dados)) {
+                document.getElementById('msg-simples').className = 'msg error';
+                document.getElementById('msg-simples').textContent = 'Preencha todos os campos!';
+                return;
+            }
+            
+            log('log-simples', '🔗 Iniciando GET simples...');
+            document.getElementById('msg-simples').className = 'msg info';
+            document.getElementById('msg-simples').textContent = '⏳ Enviando via GET...';
+            
+            try {
+                const resultado = await tentarGETSimples(dados);
+                log('log-simples', '✅ GET simples funcionou!');
+                document.getElementById('msg-simples').className = 'msg success';
+                document.getElementById('msg-simples').textContent = '✅ Dados enviados com sucesso!';
+                updateStatus('status-simples', 'Sucesso', true);
+                
+            } catch (erro) {
+                log('log-simples', `❌ Erro: ${erro.message}`);
+                document.getElementById('msg-simples').className = 'msg error';
+                document.getElementById('msg-simples').textContent = '❌ Falha na conexão';
+                updateStatus('status-simples', 'Falhou', false);
+            }
+        }
+        
+        // Solução 3: URL Manual
+        function gerarURLManual() {
+            atualizarEmail();
+            
+            const dados = coletarDados();
+            if (!validarDados(dados)) {
+                document.getElementById('msg-manual').className = 'msg error';
+                document.getElementById('msg-manual').textContent = 'Preencha todos os campos!';
+                return;
+            }
+            
+            const params = new URLSearchParams({
+                acao: 'test',
+                nome: dados.nome,
+                email: dados.email,
+                regiao: dados.regiao,
+                igreja: dados.igreja,
+                whatsapp: dados.whatsapp,
+                tipo: 'cadastro_manual'
+            });
+            
+            const urlCompleta = `${scriptUrl}?${params.toString()}`;
+            document.getElementById('url-manual').textContent = urlCompleta;
+            document.getElementById('msg-manual').className = 'msg success';
+            document.getElementById('msg-manual').textContent = '✅ URL gerada! Copie e cole no navegador.';
+            updateStatus('status-manual', 'URL Gerada', true);
+        }
+        
+        // Funções auxiliares
+        async function tentarPOST(dados) {
+            const response = await fetch(scriptUrl, {
+                method: 'POST',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    ...dados,
+                    acao: 'cadastro'
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+        
+        async function tentarGET(dados) {
+            const params = new URLSearchParams({
+                acao: 'cadastro_get',
+                ...dados
+            });
+            
+            const response = await fetch(`${scriptUrl}?${params.toString()}`);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const resultado = await response.json();
+            if (!resultado.sucesso && resultado.mensagem === 'Ação inválida.') {
+                throw new Error('Endpoint não disponível');
+            }
+            
+            return resultado;
+        }
+        
+        async function tentarGETSimples(dados) {
+            const params = new URLSearchParams({
+                acao: 'test',
+                ...dados,
+                tipo: 'cadastro'
+            });
+            
+            const response = await fetch(`${scriptUrl}?${params.toString()}`);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+        
+        // Testa todas as soluções
+        async function testarTodasSolucoes() {
+            document.getElementById('status-geral').textContent = '🔄 Testando todas as soluções...';
+            
+            await testarSolucaoHibrida();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testarSolucaoSimples();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            gerarURLManual();
+            
+            document.getElementById('status-geral').textContent = '✅ Todos os testes concluídos!';
+        }
+        
+        // Atualiza email na inicialização
+        atualizarEmail();
+    </script>
+</body>
+</html>
