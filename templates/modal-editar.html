@@ -1,0 +1,177 @@
+<!-- Reusable modal template for editing records -->
+<div class="modal" id="{{modalId}}">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>{{modalTitle}}</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        
+        <form id="{{formId}}" data-record-id="{{recordId}}">
+            {{#fields}}
+            <div class="form-group">
+                <label for="{{fieldId}}" class="form-label">{{fieldLabel}} {{#required}}*{{/required}}</label>
+                
+                {{#isInput}}
+                <input 
+                    type="{{inputType}}" 
+                    id="{{fieldId}}" 
+                    name="{{fieldName}}" 
+                    class="form-input" 
+                    {{#required}}required{{/required}}
+                    {{#placeholder}}placeholder="{{placeholder}}"{{/placeholder}}
+                    {{#value}}value="{{value}}"{{/value}}
+                    {{#dataFormat}}data-format="{{dataFormat}}"{{/dataFormat}}
+                    {{#dataValidation}}data-validation="{{dataValidation}}"{{/dataValidation}}
+                    {{#maxLength}}maxlength="{{maxLength}}"{{/maxLength}}
+                    {{#readonly}}readonly{{/readonly}}
+                >
+                {{/isInput}}
+                
+                {{#isSelect}}
+                <select 
+                    id="{{fieldId}}" 
+                    name="{{fieldName}}" 
+                    class="form-select" 
+                    {{#required}}required{{/required}}
+                    {{#readonly}}disabled{{/readonly}}
+                >
+                    {{#options}}
+                    <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                    {{/options}}
+                </select>
+                {{/isSelect}}
+                
+                {{#isTextarea}}
+                <textarea 
+                    id="{{fieldId}}" 
+                    name="{{fieldName}}" 
+                    class="form-textarea" 
+                    {{#required}}required{{/required}}
+                    {{#placeholder}}placeholder="{{placeholder}}"{{/placeholder}}
+                    {{#rows}}rows="{{rows}}"{{/rows}}
+                    {{#readonly}}readonly{{/readonly}}
+                >{{value}}</textarea>
+                {{/isTextarea}}
+                
+                {{#isDisplay}}
+                <span class="form-value">{{value}}</span>
+                {{/isDisplay}}
+            </div>
+            {{/fields}}
+            
+            {{#hasHistory}}
+            <div class="form-group">
+                <label class="form-label">{{historyTitle}}</label>
+                <div class="history-container">
+                    {{#historyItems}}
+                    <div class="history-item">
+                        <div class="history-header">
+                            <span class="history-user">{{user}}</span>
+                            <span class="history-date">{{dateFormatted}}</span>
+                        </div>
+                        <div class="history-content">{{content}}</div>
+                        {{#observation}}
+                        <div class="history-observation">{{observation}}</div>
+                        {{/observation}}
+                    </div>
+                    {{/historyItems}}
+                </div>
+            </div>
+            {{/hasHistory}}
+            
+            <div class="form-group modal-actions">
+                <button type="submit" class="btn btn-primary">
+                    {{submitIcon}} {{submitText}}
+                </button>
+                <button type="button" class="btn btn-outline modal-close">
+                    Cancelar
+                </button>
+                {{#hasDelete}}
+                <button type="button" class="btn btn-danger delete-record-btn" data-record-id="{{recordId}}">
+                    ❌ {{deleteText}}
+                </button>
+                {{/hasDelete}}
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .history-container {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 1rem;
+        background: var(--light-bg);
+    }
+
+    .history-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 0.75rem;
+    }
+
+    .history-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+
+    .history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .history-user {
+        font-weight: 500;
+        color: var(--primary-color);
+    }
+
+    .history-date {
+        font-size: 0.75rem;
+        color: var(--text-light);
+    }
+
+    .history-content {
+        font-size: 0.875rem;
+        color: var(--text-dark);
+        margin-bottom: 0.25rem;
+    }
+
+    .history-observation {
+        font-size: 0.75rem;
+        color: var(--text-light);
+        font-style: italic;
+        padding: 0.5rem;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 4px;
+    }
+
+    .form-value {
+        font-weight: 500;
+        color: var(--text-dark);
+        display: block;
+        padding: 0.75rem;
+        background: var(--light-bg);
+        border-radius: 4px;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+        .modal-actions {
+            flex-direction: column;
+        }
+
+        .modal-actions .btn {
+            width: 100%;
+        }
+    }
+</style>

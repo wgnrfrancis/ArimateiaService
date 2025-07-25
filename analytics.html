@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Arimateia Service</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-container">
+                    <div class="logo-square">A</div>
+                    <div class="logo-text">
+                        <span class="logo-main">ARIMATEIA</span>
+                        <small class="logo-sub">SERVICE</small>
+                    </div>
+                </div>
+                
+                <div class="user-info">
+                    <img src="assets/default-avatar.png" alt="Avatar" class="user-avatar">
+                    <div class="user-details">
+                        <span class="user-name" id="userName">Carregando...</span>
+                        <span class="user-role" id="userRole">Analytics</span>
+                    </div>
+                    <button class="btn-logout" onclick="auth.logout()">Sair</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <a href="dashboard.html" class="nav-tab">Dashboard</a>
+            <a href="balcao.html" class="nav-tab">Balcão</a>
+            <a href="secretaria.html" class="nav-tab">Secretaria</a>
+            <a href="coordenador.html" class="nav-tab">Coordenador</a>
+            <a href="analytics.html" class="nav-tab active">Analytics</a>
+        </nav>
+
+        <!-- Analytics Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1>📊 Dashboard Analytics</h1>
+                <p>Métricas e indicadores de performance do Arimateia Service</p>
+            </div>
+
+            <!-- Period Selector -->
+            <div class="analytics-controls">
+                <div class="period-selector">
+                    <button class="btn-period active" data-period="7">7 dias</button>
+                    <button class="btn-period" data-period="30">30 dias</button>
+                    <button class="btn-period" data-period="90">90 dias</button>
+                    <button class="btn-period" data-period="365">1 ano</button>
+                </div>
+                <button class="btn btn-primary" onclick="analytics.exportReport()">
+                    📄 Exportar Relatório
+                </button>
+            </div>
+
+            <!-- KPIs Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon">📋</div>
+                    <div class="kpi-content">
+                        <h3 class="kpi-value" id="totalChamados">-</h3>
+                        <p class="kpi-label">Total de Chamados</p>
+                        <span class="kpi-trend" id="trendChamados">-</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">✅</div>
+                    <div class="kpi-content">
+                        <h3 class="kpi-value" id="taxaResolucao">-</h3>
+                        <p class="kpi-label">Taxa de Resolução</p>
+                        <span class="kpi-trend" id="trendResolucao">-</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">⏱️</div>
+                    <div class="kpi-content">
+                        <h3 class="kpi-value" id="tempoMedio">-</h3>
+                        <p class="kpi-label">Tempo Médio (dias)</p>
+                        <span class="kpi-trend" id="trendTempo">-</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">👥</div>
+                    <div class="kpi-content">
+                        <h3 class="kpi-value" id="voluntariosAtivos">-</h3>
+                        <p class="kpi-label">Voluntários Ativos</p>
+                        <span class="kpi-trend" id="trendVoluntarios">-</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">⭐</div>
+                    <div class="kpi-content">
+                        <h3 class="kpi-value" id="satisfacaoMedia">-</h3>
+                        <p class="kpi-label">Satisfação Média</p>
+                        <span class="kpi-trend" id="trendSatisfacao">-</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">🏛️</div>
+                    <div class="kpi-content">
+                        <h3 class="kpi-value" id="igrejasAtivas">-</h3>
+                        <p class="kpi-label">Igrejas Ativas</p>
+                        <span class="kpi-trend" id="trendIgrejas">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <!-- Chamados por Período -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>📈 Chamados por Período</h3>
+                        <div class="chart-controls">
+                            <select id="chartPeriodType" title="Selecionar período do gráfico" aria-label="Período do gráfico">
+                                <option value="daily">Diário</option>
+                                <option value="weekly">Semanal</option>
+                                <option value="monthly" selected>Mensal</option>
+                            </select>
+                        </div>
+                    </div>
+                    <canvas id="chartChamadosPeriodo"></canvas>
+                </div>
+
+                <!-- Status dos Chamados -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>🎯 Status dos Chamados</h3>
+                    </div>
+                    <canvas id="chartStatusChamados"></canvas>
+                </div>
+
+                <!-- Chamados por Região -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>🗺️ Chamados por Região</h3>
+                    </div>
+                    <canvas id="chartChamadosRegiao"></canvas>
+                </div>
+
+                <!-- Categorias Mais Demandadas -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>📊 Categorias Mais Demandadas</h3>
+                    </div>
+                    <canvas id="chartCategorias"></canvas>
+                </div>
+
+                <!-- Performance dos Voluntários -->
+                <div class="chart-container chart-wide">
+                    <div class="chart-header">
+                        <h3>👥 Performance dos Voluntários</h3>
+                        <div class="chart-controls">
+                            <select id="performanceMetric" title="Selecionar métrica de performance" aria-label="Métrica de performance">
+                                <option value="total">Total de Chamados</option>
+                                <option value="resolved">Chamados Resolvidos</option>
+                                <option value="rate">Taxa de Resolução</option>
+                            </select>
+                        </div>
+                    </div>
+                    <canvas id="chartVoluntarios"></canvas>
+                </div>
+
+                <!-- Heatmap de Atendimentos -->
+                <div class="chart-container chart-wide">
+                    <div class="chart-header">
+                        <h3>🔥 Heatmap de Atendimentos</h3>
+                        <p class="chart-subtitle">Horários e dias com maior volume de chamados</p>
+                    </div>
+                    <div id="heatmapContainer">
+                        <canvas id="chartHeatmap"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Performers -->
+            <div class="top-performers">
+                <div class="performers-section">
+                    <h3>🏆 Top Voluntários do Período</h3>
+                    <div class="performers-list" id="topVoluntarios">
+                        <!-- Será preenchido dinamicamente -->
+                    </div>
+                </div>
+
+                <div class="performers-section">
+                    <h3>🏛️ Igrejas Mais Ativas</h3>
+                    <div class="performers-list" id="topIgrejas">
+                        <!-- Será preenchido dinamicamente -->
+                    </div>
+                </div>
+
+                <div class="performers-section">
+                    <h3>📋 Categorias em Alta</h3>
+                    <div class="performers-list" id="topCategorias">
+                        <!-- Será preenchido dinamicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insights Automáticos -->
+            <div class="insights-section">
+                <h3>💡 Insights Automáticos</h3>
+                <div class="insights-grid" id="insightsContainer">
+                    <!-- Será preenchido dinamicamente -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Carregando analytics...</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="data/config.js"></script>
+    <script src="scripts/helpers.js"></script>
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/flow.js"></script>
+    <script src="scripts/analytics.js"></script>
+    <script>
+        // Initialize analytics when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!auth.isAuthenticated()) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Load user info
+            const user = auth.getCurrentUser();
+            document.getElementById('userName').textContent = user.name;
+            
+            // Initialize analytics
+            analytics.init();
+        });
+    </script>
+</body>
+</html>

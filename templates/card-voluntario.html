@@ -1,0 +1,81 @@
+<!-- Template for individual volunteer card -->
+<div class="card volunteer-card" data-user-id="{{id}}" data-region="{{regiao}}">
+    <div class="card-header">
+        <div class="flex justify-between items-center">
+            <h3 class="card-title">{{nome}}</h3>
+            <span class="status-badge status-{{statusColor}}">{{statusLabel}}</span>
+        </div>
+    </div>
+    
+    <div class="volunteer-info">
+        <div class="grid grid-2">
+            <div>
+                <strong>Email:</strong> {{email}}
+            </div>
+            <div>
+                <strong>Telefone:</strong> {{telefoneFormatted}}
+            </div>
+            <div>
+                <strong>Igreja:</strong> {{igreja}}
+            </div>
+            <div>
+                <strong>Região:</strong> {{regiao}}
+            </div>
+            <div>
+                <strong>Cargo:</strong> {{cargoLabel}}
+            </div>
+            <div>
+                <strong>Data Cadastro:</strong> {{dataCadastroFormatted}}
+            </div>
+        </div>
+        
+        {{#estatisticas}}
+        <div class="volunteer-stats mt-3">
+            <div class="grid grid-3">
+                <div class="stat-item">
+                    <div class="stat-number">{{totalChamados}}</div>
+                    <div class="stat-label">Chamados</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{chamadosResolvidos}}</div>
+                    <div class="stat-label">Resolvidos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{taxaResolucao}}%</div>
+                    <div class="stat-label">Taxa Resolução</div>
+                </div>
+            </div>
+        </div>
+        {{/estatisticas}}
+        
+        <div class="mt-2">
+            <small class="text-light">
+                Cadastrado por {{criadoPor}} em {{dataCadastroFormatted}}
+            </small>
+        </div>
+    </div>
+    
+    <div class="volunteer-actions mt-3">
+        <button class="btn btn-outline view-volunteer-btn" data-user-id="{{id}}">
+            🔍 Ver Perfil
+        </button>
+        
+        {{#canEdit}}
+        <button class="btn btn-primary edit-volunteer-btn" data-user-id="{{id}}">
+            ✏️ Editar
+        </button>
+        {{/canEdit}}
+        
+        {{#canDeactivate}}
+        <button class="btn btn-warning deactivate-volunteer-btn" data-user-id="{{id}}">
+            ⏸️ Desativar
+        </button>
+        {{/canDeactivate}}
+        
+        {{#canDelete}}
+        <button class="btn btn-danger delete-volunteer-btn" data-user-id="{{id}}">
+            ❌ Remover
+        </button>
+        {{/canDelete}}
+    </div>
+</div>

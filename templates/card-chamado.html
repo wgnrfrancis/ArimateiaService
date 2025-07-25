@@ -1,0 +1,63 @@
+<!-- Template for individual ticket card -->
+<div class="card ticket-card" data-ticket-id="{{id}}" data-region="{{regiao}}">
+    <div class="card-header">
+        <div class="flex justify-between items-center">
+            <h3 class="card-title">{{nome}}</h3>
+            <span class="status-badge status-{{statusColor}}">{{statusLabel}}</span>
+        </div>
+    </div>
+    
+    <div class="ticket-info">
+        <div class="grid grid-2">
+            <div>
+                <strong>CPF:</strong> {{cpfFormatted}}
+            </div>
+            <div>
+                <strong>Contato:</strong> {{contatoFormatted}}
+            </div>
+            <div>
+                <strong>Igreja:</strong> {{igreja}}
+            </div>
+            <div>
+                <strong>Região:</strong> {{regiao}}
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <strong>Descrição:</strong>
+            <p>{{descricao}}</p>
+        </div>
+        
+        <div class="mt-2">
+            <small class="text-light">
+                Criado em {{dataAberturaFormatted}} por {{criadoPor}}
+            </small>
+        </div>
+        
+        {{#observacoes}}
+        <div class="mt-2">
+            <small class="text-light">
+                Última atualização: {{ultimaAtualizacao}} por {{atualizadoPor}}
+            </small>
+        </div>
+        {{/observacoes}}
+    </div>
+    
+    <div class="ticket-actions mt-3">
+        <button class="btn btn-outline view-ticket-btn" data-ticket-id="{{id}}">
+            🔍 Visualizar
+        </button>
+        
+        {{#canEdit}}
+        <button class="btn btn-primary edit-ticket-btn" data-ticket-id="{{id}}">
+            ✏️ Editar
+        </button>
+        {{/canEdit}}
+        
+        {{#canDelete}}
+        <button class="btn btn-danger delete-ticket-btn" data-ticket-id="{{id}}">
+            ❌ Excluir
+        </button>
+        {{/canDelete}}
+    </div>
+</div>

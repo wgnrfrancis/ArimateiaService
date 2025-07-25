@@ -175,3 +175,4 @@ Este projeto foi desenvolvido especificamente para a organização Arimateia.
 **Última atualização**: Janeiro 2024  
 **Desenvolvido por**: Equipe de Desenvolvimento Arimateia
 # ArimateiaService
+# Arimateia-Service1

@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coordenação - Balcão da Cidadania</title>
+    <link rel="stylesheet" href="/assets/style.css">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="/assets/logo.png" alt="Logo" width="32" height="32" onerror="this.style.display='none'">
+                    <span>Balcão da Cidadania</span>
+                </div>
+                
+                <div class="user-info">
+                    <img src="/assets/default-avatar.png" alt="Avatar" class="user-avatar">
+                    <div class="user-details">
+                        <div class="user-name">Carregando...</div>
+                        <div class="user-role text-light">-</div>
+                    </div>
+                    <div class="user-actions">
+                        <button class="btn btn-outline back-to-dashboard">
+                            ⬅️ Dashboard
+                        </button>
+                        <button id="logout-btn" class="btn btn-secondary">
+                            🚪 Sair
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header mb-4">
+                <h1>⚙️ Painel de Coordenação</h1>
+                <p class="text-light">Gestão completa do sistema e relatórios</p>
+            </div>
+
+            <!-- Quick Stats Dashboard -->
+            <div class="stats-dashboard mb-4">
+                <div class="grid grid-4">
+                    <div class="card text-center stat-card">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-number" id="total-tickets-stat">150</div>
+                        <div class="stat-label">Total de Chamados</div>
+                        <div class="stat-change positive">+12 esta semana</div>
+                    </div>
+                    <div class="card text-center stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-number" id="total-volunteers-stat">25</div>
+                        <div class="stat-label">Voluntários Ativos</div>
+                        <div class="stat-change positive">+3 este mês</div>
+                    </div>
+                    <div class="card text-center stat-card">
+                        <div class="stat-icon">🏛️</div>
+                        <div class="stat-number" id="total-churches-stat">10</div>
+                        <div class="stat-label">Igrejas Cadastradas</div>
+                        <div class="stat-change neutral">Sem alteração</div>
+                    </div>
+                    <div class="card text-center stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-number" id="resolution-rate-stat">85%</div>
+                        <div class="stat-label">Taxa de Resolução</div>
+                        <div class="stat-change positive">+5% este mês</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Management Sections -->
+            <div class="management-sections">
+                <div class="grid grid-2">
+                    <!-- Chamados Management -->
+                    <div class="card management-card">
+                        <div class="card-header">
+                            <h3>📋 Gestão de Chamados</h3>
+                        </div>
+                        <div class="management-actions">
+                            <button class="btn btn-primary w-full" onclick="window.location.href='/balcao.html'">
+                                🔍 Ver Todos os Chamados
+                            </button>
+                            <button class="btn btn-outline w-full" onclick="window.location.href='/secretaria.html'">
+                                ✏️ Gerenciar Chamados
+                            </button>
+                            <button class="btn btn-success w-full" id="export-all-tickets-btn">
+                                📊 Exportar Relatório Completo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- User Management -->
+                    <div class="card management-card">
+                        <div class="card-header">
+                            <h3>👥 Gestão de Usuários</h3>
+                        </div>
+                        <div class="management-actions">
+                            <button class="btn btn-primary w-full" id="add-volunteer-btn">
+                                ➕ Adicionar Voluntário
+                            </button>
+                            <button class="btn btn-primary w-full" id="add-secretary-btn">
+                                ➕ Adicionar Secretário
+                            </button>
+                            <button class="btn btn-outline w-full" id="manage-users-btn">
+                                👤 Gerenciar Usuários
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Professional Management -->
+                    <div class="card management-card">
+                        <div class="card-header">
+                            <h3>🏥 Profissionais e Serviços</h3>
+                        </div>
+                        <div class="management-actions">
+                            <button class="btn btn-primary w-full" id="add-professional-btn">
+                                ➕ Adicionar Profissional
+                            </button>
+                            <button class="btn btn-outline w-full" id="manage-services-btn">
+                                🔧 Gerenciar Serviços
+                            </button>
+                            <button class="btn btn-outline w-full" id="government-offices-btn">
+                                🏛️ Gabinetes e Secretarias
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Reports and Analytics -->
+                    <div class="card management-card">
+                        <div class="card-header">
+                            <h3>📊 Relatórios e Análises</h3>
+                        </div>
+                        <div class="management-actions">
+                            <button class="btn btn-success w-full" id="general-reports-btn">
+                                📈 Relatórios Gerais
+                            </button>
+                            <button class="btn btn-outline w-full" id="volunteer-reports-btn">
+                                👥 Ficha dos Voluntários
+                            </button>
+                            <button class="btn btn-outline w-full" id="media-events-btn">
+                                📸 Mídias de Eventos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="recent-activity-section mt-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🕒 Atividade Recente do Sistema</h3>
+                    </div>
+                    <div class="activity-timeline">
+                        <div class="activity-item">
+                            <div class="activity-time">Há 15 min</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Novo chamado criado</div>
+                                <div class="activity-description">João Silva - Igreja Central - Documentação previdenciária</div>
+                                <div class="activity-user">Por: Maria Santos (Secretaria)</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-time">Há 1 hora</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Chamado resolvido</div>
+                                <div class="activity-description">Ana Costa - Igreja do Jardim - Regularização de CPF</div>
+                                <div class="activity-user">Por: Pedro Oliveira (Coordenador)</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-time">Há 2 horas</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Novo voluntário cadastrado</div>
+                                <div class="activity-description">Carlos Mendes - Região Norte - Igreja São João</div>
+                                <div class="activity-user">Por: Sistema</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-time">Há 3 horas</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Relatório mensal gerado</div>
+                                <div class="activity-description">Relatório de atendimentos - Janeiro 2024</div>
+                                <div class="activity-user">Por: Sistema Automático</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add User Modal -->
+    <div id="add-user-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="add-user-title">➕ Adicionar Usuário</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            
+            <form id="add-user-form">
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label for="user-name" class="form-label">Nome Completo *</label>
+                        <input 
+                            type="text" 
+                            id="user-name" 
+                            name="nome" 
+                            class="form-input" 
+                            required
+                            placeholder="Nome completo do usuário"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="user-email" class="form-label">Email *</label>
+                        <input 
+                            type="email" 
+                            id="user-email" 
+                            name="email" 
+                            class="form-input" 
+                            required
+                            placeholder="email@arimateia.org"
+                        >
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label for="user-role" class="form-label">Cargo *</label>
+                        <select id="user-role" name="cargo" class="form-select" required>
+                            <option value="">Selecione o cargo</option>
+                            <option value="VOLUNTARIO">Voluntário</option>
+                            <option value="SECRETARIA">Secretaria</option>
+                            <option value="COORDENADOR">Coordenador</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="user-phone" class="form-label">Telefone</label>
+                        <input 
+                            type="tel" 
+                            id="user-phone" 
+                            name="telefone" 
+                            class="form-input" 
+                            data-format="phone"
+                            placeholder="(11) 99999-9999"
+                        >
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label for="user-church" class="form-label">Igreja *</label>
+                        <select id="user-church" name="igreja" class="form-select" required>
+                            <option value="">Selecione a igreja</option>
+                            <option value="Igreja Central">Igreja Central</option>
+                            <option value="Igreja do Bairro Alto">Igreja do Bairro Alto</option>
+                            <option value="Igreja da Vila Nova">Igreja da Vila Nova</option>
+                            <option value="Igreja do Centro">Igreja do Centro</option>
+                            <option value="Igreja São João">Igreja São João</option>
+                            <option value="Igreja Santa Maria">Igreja Santa Maria</option>
+                            <option value="Igreja do Jardim">Igreja do Jardim</option>
+                            <option value="Igreja da Paz">Igreja da Paz</option>
+                            <option value="Igreja Esperança">Igreja Esperança</option>
+                            <option value="Igreja Vida Nova">Igreja Vida Nova</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="user-region" class="form-label">Região *</label>
+                        <select id="user-region" name="regiao" class="form-select" required>
+                            <option value="">Selecione a região</option>
+                            <option value="Norte">Norte</option>
+                            <option value="Sul">Sul</option>
+                            <option value="Leste">Leste</option>
+                            <option value="Oeste">Oeste</option>
+                            <option value="Centro">Centro</option>
+                            <option value="Grande ABC">Grande ABC</option>
+                            <option value="Interior">Interior</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-note">
+                        <strong>Nota:</strong> O usuário receberá a senha padrão "Arimateia1" e será solicitado a alterá-la no primeiro acesso.
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        💾 Cadastrar Usuário
+                    </button>
+                    <button type="button" class="btn btn-outline modal-close">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reports Modal -->
+    <div id="reports-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📊 Relatórios Gerais</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            
+            <div class="reports-content">
+                <div class="report-filters mb-4">
+                    <div class="grid grid-3">
+                        <div class="form-group">
+                            <label for="report-period" class="form-label">Período</label>
+                            <select id="report-period" class="form-select">
+                                <option value="month">Este mês</option>
+                                <option value="quarter">Últimos 3 meses</option>
+                                <option value="semester">Últimos 6 meses</option>
+                                <option value="year">Este ano</option>
+                                <option value="custom">Período personalizado</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="report-region" class="form-label">Região</label>
+                            <select id="report-region" class="form-select">
+                                <option value="">Todas as regiões</option>
+                                <option value="Norte">Norte</option>
+                                <option value="Sul">Sul</option>
+                                <option value="Leste">Leste</option>
+                                <option value="Oeste">Oeste</option>
+                                <option value="Centro">Centro</option>
+                                <option value="Grande ABC">Grande ABC</option>
+                                <option value="Interior">Interior</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="report-type" class="form-label">Tipo de Relatório</label>
+                            <select id="report-type" class="form-select">
+                                <option value="general">Geral</option>
+                                <option value="by-status">Por Status</option>
+                                <option value="by-region">Por Região</option>
+                                <option value="by-volunteer">Por Voluntário</option>
+                                <option value="by-church">Por Igreja</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-actions mb-4">
+                    <button id="generate-report-btn" class="btn btn-primary">
+                        📈 Gerar Relatório
+                    </button>
+                    <button id="export-report-btn" class="btn btn-success">
+                        📊 Exportar para Excel
+                    </button>
+                </div>
+
+                <div id="report-results" class="report-results">
+                    <!-- Report results will be displayed here -->
+                    <div class="text-center text-light">
+                        <p>Selecione os filtros e clique em "Gerar Relatório" para visualizar os dados.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/data/config.js"></script>
+    <script src="/scripts/helpers.js"></script>
+    <script src="/scripts/auth.js"></script>
+    <script src="/scripts/user.js"></script>
+    <script src="/scripts/flow.js"></script>
+    <script src="/scripts/main.js"></script>
+
+    <script>
+        // Page-specific initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup add user buttons
+            document.getElementById('add-volunteer-btn').addEventListener('click', function() {
+                openAddUserModal('VOLUNTARIO', 'Adicionar Voluntário');
+            });
+
+            document.getElementById('add-secretary-btn').addEventListener('click', function() {
+                openAddUserModal('SECRETARIA', 'Adicionar Secretário');
+            });
+
+            // Setup other management buttons
+            document.getElementById('general-reports-btn').addEventListener('click', function() {
+                document.getElementById('reports-modal').classList.add('active');
+            });
+
+            document.getElementById('export-all-tickets-btn').addEventListener('click', function() {
+                exportAllTickets();
+            });
+
+            // Setup add user form
+            const addUserForm = document.getElementById('add-user-form');
+            if (addUserForm) {
+                Helpers.setupFormValidation(addUserForm);
+                
+                addUserForm.addEventListener('validSubmit', async function(e) {
+                    const formData = e.detail;
+                    
+                    const result = await flowManager.createUser(formData);
+                    
+                    if (result.success) {
+                        addUserForm.reset();
+                        document.getElementById('add-user-modal').classList.remove('active');
+                        updateUserStats();
+                    }
+                });
+            }
+
+            // Setup report generation
+            document.getElementById('generate-report-btn').addEventListener('click', function() {
+                generateReport();
+            });
+
+            // Setup input formatting
+            app.setupInputFormatting();
+        });
+
+        function openAddUserModal(role, title) {
+            const modal = document.getElementById('add-user-modal');
+            const titleElement = document.getElementById('add-user-title');
+            const roleSelect = document.getElementById('user-role');
+            
+            titleElement.textContent = title;
+            roleSelect.value = role;
+            modal.classList.add('active');
+        }
+
+        async function exportAllTickets() {
+            try {
+                Helpers.showLoading('Gerando relatório completo...');
+                
+                const result = await flowManager.getTickets({});
+                
+                if (result.success) {
+                    const tickets = result.data.map(ticket => ({
+                        'Nome': ticket.nome,
+                        'CPF': ticket.cpf,
+                        'Contato': ticket.contato,
+                        'Igreja': ticket.igreja,
+                        'Região': ticket.regiao,
+                        'Status': ticket.status,
+                        'Descrição': ticket.descricao,
+                        'Data Abertura': Helpers.formatDate(ticket.dataAbertura, true),
+                        'Criado Por': ticket.criadoPor
+                    }));
+                    
+                    Helpers.exportToCSV(tickets, `relatorio_completo_${new Date().toISOString().split('T')[0]}.csv`);
+                    Helpers.showToast('Relatório exportado com sucesso!', 'success');
+                }
+                
+                Helpers.hideLoading();
+            } catch (error) {
+                Helpers.hideLoading();
+                Helpers.showToast('Erro ao gerar relatório: ' + error.message, 'error');
+            }
+        }
+
+        async function generateReport() {
+            try {
+                const period = document.getElementById('report-period').value;
+                const region = document.getElementById('report-region').value;
+                const type = document.getElementById('report-type').value;
+                
+                Helpers.showLoading('Gerando relatório...');
+                
+                const result = await flowManager.generateReport(type, { period, region });
+                
+                if (result.success) {
+                    displayReportResults(result.data);
+                }
+                
+                Helpers.hideLoading();
+            } catch (error) {
+                Helpers.hideLoading();
+                Helpers.showToast('Erro ao gerar relatório: ' + error.message, 'error');
+            }
+        }
+
+        function displayReportResults(data) {
+            const resultsContainer = document.getElementById('report-results');
+            
+            resultsContainer.innerHTML = `
+                <div class="report-summary">
+                    <h4>Resumo do Relatório</h4>
+                    <div class="grid grid-2">
+                        <div class="summary-item">
+                            <strong>Total de Chamados:</strong> ${data.totalTickets}
+                        </div>
+                        <div class="summary-item">
+                            <strong>Taxa de Resolução:</strong> ${Math.round((data.ticketsByStatus.resolvido / data.totalTickets) * 100)}%
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-charts mt-4">
+                    <h4>Distribuição por Status</h4>
+                    <div class="status-chart">
+                        ${Object.entries(data.ticketsByStatus).map(([status, count]) => `
+                            <div class="chart-item">
+                                <span class="chart-label">${status}:</span>
+                                <span class="chart-value">${count}</span>
+                                <div class="chart-bar">
+                                    <div class="chart-fill" style="width: ${(count / data.totalTickets) * 100}%"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateUserStats() {
+            // Update user statistics in the dashboard
+            // This would typically fetch real data from the API
+            console.log('Updating user statistics...');
+        }
+    </script>
+
+    <style>
+        .page-header h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-dashboard {
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-dark);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .stat-change.positive {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .stat-change.negative {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .stat-change.neutral {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .management-sections {
+            margin: 2rem 0;
+        }
+
+        .management-card {
+            height: 100%;
+        }
+
+        .management-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .activity-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            border-left: 3px solid var(--primary-color);
+            background: var(--light-bg);
+            border-radius: 0 6px 6px 0;
+        }
+
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            white-space: nowrap;
+            min-width: 80px;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-description {
+            color: var(--text-light);
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-user {
+            color: var(--primary-color);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .form-note {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .report-results {
+            min-height: 200px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+        }
+
+        .status-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .chart-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .chart-label {
+            min-width: 120px;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .chart-value {
+            min-width: 40px;
+            text-align: right;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .chart-bar {
+            flex: 1;
+            height: 20px;
+            background: var(--light-bg);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .chart-fill {
+            height: 100%;
+            background: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .stats-dashboard .grid-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .management-sections .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .activity-item {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .activity-time {
+                min-width: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-dashboard .grid-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .chart-bar {
+                width: 100%;
+            }
+        }
+    </style>
+</body>
+</html>
