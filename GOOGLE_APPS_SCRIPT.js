@@ -254,13 +254,17 @@ function createNewUser(data) {
 function validateUser(data) {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEETS.USUARIOS);
   const dataRange = sheet.getDataRange();
-  const values = dataRange.getValues();
-  
-  // Procurar usuário por email
+  const values = dataRange.getValues(); 
+
+  // Procurar usuário por email e senha
   for (let i = 1; i < values.length; i++) {
-    if (values[i][2] === data.email && values[i][8] === 'Ativo') {
+    if (
+      values[i][2] === data.email &&                  // Email (coluna C)
+      values[i][14] === data.password &&              // 🔄 ALTERADO: Senha (coluna O, índice 14)
+      values[i][8] === 'Ativo'                        // Status (coluna I)
+    ) {
       // Atualizar último acesso
-      sheet.getRange(i + 1, 10).setValue(new Date());
+      sheet.getRange(i + 1, 10).setValue(new Date()); // Último Acesso (coluna J)
       
       return {
         success: true,
@@ -275,10 +279,10 @@ function validateUser(data) {
       };
     }
   }
-  
+
   return { 
     success: false, 
-    message: 'Usuário não encontrado ou inativo'
+    message: 'Email ou senha incorretos ou usuário inativo' // 🔄 ALTERADO: mensagem mais clara
   };
 }
 
