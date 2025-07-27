@@ -260,7 +260,7 @@ function validateUser(data) {
   for (let i = 1; i < values.length; i++) {
     if (
       values[i][2] === data.email &&                  // Email (coluna C)
-      values[i][14] === data.password &&              // 🔄 ALTERADO: Senha (coluna O, índice 14)
+      values[i][15] === data.password &&      // 🔄 Coluna P - Senha (índice 15)
       values[i][8] === 'Ativo'                        // Status (coluna I)
     ) {
       // Atualizar último acesso
