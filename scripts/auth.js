@@ -7,17 +7,17 @@ class AuthManager {
     }
 
     init() {
-        // Check for existing session on page load
+        // Verifica a sessão existente ao carregar a página
         this.loadSession();
 
-        // Set up session timeout
+        // Configura o timeout da sessão
         this.setupSessionTimeout();
     }
 
-    // Login with email and password
+    // Login com email e senha
     async login(email, password) {
         try {
-            // Validate input
+            // Valida a entrada
             if (!email || !password) {
                 throw new Error('Email e senha são obrigatórios');
             }
@@ -26,17 +26,17 @@ class AuthManager {
                 throw new Error('Email inválido');
             }
 
-            // Check if it's first login with default password
+            // Verifica se é o primeiro login com senha padrão
             const isDefaultPassword = password === CONFIG.auth.defaultPassword;
 
-            // Validate user against database/API
+            // Valida o usuário contra o banco de dados/API
             const userData = await this.validateUser(email, password);
 
             if (!userData) {
                 throw new Error('Email ou senha incorretos');
             }
 
-            // Create session
+            // Cria a sessão
             this.currentUser = {
                 id: userData.id,
                 email: userData.email,
@@ -49,10 +49,10 @@ class AuthManager {
                 isFirstLogin: isDefaultPassword
             };
 
-            // Save session
+            // Salva a sessão
             this.saveSession();
 
-            // Redirect based on role and first login status
+            // Redireciona com base na função e no status do primeiro login
             if (isDefaultPassword) {
                 this.redirectTo('/change-password.html');
             } else {
@@ -67,7 +67,7 @@ class AuthManager {
         }
     }
 
-    // Validate user credentials (real implementation using Apps Script)
+    // Valida as credenciais do usuário (implementação real usando Apps Script)
     async validateUser(email, password) {
         try {
             const response = await fetch(CONFIG.SCRIPT_URL, {
@@ -80,18 +80,115 @@ class AuthManager {
                 })
             });
 
+            // Adiciona uma verificação para o status da resposta e o tipo de conteúdo
+            if (!response.ok) {
+                // Se a resposta não for bem-sucedida (ex: 405 Method Not Allowed),
+                // tenta ler como texto para obter a mensagem de erro do servidor
+                const errorText = await response.text();
+                console.error('Erro de validação do usuário: Resposta do servidor não OK', response.status, errorText);
+                throw new Error(`Erro do servidor: ${response.status} ${response.statusText}`);
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                // Se a resposta não for JSON, lê como texto e reporta o erro
+                const errorText = await response.text();
+                console.error('Erro de validação do usuário: Resposta não é JSON', errorText);
+                throw new Error('Resposta inesperada do servidor. Esperava JSON.');
+            }
+
             const result = await response.json();
 
             if (result.success) {
                 return result.user;
             } else {
+                // Se o JSON for válido, mas 'success' for falso, usa a mensagem do servidor
                 return null;
             }
 
         } catch (error) {
-            console.error('User validation error:', error);
+            console.error('Erro de validação do usuário:', error);
             return null;
         }
+    }
+
+    // Método dummy para validar e-mail (substitua por uma validação mais robusta se necessário)
+    validateEmail(email) {
+        const re = /\S+@\S+\.\S+/;
+        return re.test(email);
+    }
+
+    // Salva a sessão no localStorage
+    saveSession() {
+        if (this.currentUser) {
+            localStorage.setItem(this.sessionKey, JSON.stringify(this.currentUser));
+        }
+    }
+
+    // Carrega a sessão do localStorage
+    loadSession() {
+        const sessionData = localStorage.getItem(this.sessionKey);
+        if (sessionData) {
+            this.currentUser = JSON.parse(sessionData);
+        }
+    }
+
+    // Configura o timeout da sessão
+    setupSessionTimeout() {
+        // Implemente a lógica de timeout aqui
+        // Exemplo: verificar a cada 5 minutos se a sessão expirou
+        setInterval(() => {
+            if (this.currentUser && this.isSessionExpired()) {
+                this.logout();
+                alert('Sua sessão expirou. Faça login novamente.');
+                this.redirectTo('/login.html');
+            }
+        }, 5 * 60 * 1000); // 5 minutos
+    }
+
+    // Verifica se a sessão expirou (exemplo: 1 hora de validade)
+    isSessionExpired() {
+        if (!this.currentUser || !this.currentUser.loginTime) {
+            return true;
+        }
+        const loginTime = new Date(this.currentUser.loginTime).getTime();
+        const currentTime = new Date().getTime();
+        const sessionDuration = 60 * 60 * 1000; // 1 hora
+        return (currentTime - loginTime) > sessionDuration;
+    }
+
+    // Logout do usuário
+    logout() {
+        this.currentUser = null;
+        localStorage.removeItem(this.sessionKey);
+        this.redirectTo('/login.html');
+    }
+
+    // Obtém o usuário atual
+    getCurrentUser() {
+        return this.currentUser;
+    }
+
+    // Redireciona para um URL
+    redirectTo(url) {
+        window.location.href = url;
+    }
+}
+
+// Assumindo que CONFIG está definido globalmente ou importado
+// Exemplo de como CONFIG poderia ser definido:
+// const CONFIG = {
+//     SCRIPT_URL: 'SEU_URL_DO_GOOGLE_APPS_SCRIPT_AQUI',
+//     auth: {
+//         defaultPassword: 'senha_padrao'
+//     }
+// };
+
+// Instancia o gerenciador de autenticação
+// const authManager = new AuthManager();
+
+// Exporta para ser usado em outros módulos se estiver usando ES Modules
+// export default AuthManager;
 
         /*
         // Mock user data for demonstration (DESATIVADO)
