@@ -9,7 +9,7 @@ class AuthManager {
     init() {
         // Check for existing session on page load
         this.loadSession();
-        
+
         // Set up session timeout
         this.setupSessionTimeout();
     }
@@ -31,7 +31,7 @@ class AuthManager {
 
             // Validate user against database/API
             const userData = await this.validateUser(email, password);
-            
+
             if (!userData) {
                 throw new Error('Email ou senha incorretos');
             }
@@ -67,57 +67,71 @@ class AuthManager {
         }
     }
 
-    // Validate user credentials (mock implementation - replace with actual API call)
+    // Validate user credentials (real implementation using Apps Script)
     async validateUser(email, password) {
         try {
-            // In a real implementation, this would call your Power Automate flow
-            // or Google Sheets API to validate the user
-            
-            // Mock user data for demonstration
-            const mockUsers = [
-                {
-                    id: 1,
-                    email: 'voluntario@arimateia.org',
-                    name: 'João Silva',
-                    role: 'VOLUNTARIO',
-                    region: 'Norte',
-                    church: 'Igreja Central',
-                    password: CONFIG.auth.defaultPassword
-                },
-                {
-                    id: 2,
-                    email: 'secretaria@arimateia.org',
-                    name: 'Maria Santos',
-                    role: 'SECRETARIA',
-                    region: 'Sul',
-                    church: 'Igreja do Bairro Alto',
-                    password: CONFIG.auth.defaultPassword
-                },
-                {
-                    id: 3,
-                    email: 'coordenador@arimateia.org',
-                    name: 'Pedro Oliveira',
-                    role: 'COORDENADOR',
-                    region: 'Centro',
-                    church: 'Igreja Central',
-                    password: CONFIG.auth.defaultPassword
-                }
-            ];
+            const response = await fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'login',
+                    email: email.trim(),
+                    password: password.trim()
+                })
+            });
 
-            const user = mockUsers.find(u => u.email === email && u.password === password);
-            
-            if (user) {
-                // Remove password from returned data
-                const { password: _, ...userData } = user;
-                return userData;
+            const result = await response.json();
+
+            if (result.success) {
+                return result.user;
+            } else {
+                return null;
             }
-
-            return null;
 
         } catch (error) {
             console.error('User validation error:', error);
             return null;
         }
+
+        /*
+        // Mock user data for demonstration (DESATIVADO)
+        const mockUsers = [
+            {
+                id: 1,
+                email: 'voluntario@arimateia.org',
+                name: 'João Silva',
+                role: 'VOLUNTARIO',
+                region: 'Norte',
+                church: 'Igreja Central',
+                password: CONFIG.auth.defaultPassword
+            },
+            {
+                id: 2,
+                email: 'secretaria@arimateia.org',
+                name: 'Maria Santos',
+                role: 'SECRETARIA',
+                region: 'Sul',
+                church: 'Igreja do Bairro Alto',
+                password: CONFIG.auth.defaultPassword
+            },
+            {
+                id: 3,
+                email: 'coordenador@arimateia.org',
+                name: 'Pedro Oliveira',
+                role: 'COORDENADOR',
+                region: 'Centro',
+                church: 'Igreja Central',
+                password: CONFIG.auth.defaultPassword
+            }
+        ];
+
+        const user = mockUsers.find(u => u.email === email && u.password === password);
+        if (user) {
+            const { password: _, ...userData } = user;
+            return userData;
+        }
+        return null;
+        */
     }
 
     // Logout user
@@ -136,7 +150,7 @@ class AuthManager {
     // Check if user has specific permission
     hasPermission(permission) {
         if (!this.currentUser) return false;
-        
+
         const userRole = CONFIG.roles[this.currentUser.role];
         return userRole && userRole.permissions.includes(permission);
     }
@@ -168,11 +182,10 @@ class AuthManager {
             const sessionData = localStorage.getItem(this.sessionKey);
             if (sessionData) {
                 const { user, timestamp } = JSON.parse(sessionData);
-                
-                // Check if session is still valid (not expired)
+
                 const now = Date.now();
                 const sessionAge = now - timestamp;
-                
+
                 if (sessionAge < CONFIG.auth.sessionTimeout) {
                     this.currentUser = user;
                     return true;
@@ -181,8 +194,7 @@ class AuthManager {
         } catch (error) {
             console.error('Session load error:', error);
         }
-        
-        // Clear invalid session
+
         localStorage.removeItem(this.sessionKey);
         return false;
     }
@@ -196,14 +208,14 @@ class AuthManager {
                     const { timestamp } = JSON.parse(sessionData);
                     const now = Date.now();
                     const sessionAge = now - timestamp;
-                    
+
                     if (sessionAge >= CONFIG.auth.sessionTimeout) {
                         this.logout();
                         alert('Sua sessão expirou. Faça login novamente.');
                     }
                 }
             }
-        }, 60000); // Check every minute
+        }, 60000);
     }
 
     // Protect page (redirect to login if not authenticated)
@@ -279,8 +291,7 @@ class AuthManager {
                 throw new Error('Nova senha deve ter pelo menos 6 caracteres');
             }
 
-            // In a real implementation, update password in database
-            // For now, just update the session
+            // Em produção: aqui você deve atualizar a senha na planilha (Apps Script)
             this.currentUser.isFirstLogin = false;
             this.saveSession();
 
