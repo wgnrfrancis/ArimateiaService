@@ -68,57 +68,32 @@ class AuthManager {
     }
 
     // Validate user credentials (mock implementation - replace with actual API call)
-    async validateUser(email, password) {
-        try {
-            // In a real implementation, this would call your Power Automate flow
-            // or Google Sheets API to validate the user
-            
-            // Mock user data for demonstration
-            const mockUsers = [
-                {
-                    id: 1,
-                    email: 'voluntario@arimateia.org',
-                    name: 'João Silva',
-                    role: 'VOLUNTARIO',
-                    region: 'Norte',
-                    church: 'Igreja Central',
-                    password: CONFIG.auth.defaultPassword
-                },
-                {
-                    id: 2,
-                    email: 'secretaria@arimateia.org',
-                    name: 'Maria Santos',
-                    role: 'SECRETARIA',
-                    region: 'Sul',
-                    church: 'Igreja do Bairro Alto',
-                    password: CONFIG.auth.defaultPassword
-                },
-                {
-                    id: 3,
-                    email: 'coordenador@arimateia.org',
-                    name: 'Pedro Oliveira',
-                    role: 'COORDENADOR',
-                    region: 'Centro',
-                    church: 'Igreja Central',
-                    password: CONFIG.auth.defaultPassword
-                }
-            ];
+   // Validate user credentials via Google Apps Script
+async validateUser(email, password) {
+    try {
+        const response = await fetch(`${CONFIG.googleAppsScript.webAppUrl}${CONFIG.googleAppsScript.endpoints.validateUser}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
 
-            const user = mockUsers.find(u => u.email === email && u.password === password);
-            
-            if (user) {
-                // Remove password from returned data
-                const { password: _, ...userData } = user;
-                return userData;
-            }
+        const result = await response.json();
+        console.log('[Login] Resultado da API:', result);
 
-            return null;
-
-        } catch (error) {
-            console.error('User validation error:', error);
-            return null;
+        if (result.success && result.user) {
+            return result.user;
         }
+
+        return null;
+
+    } catch (error) {
+        console.error('Erro ao validar usuário na API:', error);
+        return null;
     }
+}
+
 
     // Logout user
     logout() {
