@@ -77,21 +77,23 @@ class AnalyticsManager {
     // Load data from Google Sheets
     async loadData() {
         try {
-            // Simulate loading data (replace with actual API calls)
-            this.data = {
-                chamados: this.generateMockChamados(),
-                usuarios: this.generateMockUsuarios(),
-                observacoes: this.generateMockObservacoes()
-            };
+            // Load real data from Google Sheets
+            const chamadosResponse = await flowManager.getTickets({ period: this.currentPeriod });
+            const usuariosResponse = await flowManager.getUsers();
             
-            // In production, use:
-            // const chamadosResponse = await flow.getTickets({ period: this.currentPeriod });
-            // const usuariosResponse = await flow.getUsers();
-            // this.data.chamados = chamadosResponse.data.tickets || [];
-            // this.data.usuarios = usuariosResponse.data.users || [];
+            this.data = {
+                chamados: chamadosResponse.success ? chamadosResponse.data : [],
+                usuarios: usuariosResponse.success ? usuariosResponse.data : [],
+                observacoes: []
+            };
             
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
+            this.data = {
+                chamados: [],
+                usuarios: [],
+                observacoes: []
+            };
             throw error;
         }
     }
@@ -370,7 +372,7 @@ class AnalyticsManager {
             : 0;
         
         const voluntariosAtivos = usuarios.filter(u => u.status === 'Ativo').length;
-        const satisfacaoMedia = 4.2; // Mock data
+        const satisfacaoMedia = this.calculateSatisfacaoMedia(chamados);
         const igrejasAtivas = [...new Set(chamados.map(c => c.igreja))].length;
 
         return {
@@ -393,11 +395,38 @@ class AnalyticsManager {
 
     // Get data for charts
     getChamadosPeriodoData() {
-        // Mock data - replace with real calculations
+        // Calculate real data from chamados
+        const chamados = this.data.chamados;
+        const monthlyData = this.groupChamadosByMonth(chamados);
+        
+        // Group by created and resolved
+        const monthlyCreated = {};
+        const monthlyResolved = {};
+        
+        chamados.forEach(chamado => {
+            const createdDate = new Date(chamado.dataAbertura);
+            const createdKey = createdDate.toLocaleDateString('pt-BR', { 
+                year: 'numeric', 
+                month: 'short' 
+            });
+            monthlyCreated[createdKey] = (monthlyCreated[createdKey] || 0) + 1;
+            
+            if (chamado.status === 'resolvido' && chamado.dataResolucao) {
+                const resolvedDate = new Date(chamado.dataResolucao);
+                const resolvedKey = resolvedDate.toLocaleDateString('pt-BR', { 
+                    year: 'numeric', 
+                    month: 'short' 
+                });
+                monthlyResolved[resolvedKey] = (monthlyResolved[resolvedKey] || 0) + 1;
+            }
+        });
+        
+        const labels = Object.keys(monthlyCreated);
+        
         return {
-            labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
-            created: [12, 19, 15, 25, 22, 30],
-            resolved: [10, 16, 13, 22, 20, 28]
+            labels: labels,
+            created: labels.map(label => monthlyCreated[label] || 0),
+            resolved: labels.map(label => monthlyResolved[label] || 0)
         };
     }
 
@@ -520,33 +549,64 @@ class AnalyticsManager {
 
     // Get top performers
     getTopVoluntarios() {
-        return [
-            { name: 'Maria Silva', value: '45 chamados', trend: 'up' },
-            { name: 'João Santos', value: '38 chamados', trend: 'up' },
-            { name: 'Ana Costa', value: '32 chamados', trend: 'stable' },
-            { name: 'Pedro Oliveira', value: '28 chamados', trend: 'down' },
-            { name: 'Lucia Ferreira', value: '25 chamados', trend: 'up' }
-        ];
+        const usuarios = this.data.usuarios || [];
+        const chamados = this.data.chamados || [];
+        
+        // Calculate real stats from data
+        const voluntarioStats = usuarios.map(usuario => {
+            const userTickets = chamados.filter(c => c.criadoPor === usuario.name || c.responsavel === usuario.name);
+            return {
+                name: usuario.name,
+                value: `${userTickets.length} chamados`,
+                trend: 'stable' // Could be calculated based on historical data
+            };
+        });
+        
+        return voluntarioStats
+            .sort((a, b) => parseInt(b.value) - parseInt(a.value))
+            .slice(0, 5);
     }
 
     getTopIgrejas() {
-        return [
-            { name: 'Igreja Central', value: '120 chamados', trend: 'up' },
-            { name: 'Igreja do Bairro Alto', value: '95 chamados', trend: 'up' },
-            { name: 'Igreja da Vila Nova', value: '78 chamados', trend: 'stable' },
-            { name: 'Igreja do Centro', value: '65 chamados', trend: 'down' },
-            { name: 'Igreja da Periferia', value: '52 chamados', trend: 'up' }
-        ];
+        const chamados = this.data.chamados || [];
+        
+        // Group tickets by church
+        const igrejaStats = {};
+        chamados.forEach(chamado => {
+            if (chamado.igreja) {
+                igrejaStats[chamado.igreja] = (igrejaStats[chamado.igreja] || 0) + 1;
+            }
+        });
+        
+        return Object.entries(igrejaStats)
+            .map(([igreja, count]) => ({
+                name: igreja,
+                value: `${count} chamados`,
+                trend: 'stable'
+            }))
+            .sort((a, b) => parseInt(b.value) - parseInt(a.value))
+            .slice(0, 5);
     }
 
     getTopCategorias() {
-        return [
-            { name: 'Documentação', value: '156 chamados', trend: 'up' },
-            { name: 'Benefícios Sociais', value: '134 chamados', trend: 'up' },
-            { name: 'Jurídico', value: '89 chamados', trend: 'stable' },
-            { name: 'Saúde', value: '67 chamados', trend: 'down' },
-            { name: 'Educação', value: '45 chamados', trend: 'up' }
-        ];
+        const chamados = this.data.chamados || [];
+        
+        // Group tickets by category
+        const categoriaStats = {};
+        chamados.forEach(chamado => {
+            if (chamado.categoria) {
+                categoriaStats[chamado.categoria] = (categoriaStats[chamado.categoria] || 0) + 1;
+            }
+        });
+        
+        return Object.entries(categoriaStats)
+            .map(([categoria, count]) => ({
+                name: categoria,
+                value: `${count} chamados`,
+                trend: 'stable'
+            }))
+            .sort((a, b) => parseInt(b.value) - parseInt(a.value))
+            .slice(0, 5);
     }
 
     // Calculate insights
@@ -667,38 +727,32 @@ class AnalyticsManager {
         return csv;
     }
 
-    // Generate mock data for development
-    generateMockChamados() {
-        const statuses = ['Aberto', 'Em Andamento', 'Resolvido', 'Cancelado'];
-        const regioes = ['Norte', 'Sul', 'Leste', 'Oeste', 'Centro'];
-        const igrejas = ['Igreja Central', 'Igreja do Bairro Alto', 'Igreja da Vila Nova', 'Igreja do Centro'];
-        const categorias = ['Documentação', 'Benefícios Sociais', 'Jurídico', 'Saúde', 'Educação'];
-        const voluntarios = ['Maria Silva', 'João Santos', 'Ana Costa', 'Pedro Oliveira', 'Lucia Ferreira'];
+    // Helper functions for data processing
+    calculateSatisfacaoMedia(chamados) {
+        const satisfacoes = chamados
+            .filter(c => c.satisfacao && c.satisfacao > 0)
+            .map(c => c.satisfacao);
         
-        return Array.from({length: 100}, (_, i) => ({
-            id: `CH${String(i + 1).padStart(3, '0')}`,
-            status: statuses[Math.floor(Math.random() * statuses.length)],
-            regiao: regioes[Math.floor(Math.random() * regioes.length)],
-            igreja: igrejas[Math.floor(Math.random() * igrejas.length)],
-            categoria: categorias[Math.floor(Math.random() * categorias.length)],
-            criadoPor: voluntarios[Math.floor(Math.random() * voluntarios.length)],
-            tempoResolucao: Math.floor(Math.random() * 10) + 1,
-            dataAbertura: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)
-        }));
+        if (satisfacoes.length === 0) return 0;
+        
+        const soma = satisfacoes.reduce((acc, val) => acc + val, 0);
+        return Math.round((soma / satisfacoes.length) * 10) / 10;
     }
 
-    generateMockUsuarios() {
-        return [
-            { id: 'USR001', name: 'Maria Silva', status: 'Ativo', role: 'VOLUNTARIO' },
-            { id: 'USR002', name: 'João Santos', status: 'Ativo', role: 'VOLUNTARIO' },
-            { id: 'USR003', name: 'Ana Costa', status: 'Ativo', role: 'SECRETARIA' },
-            { id: 'USR004', name: 'Pedro Oliveira', status: 'Ativo', role: 'COORDENADOR' },
-            { id: 'USR005', name: 'Lucia Ferreira', status: 'Ativo', role: 'VOLUNTARIO' }
-        ];
-    }
-
-    generateMockObservacoes() {
-        return [];
+    groupChamadosByMonth(chamados) {
+        const monthlyData = {};
+        
+        chamados.forEach(chamado => {
+            const date = new Date(chamado.dataAbertura);
+            const monthKey = date.toLocaleDateString('pt-BR', { 
+                year: 'numeric', 
+                month: 'short' 
+            });
+            
+            monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
+        });
+        
+        return monthlyData;
     }
 }
 

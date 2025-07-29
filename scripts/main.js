@@ -103,6 +103,9 @@ class App {
         if (profileBtn) {
             profileBtn.addEventListener('click', () => userManager.showProfileModal());
         }
+
+        // Setup permission-based visibility
+        this.setupPermissionBasedVisibility();
     }
 
     // Initialize Balcão page
@@ -523,6 +526,40 @@ class App {
     setupUserManagement() {
         // Implementation for user management
         console.log('Setting up user management');
+    }
+
+    // Setup permission-based visibility
+    setupPermissionBasedVisibility() {
+        const user = auth.getCurrentUser();
+        if (!user) return;
+
+        // Hide/show elements based on permissions
+        const permissionElements = document.querySelectorAll('[data-permission]');
+        
+        permissionElements.forEach(element => {
+            const requiredPermission = element.getAttribute('data-permission');
+            let hasPermission = false;
+
+            switch(requiredPermission) {
+                case 'coordenador_only':
+                    hasPermission = user.role === 'COORDENADOR';
+                    break;
+                case 'secretaria_view':
+                    hasPermission = user.role === 'COORDENADOR' || user.role === 'SECRETARIA';
+                    break;
+                case 'volunteer_view':
+                    hasPermission = true; // All authenticated users
+                    break;
+                default:
+                    hasPermission = true;
+            }
+
+            if (hasPermission) {
+                element.style.display = '';
+            } else {
+                element.style.display = 'none';
+            }
+        });
     }
 }
 

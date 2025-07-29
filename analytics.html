@@ -3,50 +3,1570 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analytics - Arimateia Service</title>
+    <title>📊 Dashboard Analytics - Balcão da Cidadania</title>
     <link rel="stylesheet" href="assets/style.css">
-    <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+    <style>
+        /* Estilos específicos para Dashboard Analytics */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .filtros-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+
+        .filtros-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filtro-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filtro-item label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filtro-item select, .filtro-item input {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 14px;
+        }
+
+        .btn-filtrar {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-filtrar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .cards-resumo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card-kpi {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid;
+            transition: transform 0.3s ease;
+        }
+
+        .card-kpi:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-kpi.success { border-left-color: #2ecc71; }
+        .card-kpi.warning { border-left-color: #f39c12; }
+        .card-kpi.danger { border-left-color: #e74c3c; }
+        .card-kpi.info { border-left-color: #3498db; }
+
+        .card-kpi h3 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        .card-valor {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+
+        .card-descricao {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .analytics-tabs {
+            display: flex;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #495057;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .progress-bar {
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 20px;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.8s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8em;
+        }
+
+        .ranking-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .ranking-item {
+            padding: 12px;
+            margin: 8px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .ranking-position {
+            background: #667eea;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.8em;
+        }
+
+        .ranking-info {
+            flex: 1;
+            margin: 0 15px;
+        }
+
+        .ranking-nome {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .ranking-detalhes {
+            font-size: 0.8em;
+            color: #7f8c8d;
+        }
+
+        .ranking-valor {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .recomendacoes {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .recomendacoes h3 {
+            margin: 0 0 15px 0;
+            color: #d63031;
+            font-size: 1.2em;
+        }
+
+        .recomendacao-item {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid #d63031;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #fcc;
+            margin: 10px 0;
+        }
+
+        .meta-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .meta-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .meta-badge.alcancada { background: #d4edda; color: #155724; }
+        .meta-badge.proxima { background: #fff3cd; color: #856404; }
+        .meta-badge.distante { background: #f8d7da; color: #721c24; }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .header-section h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+        }
+
+        .header-section p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .btn-voltar {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-voltar:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        @media (max-width: 768px) {
+            .cards-resumo {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .analytics-tabs {
+                flex-direction: column;
+            }
+            
+            .filtros-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-section h1 {
+                font-size: 2em;
+            }
+
+            .dashboard-container {
+                padding: 10px;
+            }
+        }
+
+        /* Estilos para Tab de Relatórios */
+        .relatorios-container {
+            margin-top: 20px;
+        }
+
+        .relatorios-section {
+            margin-bottom: 40px;
+        }
+
+        .relatorios-section h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            font-size: 1.4em;
+        }
+
+        .relatorios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .relatorio-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .relatorio-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .relatorio-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .relatorio-header h4 {
+            margin: 0 0 8px 0;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .relatorio-header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
+
+        .relatorio-content {
+            padding: 25px;
+        }
+
+        .relatorio-content ul {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+        }
+
+        .relatorio-content li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f3f4;
+            color: #5f6368;
+            font-size: 0.9em;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .relatorio-content li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #34a853;
+            font-weight: bold;
+        }
+
+        .relatorio-content li:last-child {
+            border-bottom: none;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9em;
+        }
+
+        .input-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 0.9em;
+            background: white;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-relatorio {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-relatorio:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-relatorio:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .relatorios-lista {
+            min-height: 200px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px dashed #dee2e6;
+        }
+
+        .sem-relatorios {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px 20px;
+        }
+
+        .sem-relatorios p {
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+
+        .relatorio-gerado {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #28a745;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .relatorio-gerado:hover {
+            transform: translateX(5px);
+        }
+
+        .relatorio-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .relatorio-titulo {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        .relatorio-data {
+            font-size: 0.85em;
+            color: #6c757d;
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .relatorio-resumo {
+            color: #5f6368;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .relatorio-acoes {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-download, .btn-visualizar {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-download {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background: #218838;
+        }
+
+        .btn-visualizar {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-visualizar:hover {
+            background: #0056b3;
+        }
+
+        .loading-relatorio {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .loading-relatorio .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
+    <button class="btn-voltar" onclick="window.location.href='dashboard.html'">
+        ← Voltar ao Dashboard
+    </button>
+
+    <div class="dashboard-container">
         <!-- Header -->
-        <header class="header">
-            <div class="header-content">
-                <div class="logo-container">
-                    <div class="logo-square">A</div>
-                    <div class="logo-text">
-                        <span class="logo-main">ARIMATEIA</span>
-                        <small class="logo-sub">SERVICE</small>
-                    </div>
+        <div class="header-section">
+            <h1>📊 Dashboard Analytics</h1>
+            <p>Análise completa de dados com filtros regionais e tracking de progresso</p>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filtros-container">
+            <h3>🎯 Filtros e Configurações</h3>
+            <div class="filtros-grid">
+                <div class="filtro-item">
+                    <label for="filtro-regiao">Região:</label>
+                    <select id="filtro-regiao">
+                        <option value="">Todas as Regiões</option>
+                    </select>
                 </div>
-                
-                <div class="user-info">
-                    <img src="assets/default-avatar.png" alt="Avatar" class="user-avatar">
-                    <div class="user-details">
-                        <span class="user-name" id="userName">Carregando...</span>
-                        <span class="user-role" id="userRole">Analytics</span>
-                    </div>
-                    <button class="btn-logout" onclick="auth.logout()">Sair</button>
+                <div class="filtro-item">
+                    <label for="filtro-igreja">Igreja:</label>
+                    <select id="filtro-igreja">
+                        <option value="">Todas as Igrejas</option>
+                    </select>
+                </div>
+                <div class="filtro-item">
+                    <label for="filtro-municipio">Município:</label>
+                    <select id="filtro-municipio">
+                        <option value="">Todos os Municípios</option>
+                    </select>
+                </div>
+                <div class="filtro-item">
+                    <label for="meta-finalizacao">Meta de Finalização (%):</label>
+                    <input type="number" id="meta-finalizacao" value="80" min="0" max="100">
                 </div>
             </div>
-        </header>
+            <button class="btn-filtrar" onclick="aplicarFiltros()">
+                🔍 Aplicar Filtros
+            </button>
+        </div>
 
-        <!-- Navigation -->
-        <nav class="nav-tabs">
-            <a href="dashboard.html" class="nav-tab">Dashboard</a>
-            <a href="balcao.html" class="nav-tab">Balcão</a>
-            <a href="secretaria.html" class="nav-tab">Secretaria</a>
-            <a href="coordenador.html" class="nav-tab">Coordenador</a>
-            <a href="analytics.html" class="nav-tab active">Analytics</a>
-        </nav>
+        <!-- Cards de Resumo -->
+        <div id="cards-resumo" class="cards-resumo">
+            <div class="loading">Carregando dados...</div>
+        </div>
 
-        <!-- Analytics Content -->
-        <main class="main-content">
-            <div class="page-header">
-                <h1>📊 Dashboard Analytics</h1>
-                <p>Métricas e indicadores de performance do Arimateia Service</p>
+        <!-- Tabs de Analytics -->
+        <div class="analytics-tabs">
+            <button class="tab-button active" onclick="mostrarTab('geral')">📈 Geral</button>
+            <button class="tab-button" onclick="mostrarTab('chamados')">📞 Chamados</button>
+            <button class="tab-button" onclick="mostrarTab('regional')">🌍 Regional</button>
+            <button class="tab-button" onclick="mostrarTab('progresso')">📊 Progresso</button>
+            <button class="tab-button" onclick="mostrarTab('relatorios')">📋 Relatórios</button>
+        </div>
+
+        <!-- Conteúdo das Tabs -->
+        <div class="tab-content">
+            <!-- Tab Geral -->
+            <div id="tab-geral" class="tab-pane active">
+                <h2>📈 Análise Geral do Sistema</h2>
+                <div id="analytics-geral" class="loading">Carregando análise geral...</div>
+            </div>
+
+            <!-- Tab Chamados -->
+            <div id="tab-chamados" class="tab-pane">
+                <h2>📞 Analytics Detalhados de Chamados</h2>
+                <div id="analytics-chamados" class="loading">Carregando analytics de chamados...</div>
+            </div>
+
+            <!-- Tab Regional -->
+            <div id="tab-regional" class="tab-pane">
+                <h2>🌍 Analytics Regionais Avançados</h2>
+                <div id="analytics-regional" class="loading">Carregando analytics regionais...</div>
+            </div>
+
+            <!-- Tab Progresso -->
+            <div id="tab-progresso" class="tab-pane">
+                <h2>📊 Analytics de Progresso e Metas</h2>
+                <div id="analytics-progresso" class="loading">Carregando analytics de progresso...</div>
+            </div>
+
+            <!-- Tab Relatórios -->
+            <div id="tab-relatorios" class="tab-pane">
+                <h2>📋 Geração de Relatórios Completos</h2>
+                
+                <div class="relatorios-container">
+                    <!-- Seção de Geração de Relatórios -->
+                    <div class="relatorios-section">
+                        <h3>🎯 Tipos de Relatórios Disponíveis</h3>
+                        
+                        <div class="relatorios-grid">
+                            <!-- Relatório Geral -->
+                            <div class="relatorio-card">
+                                <div class="relatorio-header">
+                                    <h4>📊 Relatório Geral</h4>
+                                    <p>Análise completa de todo o sistema</p>
+                                </div>
+                                <div class="relatorio-content">
+                                    <ul>
+                                        <li>Resumo executivo completo</li>
+                                        <li>Indicadores de performance</li>
+                                        <li>Análise de tendências</li>
+                                        <li>Recomendações estratégicas</li>
+                                    </ul>
+                                    <button class="btn-relatorio" onclick="gerarRelatorioGeral()">
+                                        📈 Gerar Relatório Geral
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Relatório Regional -->
+                            <div class="relatorio-card">
+                                <div class="relatorio-header">
+                                    <h4>📍 Relatório Regional</h4>
+                                    <p>Análise detalhada por região</p>
+                                </div>
+                                <div class="relatorio-content">
+                                    <div class="input-group">
+                                        <label for="select-regiao-relatorio">Selecione a Região:</label>
+                                        <select id="select-regiao-relatorio">
+                                            <option value="">Escolha uma região</option>
+                                            <option value="Norte">Norte</option>
+                                            <option value="Sul">Sul</option>
+                                            <option value="Leste">Leste</option>
+                                            <option value="Oeste">Oeste</option>
+                                            <option value="Centro">Centro</option>
+                                        </select>
+                                    </div>
+                                    <ul>
+                                        <li>Performance regional comparativa</li>
+                                        <li>Ranking entre regiões</li>
+                                        <li>Detalhamento por igrejas</li>
+                                        <li>Planos de ação específicos</li>
+                                    </ul>
+                                    <button class="btn-relatorio" onclick="gerarRelatorioRegional()">
+                                        🌍 Gerar Relatório Regional
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Relatório por Igreja -->
+                            <div class="relatorio-card">
+                                <div class="relatorio-header">
+                                    <h4>⛪ Relatório por Igreja</h4>
+                                    <p>Análise específica de uma igreja</p>
+                                </div>
+                                <div class="relatorio-content">
+                                    <div class="input-group">
+                                        <label for="select-igreja-relatorio">Selecione a Igreja:</label>
+                                        <select id="select-igreja-relatorio">
+                                            <option value="">Escolha uma igreja</option>
+                                            <option value="Igreja Central">Igreja Central</option>
+                                            <option value="Igreja Norte">Igreja Norte</option>
+                                            <option value="Igreja Sul">Igreja Sul</option>
+                                            <option value="Igreja Leste">Igreja Leste</option>
+                                            <option value="Igreja Oeste">Igreja Oeste</option>
+                                        </select>
+                                    </div>
+                                    <ul>
+                                        <li>Performance individual detalhada</li>
+                                        <li>Comparativo com outras igrejas</li>
+                                        <li>Análise de voluntários</li>
+                                        <li>Planos de desenvolvimento</li>
+                                    </ul>
+                                    <button class="btn-relatorio" onclick="gerarRelatorioIgreja()">
+                                        ⛪ Gerar Relatório da Igreja
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seção de Relatórios Gerados -->
+                    <div class="relatorios-section">
+                        <h3>📄 Relatórios Gerados</h3>
+                        <div id="relatorios-gerados" class="relatorios-lista">
+                            <div class="sem-relatorios">
+                                <p>Nenhum relatório gerado ainda.</p>
+                                <p>Utilize as opções acima para gerar relatórios personalizados.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recomendações -->
+        <div id="recomendacoes-container"></div>
+    </div>
+
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/helpers.js"></script>
+    <script>
+        // 📊 ================== DASHBOARD ANALYTICS SCRIPT ==================
+
+        let currentFilters = {
+            regiao: '',
+            igreja: '',
+            municipio: '',
+            meta: 80
+        };
+
+        let analyticsData = {
+            geral: null,
+            chamados: null,
+            regional: null,
+            progresso: null
+        };
+
+        // Inicializar dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Iniciando Dashboard Analytics...');
+            initDashboard();
+        });
+
+        async function initDashboard() {
+            try {
+                // Verificar autenticação
+                const userInfo = getCurrentUser();
+                if (!userInfo) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                // Carregar filtros disponíveis
+                await carregarFiltrosDisponiveis();
+                
+                // Carregar dados iniciais
+                await carregarTodosAnalytics();
+                
+            } catch (error) {
+                console.error('Erro ao inicializar dashboard:', error);
+                mostrarErro('Erro ao carregar dashboard: ' + error.message);
+            }
+        }
+
+        async function carregarFiltrosDisponiveis() {
+            try {
+                // Simular carregamento de filtros (implementar com dados reais)
+                const regioes = ['Norte', 'Sul', 'Leste', 'Oeste', 'Centro'];
+                const igrejas = ['Igreja A', 'Igreja B', 'Igreja C', 'Igreja D'];
+                const municipios = ['Município 1', 'Município 2', 'Município 3'];
+
+                // Preencher filtros
+                preencherSelect('filtro-regiao', regioes);
+                preencherSelect('filtro-igreja', igrejas);
+                preencherSelect('filtro-municipio', municipios);
+
+            } catch (error) {
+                console.error('Erro ao carregar filtros:', error);
+            }
+        }
+
+        function preencherSelect(selectId, opcoes) {
+            const select = document.getElementById(selectId);
+            opcoes.forEach(opcao => {
+                const option = document.createElement('option');
+                option.value = opcao;
+                option.textContent = opcao;
+                select.appendChild(option);
+            });
+        }
+
+        async function aplicarFiltros() {
+            try {
+                // Atualizar filtros atuais
+                currentFilters = {
+                    regiao: document.getElementById('filtro-regiao').value,
+                    igreja: document.getElementById('filtro-igreja').value,
+                    municipio: document.getElementById('filtro-municipio').value,
+                    meta: parseInt(document.getElementById('meta-finalizacao').value) || 80
+                };
+
+                console.log('🎯 Aplicando filtros:', currentFilters);
+
+                // Recarregar todos os analytics
+                await carregarTodosAnalytics();
+
+            } catch (error) {
+                console.error('Erro ao aplicar filtros:', error);
+                mostrarErro('Erro ao aplicar filtros: ' + error.message);
+            }
+        }
+
+        async function carregarTodosAnalytics() {
+            try {
+                const userInfo = getCurrentUser();
+                if (!userInfo) return;
+
+                // Mostrar loading nos cards
+                mostrarCardsLoading();
+
+                // Preparar dados para envio
+                const requestData = {
+                    action: 'getDashboardAnalytics',
+                    userInfo: userInfo,
+                    ...currentFilters
+                };
+
+                console.log('📊 Carregando analytics gerais...');
+                
+                // Carregar analytics geral
+                const response = await fetch(getApiUrl(), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    analyticsData.geral = result.analytics;
+                    renderizarAnalyticsGeral(result.analytics);
+                    
+                    // Carregar outros analytics em paralelo
+                    await Promise.all([
+                        carregarChamadosAnalytics(),
+                        carregarRegionalAnalytics(),
+                        carregarProgressoAnalytics()
+                    ]);
+                } else {
+                    throw new Error(result.error || 'Erro ao carregar analytics');
+                }
+
+            } catch (error) {
+                console.error('Erro ao carregar analytics:', error);
+                mostrarErro('Erro ao carregar analytics: ' + error.message);
+            }
+        }
+
+        async function carregarChamadosAnalytics() {
+            try {
+                const userInfo = getCurrentUser();
+                const requestData = {
+                    action: 'getChamadosAnalytics',
+                    userInfo: userInfo,
+                    ...currentFilters
+                };
+
+                const response = await fetch(getApiUrl(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    analyticsData.chamados = result.analytics;
+                    renderizarAnalyticsChamados(result.analytics);
+                } else {
+                    console.error('Erro analytics chamados:', result.error);
+                }
+
+            } catch (error) {
+                console.error('Erro ao carregar analytics de chamados:', error);
+            }
+        }
+
+        async function carregarRegionalAnalytics() {
+            try {
+                const userInfo = getCurrentUser();
+                const requestData = {
+                    action: 'getRegionalAnalytics',
+                    userInfo: userInfo,
+                    ...currentFilters
+                };
+
+                const response = await fetch(getApiUrl(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    analyticsData.regional = result.analytics;
+                    renderizarAnalyticsRegional(result.analytics);
+                } else {
+                    console.error('Erro analytics regional:', result.error);
+                }
+
+            } catch (error) {
+                console.error('Erro ao carregar analytics regionais:', error);
+            }
+        }
+
+        async function carregarProgressoAnalytics() {
+            try {
+                const userInfo = getCurrentUser();
+                const requestData = {
+                    action: 'getProgressAnalytics',
+                    userInfo: userInfo,
+                    ...currentFilters
+                };
+
+                const response = await fetch(getApiUrl(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    analyticsData.progresso = result.analytics;
+                    renderizarAnalyticsProgresso(result.analytics);
+                } else {
+                    console.error('Erro analytics progresso:', result.error);
+                }
+
+            } catch (error) {
+                console.error('Erro ao carregar analytics de progresso:', error);
+            }
+        }
+
+        function mostrarCardsLoading() {
+            document.getElementById('cards-resumo').innerHTML = '<div class="loading">Carregando dados...</div>';
+        }
+
+        function renderizarAnalyticsGeral(analytics) {
+            // Renderizar cards de resumo
+            const cardsHtml = `
+                <div class="card-kpi success">
+                    <h3>📞 Total de Chamados</h3>
+                    <div class="card-valor">${analytics.resumoGeral.totalChamados}</div>
+                    <div class="card-descricao">Todos os chamados registrados</div>
+                </div>
+                <div class="card-kpi info">
+                    <h3>✅ Taxa de Finalização</h3>
+                    <div class="card-valor">${analytics.resumoGeral.taxaFinalizacao}</div>
+                    <div class="card-descricao">Chamados finalizados</div>
+                </div>
+                <div class="card-kpi warning">
+                    <h3>⏱️ Tempo Médio</h3>
+                    <div class="card-valor">${analytics.resumoGeral.tempoMedioResolucao}</div>
+                    <div class="card-descricao">Dias para resolução</div>
+                </div>
+                <div class="card-kpi danger">
+                    <h3>🔴 Chamados Abertos</h3>
+                    <div class="card-valor">${analytics.resumoGeral.chamadosAbertos}</div>
+                    <div class="card-descricao">Aguardando atendimento</div>
+                </div>
+                <div class="card-kpi info">
+                    <h3>👥 Total de Usuários</h3>
+                    <div class="card-valor">${analytics.resumoGeral.totalUsuarios}</div>
+                    <div class="card-descricao">Usuários cadastrados</div>
+                </div>
+                <div class="card-kpi success">
+                    <h3>⚡ Em Andamento</h3>
+                    <div class="card-valor">${analytics.resumoGeral.chamadosAndamento}</div>
+                    <div class="card-descricao">Sendo processados</div>
+                </div>
+            `;
+
+            document.getElementById('cards-resumo').innerHTML = cardsHtml;
+
+            // Renderizar análise geral detalhada
+            const geralHtml = `
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <div class="chart-title">🌍 Análise por Região</div>
+                        ${renderizarAnaliseRegional(analytics.analisePorRegiao)}
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">⛪ Análise por Igreja</div>
+                        ${renderizarAnaliseIgreja(analytics.analisePorIgreja)}
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">🏙️ Análise por Município</div>
+                        ${renderizarAnaliseMunicipio(analytics.analisePorMunicipio)}
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">📈 Progresso Geral</div>
+                        ${renderizarProgressoGeral(analytics.progresso)}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('analytics-geral').innerHTML = geralHtml;
+        }
+
+        function renderizarAnaliseRegional(analise) {
+            let html = '<div class="ranking-list">';
+            
+            Object.keys(analise).forEach((regiao, index) => {
+                const dados = analise[regiao];
+                html += `
+                    <div class="ranking-item">
+                        <div class="ranking-position">${index + 1}</div>
+                        <div class="ranking-info">
+                            <div class="ranking-nome">${regiao}</div>
+                            <div class="ranking-detalhes">
+                                ${dados.totalChamados} chamados • ${dados.totalIgrejas} igrejas • ${dados.totalMunicipios} municípios
+                            </div>
+                        </div>
+                        <div class="ranking-valor">${dados.taxaFinalizacao}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+
+        function renderizarAnaliseIgreja(analise) {
+            let html = '<div class="ranking-list">';
+            
+            const igrejas = Object.keys(analise).slice(0, 10); // Top 10
+            igrejas.forEach((igreja, index) => {
+                const dados = analise[igreja];
+                html += `
+                    <div class="ranking-item">
+                        <div class="ranking-position">${index + 1}</div>
+                        <div class="ranking-info">
+                            <div class="ranking-nome">${igreja}</div>
+                            <div class="ranking-detalhes">
+                                ${dados.regiao} • ${dados.totalChamados} chamados
+                            </div>
+                        </div>
+                        <div class="ranking-valor">${dados.taxaFinalizacao}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+
+        function renderizarAnaliseMunicipio(analise) {
+            let html = '<div class="ranking-list">';
+            
+            const municipios = Object.keys(analise).slice(0, 10); // Top 10
+            municipios.forEach((municipio, index) => {
+                const dados = analise[municipio];
+                html += `
+                    <div class="ranking-item">
+                        <div class="ranking-position">${index + 1}</div>
+                        <div class="ranking-info">
+                            <div class="ranking-nome">${municipio}</div>
+                            <div class="ranking-detalhes">
+                                ${dados.regiao} • ${dados.totalChamados} chamados • ${dados.profissionais} profissionais
+                            </div>
+                        </div>
+                        <div class="ranking-valor">${dados.taxaFinalizacao}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+
+        function renderizarProgressoGeral(progresso) {
+            return `
+                <div>
+                    <p><strong>Tendência:</strong> <span class="meta-badge alcancada">${progresso.tendencia}</span></p>
+                    <p><strong>Progresso Mensal:</strong></p>
+                    <div style="max-height: 200px; overflow-y: auto;">
+                        ${Object.keys(progresso.progressoMensal).map(mes => `
+                            <div style="margin: 8px 0;">
+                                <strong>${mes}:</strong> ${progresso.progressoMensal[mes].total} total, 
+                                ${progresso.progressoMensal[mes].finalizados} finalizados
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderizarAnalyticsChamados(analytics) {
+            if (!analytics) return;
+
+            const html = `
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <div class="chart-title">📊 Análise por Status</div>
+                        ${renderizarStatusAnalysis(analytics.statusAnalysis)}
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">📝 Análise por Tipo</div>
+                        ${renderizarTipoAnalysis(analytics.tipoAnalysis)}
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">⚡ Análise por Prioridade</div>
+                        ${renderizarPrioridadeAnalysis(analytics.prioridadeAnalysis)}
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">🏆 Rankings</div>
+                        ${renderizarRankings(analytics.rankings)}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('analytics-chamados').innerHTML = html;
+        }
+
+        function renderizarStatusAnalysis(statusAnalysis) {
+            return `
+                <div>
+                    <div style="margin: 10px 0;">
+                        <strong>Abertos:</strong> ${statusAnalysis.abertos.total} (${statusAnalysis.abertos.percentual})
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${statusAnalysis.abertos.percentual}">
+                                ${statusAnalysis.abertos.percentual}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <strong>Em Andamento:</strong> ${statusAnalysis.andamento.total} (${statusAnalysis.andamento.percentual})
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${statusAnalysis.andamento.percentual}">
+                                ${statusAnalysis.andamento.percentual}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <strong>Finalizados:</strong> ${statusAnalysis.finalizados.total} (${statusAnalysis.finalizados.percentual})
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${statusAnalysis.finalizados.percentual}">
+                                ${statusAnalysis.finalizados.percentual}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderizarTipoAnalysis(tipoAnalysis) {
+            let html = '<div>';
+            
+            Object.keys(tipoAnalysis).forEach(tipo => {
+                const dados = tipoAnalysis[tipo];
+                html += `
+                    <div style="margin: 8px 0; padding: 8px; background: #f8f9fa; border-radius: 6px;">
+                        <strong>${tipo}:</strong> ${dados.total} total, ${dados.finalizados} finalizados (${dados.taxaFinalizacao})
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+
+        function renderizarPrioridadeAnalysis(prioridadeAnalysis) {
+            const cores = {
+                'baixa': '#28a745',
+                'media': '#ffc107', 
+                'alta': '#fd7e14',
+                'urgente': '#dc3545'
+            };
+
+            let html = '<div>';
+            
+            Object.keys(prioridadeAnalysis).forEach(prioridade => {
+                const valor = prioridadeAnalysis[prioridade];
+                html += `
+                    <div style="margin: 8px 0; padding: 8px; background: ${cores[prioridade]}20; border-left: 4px solid ${cores[prioridade]}; border-radius: 6px;">
+                        <strong style="text-transform: capitalize;">${prioridade}:</strong> ${valor} chamados
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+
+        function renderizarRankings(rankings) {
+            return `
+                <div>
+                    <h4>🥇 Top 5 Regiões</h4>
+                    ${rankings.regioes.slice(0, 5).map((item, i) => `
+                        <div class="ranking-item">
+                            <div class="ranking-position">${i + 1}</div>
+                            <div class="ranking-info">
+                                <div class="ranking-nome">${item.regiao}</div>
+                                <div class="ranking-detalhes">${item.total} chamados</div>
+                            </div>
+                            <div class="ranking-valor">${item.taxaFinalizacao}%</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderizarAnalyticsRegional(analytics) {
+            if (!analytics) return;
+
+            const html = `
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <div class="chart-title">📊 Resumo Regional</div>
+                        ${renderizarResumoRegional(analytics.resumoRegional)}
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">🗺️ Mapa de Cobertura</div>
+                        ${renderizarMapaCobertura(analytics.mapaCobertura)}
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">📈 Comparativo entre Regiões</div>
+                        ${renderizarComparativoRegioes(analytics.comparativoRegioes)}
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">🎯 Detalhes por Região</div>
+                        ${renderizarDetalhePorRegiao(analytics.detalhePorRegiao)}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('analytics-regional').innerHTML = html;
+        }
+
+        function renderizarResumoRegional(resumo) {
+            return `
+                <div>
+                    <p><strong>Total de Regiões:</strong> ${resumo.totalRegioes}</p>
+                    <p><strong>Região Mais Ativa:</strong> ${resumo.regiaoMaisAtiva}</p>
+                    <p><strong>Melhor Taxa de Finalização:</strong> ${resumo.regiaoMelhorTaxa}</p>
+                    <p><strong>Cobertura:</strong> ${resumo.coberturaMunicipios} municípios, ${resumo.coberturaIgrejas} igrejas</p>
+                </div>
+            `;
+        }
+
+        function renderizarMapaCobertura(mapa) {
+            return `
+                <div>
+                    <div class="card-kpi info">
+                        <h4>📍 Cobertura Total</h4>
+                        <p><strong>Regiões:</strong> ${mapa.totalRegioes}</p>
+                        <p><strong>Municípios:</strong> ${mapa.totalMunicipios}</p>
+                        <p><strong>Igrejas:</strong> ${mapa.totalIgrejas}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderizarComparativoRegioes(comparativo) {
+            let html = '<div style="max-height: 300px; overflow-y: auto;">';
+            
+            Object.keys(comparativo).forEach(regiao => {
+                const dados = comparativo[regiao];
+                html += `
+                    <div style="margin: 8px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">
+                        <strong>${regiao}</strong><br>
+                        Chamados: ${dados.chamados} | Usuários: ${dados.usuarios} | 
+                        Ratio: ${dados.ratioChamadosUsuarios}
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+
+        function renderizarDetalhePorRegiao(detalhes) {
+            let html = '<div style="max-height: 300px; overflow-y: auto;">';
+            
+            Object.keys(detalhes).forEach(regiao => {
+                const dados = detalhes[regiao];
+                html += `
+                    <div style="margin: 8px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">
+                        <strong>${regiao}</strong><br>
+                        <small>
+                            Chamados: ${dados.chamados.total} (${dados.chamados.taxaFinalizacao})<br>
+                            Usuários: ${dados.usuarios} | Assessores: ${dados.assessores}<br>
+                            Igrejas: ${dados.totalIgrejas} | Municípios: ${dados.totalMunicipios}
+                        </small>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+
+        function renderizarAnalyticsProgresso(analytics) {
+            if (!analytics) return;
+
+            const html = `
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <div class="chart-title">🎯 Resumo de Progresso</div>
+                        ${renderizarResumoProgresso(analytics.resumoProgresso)}
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">📊 KPIs Principais</div>
+                        ${renderizarKPIs(analytics.kpis)}
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">📈 Evolução Temporal</div>
+                        ${renderizarEvolucaoTemporal(analytics.evolucaoTemporal)}
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">🔮 Previsões</div>
+                        ${renderizarPrevisoes(analytics.previsoes)}
+                    </div>
+                </div>
+                ${renderizarRecomendacoes(analytics.recomendacoes)}
+            `;
+
+            document.getElementById('analytics-progresso').innerHTML = html;
+        }
+
+        function renderizarResumoProgresso(resumo) {
+            const statusMeta = resumo.distanciaMeta && resumo.distanciaMeta.includes('-') ? 'alcancada' : 
+                              resumo.distanciaMeta && parseFloat(resumo.distanciaMeta) <= 10 ? 'proxima' : 'distante';
+
+            return `
+                <div>
+                    <div class="meta-indicator">
+                        <strong>Meta Definida:</strong> 
+                        <span class="meta-badge ${statusMeta}">${resumo.metaDefinida}</span>
+                    </div>
+                    <p><strong>Progresso Atual:</strong> ${resumo.progressoAtual}</p>
+                    <p><strong>Distância da Meta:</strong> ${resumo.distanciaMeta}</p>
+                    <p><strong>Tendência:</strong> ${resumo.tendencia}</p>
+                    <p><strong>Previsão de Alcance:</strong> ${resumo.previsaoAlcanceMeta}</p>
+                </div>
+            `;
+        }
+
+        function renderizarKPIs(kpis) {
+            return `
+                <div>
+                    <div class="card-kpi success">
+                        <h4>Taxa Atual</h4>
+                        <div class="card-valor" style="font-size: 1.8em;">${kpis.taxaFinalizacaoAtual}</div>
+                    </div>
+                    <p><strong>Distância da Meta:</strong> ${kpis.distanciaMeta}</p>
+                    <p><strong>Tendência:</strong> ${kpis.tendencia}</p>
+                    <p><strong>Urgentes Abertos:</strong> ${kpis.urgentesAbertos}</p>
+                </div>
+            `;
+        }
+
+        function renderizarEvolucaoTemporal(evolucao) {
+            let html = '<div style="max-height: 250px; overflow-y: auto;">';
+            
+            Object.keys(evolucao).sort().forEach(mes => {
+                const dados = evolucao[mes];
+                html += `
+                    <div style="margin: 5px 0; padding: 8px; background: #f8f9fa; border-radius: 6px;">
+                        <strong>${mes}:</strong> 
+                        ${dados.criados} criados, ${dados.finalizados} finalizados
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+
+        function renderizarPrevisoes(previsoes) {
+            return `
+                <div>
+                    <p><strong>Tendência:</strong> ${previsoes.tendencia}</p>
+                    <p><strong>Previsão Próximo Mês:</strong> ${previsoes.previsaoProximoMes} chamados</p>
+                    <p><strong>Data Estimada Meta:</strong> ${previsoes.dataEstimadaMeta}</p>
+                </div>
+            `;
+        }
+
+        function renderizarRecomendacoes(recomendacoes) {
+            if (!recomendacoes || recomendacoes.length === 0) return '';
+
+            let html = `
+                <div class="recomendacoes">
+                    <h3>💡 Recomendações de Melhoria</h3>
+            `;
+
+            recomendacoes.forEach(recomendacao => {
+                html += `<div class="recomendacao-item">${recomendacao}</div>`;
+            });
+
+            html += '</div>';
+
+            // Atualizar container de recomendações
+            document.getElementById('recomendacoes-container').innerHTML = html;
+            
+            return '';
+        }
+
+        function mostrarTab(tabName) {
+            // Remover classe active de todos os botões e panes
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+
+            // Adicionar classe active no botão e pane corretos
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        function mostrarErro(mensagem) {
+            const errorHtml = `<div class="error-message">${mensagem}</div>`;
+            document.getElementById('cards-resumo').innerHTML = errorHtml;
+        }
+
+        // Função para obter URL da API
+        function getApiUrl() {
+            return 'https://script.google.com/macros/s/AKfycbx1jklZ7rXh0wrvrcY1OMq2NL7nfDV8bUmUOJUKZq7sBZ4F7RzKsOzCR3qI0QmxhcVU/exec';
+        }
+
+        // Event listeners para filtros
+        document.getElementById('filtro-regiao').addEventListener('change', aplicarFiltros);
+        document.getElementById('filtro-igreja').addEventListener('change', aplicarFiltros);
+        document.getElementById('filtro-municipio').addEventListener('change', aplicarFiltros);
+        document.getElementById('meta-finalizacao').addEventListener('change', aplicarFiltros);
+    </script>
+</body>
+</html>
             </div>
 
             <!-- Period Selector -->
@@ -248,6 +1768,357 @@
             // Initialize analytics
             analytics.init();
         });
+
+        // ================== FUNÇÕES DE GERAÇÃO DE RELATÓRIOS ==================
+
+        /**
+         * 📊 Gerar Relatório Geral
+         */
+        async function gerarRelatorioGeral() {
+            try {
+                mostrarLoadingRelatorio('Gerando relatório geral...');
+                
+                const response = await fetchAPI({
+                    action: 'gerarRelatorioGeral'
+                });
+
+                if (response.success) {
+                    adicionarRelatorioGerado(response.relatorio);
+                    mostrarNotificacao('✅ Relatório geral gerado com sucesso!', 'success');
+                } else {
+                    throw new Error(response.error || 'Erro ao gerar relatório geral');
+                }
+            } catch (error) {
+                console.error('Erro ao gerar relatório geral:', error);
+                mostrarNotificacao('❌ Erro ao gerar relatório geral: ' + error.message, 'error');
+            } finally {
+                esconderLoadingRelatorio();
+            }
+        }
+
+        /**
+         * 📍 Gerar Relatório Regional
+         */
+        async function gerarRelatorioRegional() {
+            try {
+                const regiaoSelect = document.getElementById('select-regiao-relatorio');
+                const regiao = regiaoSelect.value;
+
+                if (!regiao) {
+                    mostrarNotificacao('⚠️ Por favor, selecione uma região', 'warning');
+                    return;
+                }
+
+                mostrarLoadingRelatorio(`Gerando relatório da região ${regiao}...`);
+                
+                const response = await fetchAPI({
+                    action: 'gerarRelatorioPorRegiao',
+                    regiao: regiao
+                });
+
+                if (response.success) {
+                    adicionarRelatorioGerado(response.relatorio);
+                    mostrarNotificacao(`✅ Relatório da região ${regiao} gerado com sucesso!`, 'success');
+                    regiaoSelect.value = ''; // Limpar seleção
+                } else {
+                    throw new Error(response.error || 'Erro ao gerar relatório regional');
+                }
+            } catch (error) {
+                console.error('Erro ao gerar relatório regional:', error);
+                mostrarNotificacao('❌ Erro ao gerar relatório regional: ' + error.message, 'error');
+            } finally {
+                esconderLoadingRelatorio();
+            }
+        }
+
+        /**
+         * ⛪ Gerar Relatório por Igreja
+         */
+        async function gerarRelatorioIgreja() {
+            try {
+                const igrejaSelect = document.getElementById('select-igreja-relatorio');
+                const igreja = igrejaSelect.value;
+
+                if (!igreja) {
+                    mostrarNotificacao('⚠️ Por favor, selecione uma igreja', 'warning');
+                    return;
+                }
+
+                mostrarLoadingRelatorio(`Gerando relatório da ${igreja}...`);
+                
+                const response = await fetchAPI({
+                    action: 'gerarRelatorioPorIgreja',
+                    igreja: igreja
+                });
+
+                if (response.success) {
+                    adicionarRelatorioGerado(response.relatorio);
+                    mostrarNotificacao(`✅ Relatório da ${igreja} gerado com sucesso!`, 'success');
+                    igrejaSelect.value = ''; // Limpar seleção
+                } else {
+                    throw new Error(response.error || 'Erro ao gerar relatório da igreja');
+                }
+            } catch (error) {
+                console.error('Erro ao gerar relatório da igreja:', error);
+                mostrarNotificacao('❌ Erro ao gerar relatório da igreja: ' + error.message, 'error');
+            } finally {
+                esconderLoadingRelatorio();
+            }
+        }
+
+        /**
+         * 🔄 Mostrar Loading de Relatório
+         */
+        function mostrarLoadingRelatorio(mensagem) {
+            const container = document.getElementById('relatorios-gerados');
+            container.innerHTML = `
+                <div class="loading-relatorio">
+                    <div class="spinner"></div>
+                    <p>${mensagem}</p>
+                </div>
+            `;
+        }
+
+        /**
+         * 🔄 Esconder Loading de Relatório
+         */
+        function esconderLoadingRelatorio() {
+            // O loading será substituído pelo relatório ou volta ao estado inicial
+        }
+
+        /**
+         * 📋 Adicionar Relatório Gerado à Lista
+         */
+        function adicionarRelatorioGerado(relatorio) {
+            const container = document.getElementById('relatorios-gerados');
+            
+            // Verificar se ainda há a mensagem de "sem relatórios"
+            const semRelatorios = container.querySelector('.sem-relatorios');
+            if (semRelatorios) {
+                container.innerHTML = '';
+            }
+
+            const tipoEmoji = {
+                'geral': '📊',
+                'regional': '📍', 
+                'igreja': '⛪'
+            };
+
+            const tipoNome = {
+                'geral': 'Relatório Geral',
+                'regional': `Relatório Regional - ${relatorio.regiao}`,
+                'igreja': `Relatório da ${relatorio.igreja}`
+            };
+
+            const dataFormatada = new Date(relatorio.dataGeracao).toLocaleString('pt-BR');
+            
+            const relatorioHTML = `
+                <div class="relatorio-gerado" data-id="${Date.now()}">
+                    <div class="relatorio-meta">
+                        <div class="relatorio-titulo">
+                            ${tipoEmoji[relatorio.tipo]} ${tipoNome[relatorio.tipo]}
+                        </div>
+                        <div class="relatorio-data">
+                            ${dataFormatada}
+                        </div>
+                    </div>
+                    <div class="relatorio-resumo">
+                        ${gerarResumoRelatorio(relatorio)}
+                    </div>
+                    <div class="relatorio-acoes">
+                        <button class="btn-visualizar" onclick="visualizarRelatorio('${Date.now()}')">
+                            👁️ Visualizar
+                        </button>
+                        <button class="btn-download" onclick="downloadRelatorio('${Date.now()}')">
+                            💾 Download JSON
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            container.insertAdjacentHTML('afterbegin', relatorioHTML);
+            
+            // Armazenar dados do relatório para download
+            window.relatoriosGerados = window.relatoriosGerados || {};
+            window.relatoriosGerados[Date.now()] = relatorio;
+        }
+
+        /**
+         * 📝 Gerar Resumo do Relatório
+         */
+        function gerarResumoRelatorio(relatorio) {
+            switch (relatorio.tipo) {
+                case 'geral':
+                    return `Total de ${relatorio.resumoExecutivo.totalChamados} chamados e ${relatorio.resumoExecutivo.totalVoluntarios} voluntários. Taxa de resolução: ${relatorio.resumoExecutivo.taxaResolucao}%.`;
+                case 'regional':
+                    return `Região ${relatorio.regiao}: ${relatorio.resumoRegional.totalChamados} chamados, ${relatorio.resumoRegional.totalVoluntarios} voluntários, ${relatorio.resumoRegional.igrejas} igrejas.`;
+                case 'igreja':
+                    return `${relatorio.igreja}: ${relatorio.resumoIgreja.totalChamados} chamados, ${relatorio.resumoIgreja.totalVoluntarios} voluntários. Taxa de resolução: ${relatorio.performanceIgreja.taxaResolucao}%.`;
+                default:
+                    return 'Relatório gerado com sucesso.';
+            }
+        }
+
+        /**
+         * 👁️ Visualizar Relatório
+         */
+        function visualizarRelatorio(id) {
+            const relatorio = window.relatoriosGerados?.[id];
+            if (!relatorio) {
+                mostrarNotificacao('❌ Relatório não encontrado', 'error');
+                return;
+            }
+
+            // Criar modal para visualizar o relatório
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            `;
+
+            modal.innerHTML = `
+                <div style="
+                    background: white;
+                    border-radius: 15px;
+                    max-width: 800px;
+                    width: 100%;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    padding: 30px;
+                    position: relative;
+                ">
+                    <button onclick="this.closest('.modal').remove()" style="
+                        position: absolute;
+                        top: 15px;
+                        right: 15px;
+                        background: #dc3545;
+                        color: white;
+                        border: none;
+                        border-radius: 50%;
+                        width: 30px;
+                        height: 30px;
+                        cursor: pointer;
+                        font-size: 16px;
+                    ">×</button>
+                    
+                    <h2>${gerarTituloRelatorio(relatorio)}</h2>
+                    <pre style="
+                        background: #f8f9fa;
+                        padding: 20px;
+                        border-radius: 8px;
+                        white-space: pre-wrap;
+                        font-size: 12px;
+                        line-height: 1.4;
+                        max-height: 60vh;
+                        overflow-y: auto;
+                    ">${JSON.stringify(relatorio, null, 2)}</pre>
+                </div>
+            `;
+
+            modal.className = 'modal';
+            document.body.appendChild(modal);
+        }
+
+        /**
+         * 💾 Download do Relatório
+         */
+        function downloadRelatorio(id) {
+            const relatorio = window.relatoriosGerados?.[id];
+            if (!relatorio) {
+                mostrarNotificacao('❌ Relatório não encontrado', 'error');
+                return;
+            }
+
+            const dataFormatada = new Date(relatorio.dataGeracao).toISOString().split('T')[0];
+            const filename = `relatorio_${relatorio.tipo}_${dataFormatada}.json`;
+            
+            const dataStr = JSON.stringify(relatorio, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = filename;
+            link.click();
+            
+            mostrarNotificacao('💾 Download iniciado!', 'success');
+        }
+
+        /**
+         * 📋 Gerar Título do Relatório
+         */
+        function gerarTituloRelatorio(relatorio) {
+            const tipoEmoji = {
+                'geral': '📊',
+                'regional': '📍', 
+                'igreja': '⛪'
+            };
+
+            switch (relatorio.tipo) {
+                case 'geral':
+                    return `${tipoEmoji[relatorio.tipo]} Relatório Geral do Sistema`;
+                case 'regional':
+                    return `${tipoEmoji[relatorio.tipo]} Relatório Regional - ${relatorio.regiao}`;
+                case 'igreja':
+                    return `${tipoEmoji[relatorio.tipo]} Relatório da ${relatorio.igreja}`;
+                default:
+                    return '📋 Relatório';
+            }
+        }
+
+        /**
+         * 🔔 Mostrar Notificação
+         */
+        function mostrarNotificacao(mensagem, tipo = 'info') {
+            const cores = {
+                success: '#28a745',
+                error: '#dc3545',
+                warning: '#ffc107',
+                info: '#17a2b8'
+            };
+
+            const notificacao = document.createElement('div');
+            notificacao.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${cores[tipo]};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                z-index: 10001;
+                font-weight: 600;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                transform: translateX(400px);
+                transition: transform 0.3s ease;
+            `;
+            notificacao.textContent = mensagem;
+
+            document.body.appendChild(notificacao);
+
+            // Animar entrada
+            setTimeout(() => {
+                notificacao.style.transform = 'translateX(0)';
+            }, 100);
+
+            // Remover após 4 segundos
+            setTimeout(() => {
+                notificacao.style.transform = 'translateX(400px)';
+                setTimeout(() => {
+                    if (notificacao.parentNode) {
+                        notificacao.parentNode.removeChild(notificacao);
+                    }
+                }, 300);
+            }, 4000);
+        }
     </script>
 </body>
 </html>

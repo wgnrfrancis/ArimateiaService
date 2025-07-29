@@ -1,4 +1,5 @@
 // Google Apps Script integration module for Balcão da Cidadania
+// Handles all communication with Google Sheets via Google Apps Script Web App
 class FlowManager {
     constructor() {
         this.baseUrl = CONFIG.googleAppsScript.webAppUrl;
@@ -36,10 +37,7 @@ class FlowManager {
         } catch (error) {
             Helpers.hideLoading();
             console.error('Google Apps Script error:', error);
-            
-            // For development/demo purposes, simulate success
-            console.warn('Using mock response for development');
-            return { success: true, data: { id: Helpers.generateId(), ...data } };
+            throw error;
         }
     }
 
@@ -47,35 +45,46 @@ class FlowManager {
     async createTicket(ticketData) {
         try {
             const payload = {
-                action: 'create_ticket',
-                ticket: {
-                    id: Helpers.generateId(),
-                    nome: ticketData.nome,
-                    cpf: ticketData.cpf,
-                    contato: ticketData.contato,
-                    igreja: ticketData.igreja,
-                    regiao: ticketData.regiao,
-                    descricao: ticketData.descricao,
-                    status: 'aberto',
-                    dataAbertura: new Date().toISOString(),
-                    criadoPor: auth.getCurrentUser()?.name || 'Sistema',
-                    criadoPorEmail: auth.getCurrentUser()?.email || '',
-                    observacoes: []
-                }
+                action: 'newTicket',
+                nomeCidadao: ticketData.nome,
+                contato: ticketData.contato,
+                email: ticketData.email,
+                descricao: ticketData.descricao,
+                prioridade: ticketData.prioridade,
+                categoria: ticketData.categoria,
+                demanda: ticketData.demanda,
+                userInfo: auth.getCurrentUser()
             };
 
             const result = await this.sendToScript(this.endpoints.newTicket, payload);
-            
-            if (result.success) {
-                Helpers.showToast('Chamado criado com sucesso!', 'success');
-                return result;
-            } else {
-                throw new Error('Erro ao criar chamado');
-            }
+            return result;
 
         } catch (error) {
             console.error('Create ticket error:', error);
-            Helpers.showToast('Erro ao criar chamado: ' + error.message, 'error');
+            return { success: false, error: error.message };
+        }
+    }
+
+    // 📋 Buscar categorias de serviços
+    async getCategorias() {
+        try {
+            const payload = {
+                action: 'getCategorias'
+            };
+
+            const result = await this.sendToScript('', payload);
+            
+            if (result.success && result.data.success) {
+                return {
+                    success: true,
+                    categorias: result.data.categorias
+                };
+            } else {
+                throw new Error(result.data?.error || 'Erro ao buscar categorias');
+            }
+
+        } catch (error) {
+            console.error('Buscar categorias error:', error);
             return { success: false, error: error.message };
         }
     }
@@ -85,28 +94,11 @@ class FlowManager {
         try {
             const user = auth.getCurrentUser();
             const payload = {
-                action: 'update_ticket',
+                action: 'updateTicket',
                 ticketId: ticketId,
-                updates: {
-                    ...updateData,
-                    ultimaAtualizacao: new Date().toISOString(),
-                    atualizadoPor: user?.name || 'Sistema',
-                    atualizadoPorEmail: user?.email || ''
-                }
+                ...updateData,
+                userInfo: user || { name: 'Sistema', email: '' }
             };
-
-            // Add observation if status changed
-            if (updateData.status) {
-                payload.updates.observacoes = payload.updates.observacoes || [];
-                payload.updates.observacoes.push({
-                    id: Helpers.generateId(),
-                    data: new Date().toISOString(),
-                    usuario: user?.name || 'Sistema',
-                    tipo: 'status_change',
-                    texto: `Status alterado para: ${updateData.status}`,
-                    observacao: updateData.observacao || ''
-                });
-            }
 
             const result = await this.sendToScript(this.endpoints.updateTicket, payload);
             
@@ -114,7 +106,7 @@ class FlowManager {
                 Helpers.showToast('Chamado atualizado com sucesso!', 'success');
                 return result;
             } else {
-                throw new Error('Erro ao atualizar chamado');
+                throw new Error(result.error || 'Erro ao atualizar chamado');
             }
 
         } catch (error) {
@@ -129,14 +121,10 @@ class FlowManager {
         try {
             const user = auth.getCurrentUser();
             const payload = {
-                action: 'delete_ticket',
+                action: 'deleteTicket',
                 ticketId: ticketId,
-                deleteInfo: {
-                    dataExclusao: new Date().toISOString(),
-                    excluidoPor: user?.name || 'Sistema',
-                    excluidoPorEmail: user?.email || '',
-                    motivo: reason
-                }
+                motivo: reason,
+                userInfo: user || { name: 'Sistema', email: '' }
             };
 
             const result = await this.sendToScript(this.endpoints.deleteTicket, payload);
@@ -145,7 +133,7 @@ class FlowManager {
                 Helpers.showToast('Chamado excluído com sucesso!', 'success');
                 return result;
             } else {
-                throw new Error('Erro ao excluir chamado');
+                throw new Error(result.error || 'Erro ao excluir chamado');
             }
 
         } catch (error) {
@@ -159,19 +147,15 @@ class FlowManager {
     async createUser(userData) {
         try {
             const payload = {
-                action: 'create_user',
-                user: {
-                    id: Helpers.generateId(),
-                    nome: userData.nome,
-                    email: userData.email,
-                    cargo: userData.cargo,
-                    regiao: userData.regiao,
-                    igreja: userData.igreja,
-                    telefone: userData.telefone,
-                    dataCadastro: new Date().toISOString(),
-                    criadoPor: auth.getCurrentUser()?.name || 'Sistema',
-                    status: 'ativo'
-                }
+                action: 'newUser',
+                nomeCompleto: userData.nome,
+                email: userData.email,
+                senha: userData.senha || 'Arimateia1', // Senha padrão
+                telefone: userData.telefone,
+                cargo: userData.cargo,
+                igreja: userData.igreja,
+                regiao: userData.regiao,
+                userInfo: auth.getCurrentUser() || { name: 'Sistema', email: '' }
             };
 
             const result = await this.sendToScript(this.endpoints.newUser, payload);
@@ -180,7 +164,7 @@ class FlowManager {
                 Helpers.showToast('Usuário criado com sucesso!', 'success');
                 return result;
             } else {
-                throw new Error('Erro ao criar usuário');
+                throw new Error(result.error || 'Erro ao criar usuário');
             }
 
         } catch (error) {
@@ -194,11 +178,9 @@ class FlowManager {
     async validateUser(email, password) {
         try {
             const payload = {
-                action: 'validate_user',
-                credentials: {
-                    email: email,
-                    password: password
-                }
+                action: 'validateUser',
+                email: email,
+                password: password
             };
 
             const result = await this.sendToScript(this.endpoints.validateUser, payload);
@@ -213,93 +195,13 @@ class FlowManager {
     // Get tickets with filters
     async getTickets(filters = {}) {
         try {
-            // For demo purposes, return mock data
-            // In production, this would call the Power Automate flow to get data from Google Sheets
-            
-            const mockTickets = [
-                {
-                    id: '1',
-                    nome: 'João Silva',
-                    cpf: '123.456.789-00',
-                    contato: '(11) 99999-9999',
-                    igreja: 'Igreja Central',
-                    regiao: 'Norte',
-                    descricao: 'Preciso de ajuda com documentação para aposentadoria',
-                    status: 'aberto',
-                    dataAbertura: '2024-01-15T10:30:00Z',
-                    criadoPor: 'Maria Santos',
-                    observacoes: []
-                },
-                {
-                    id: '2',
-                    nome: 'Maria Oliveira',
-                    cpf: '987.654.321-00',
-                    contato: '(11) 88888-8888',
-                    igreja: 'Igreja do Bairro Alto',
-                    regiao: 'Sul',
-                    descricao: 'Orientação sobre benefícios sociais',
-                    status: 'em_andamento',
-                    dataAbertura: '2024-01-14T14:15:00Z',
-                    criadoPor: 'Pedro Oliveira',
-                    observacoes: [
-                        {
-                            id: 'obs1',
-                            data: '2024-01-15T09:00:00Z',
-                            usuario: 'Ana Costa',
-                            tipo: 'status_change',
-                            texto: 'Status alterado para: Em Andamento',
-                            observacao: 'Entrando em contato com o INSS'
-                        }
-                    ]
-                },
-                {
-                    id: '3',
-                    nome: 'Carlos Santos',
-                    cpf: '456.789.123-00',
-                    contato: '(11) 77777-7777',
-                    igreja: 'Igreja da Vila Nova',
-                    regiao: 'Leste',
-                    descricao: 'Regularização de CPF',
-                    status: 'resolvido',
-                    dataAbertura: '2024-01-10T16:45:00Z',
-                    criadoPor: 'João Silva',
-                    observacoes: [
-                        {
-                            id: 'obs2',
-                            data: '2024-01-12T11:30:00Z',
-                            usuario: 'Maria Santos',
-                            tipo: 'status_change',
-                            texto: 'Status alterado para: Resolvido',
-                            observacao: 'CPF regularizado com sucesso na Receita Federal'
-                        }
-                    ]
-                }
-            ];
+            const payload = {
+                action: 'getTickets',
+                filters: filters
+            };
 
-            // Apply filters
-            let filteredTickets = mockTickets;
-            
-            if (filters.regiao) {
-                filteredTickets = filteredTickets.filter(ticket => ticket.regiao === filters.regiao);
-            }
-            
-            if (filters.status) {
-                filteredTickets = filteredTickets.filter(ticket => ticket.status === filters.status);
-            }
-            
-            if (filters.igreja) {
-                filteredTickets = filteredTickets.filter(ticket => ticket.igreja === filters.igreja);
-            }
-            
-            if (filters.search) {
-                const searchTerm = filters.search.toLowerCase();
-                filteredTickets = filteredTickets.filter(ticket => 
-                    ticket.nome.toLowerCase().includes(searchTerm) ||
-                    ticket.descricao.toLowerCase().includes(searchTerm)
-                );
-            }
-
-            return { success: true, data: filteredTickets };
+            const result = await this.sendToScript(this.endpoints.getTickets, payload);
+            return result;
 
         } catch (error) {
             console.error('Get tickets error:', error);
@@ -310,59 +212,13 @@ class FlowManager {
     // Get users with filters
     async getUsers(filters = {}) {
         try {
-            // Mock user data for demo
-            const mockUsers = [
-                {
-                    id: '1',
-                    nome: 'João Silva',
-                    email: 'voluntario@arimateia.org',
-                    cargo: 'VOLUNTARIO',
-                    regiao: 'Norte',
-                    igreja: 'Igreja Central',
-                    telefone: '(11) 99999-9999',
-                    dataCadastro: '2024-01-01T00:00:00Z',
-                    status: 'ativo'
-                },
-                {
-                    id: '2',
-                    nome: 'Maria Santos',
-                    email: 'secretaria@arimateia.org',
-                    cargo: 'SECRETARIA',
-                    regiao: 'Sul',
-                    igreja: 'Igreja do Bairro Alto',
-                    telefone: '(11) 88888-8888',
-                    dataCadastro: '2024-01-01T00:00:00Z',
-                    status: 'ativo'
-                },
-                {
-                    id: '3',
-                    nome: 'Pedro Oliveira',
-                    email: 'coordenador@arimateia.org',
-                    cargo: 'COORDENADOR',
-                    regiao: 'Centro',
-                    igreja: 'Igreja Central',
-                    telefone: '(11) 77777-7777',
-                    dataCadastro: '2024-01-01T00:00:00Z',
-                    status: 'ativo'
-                }
-            ];
+            const payload = {
+                action: 'getUsers',
+                filters: filters
+            };
 
-            // Apply filters
-            let filteredUsers = mockUsers;
-            
-            if (filters.regiao) {
-                filteredUsers = filteredUsers.filter(user => user.regiao === filters.regiao);
-            }
-            
-            if (filters.cargo) {
-                filteredUsers = filteredUsers.filter(user => user.cargo === filters.cargo);
-            }
-            
-            if (filters.igreja) {
-                filteredUsers = filteredUsers.filter(user => user.igreja === filters.igreja);
-            }
-
-            return { success: true, data: filteredUsers };
+            const result = await this.sendToScript(this.endpoints.getUsers, payload);
+            return result;
 
         } catch (error) {
             console.error('Get users error:', error);
@@ -374,48 +230,74 @@ class FlowManager {
     async generateReport(reportType, filters = {}) {
         try {
             const payload = {
-                action: 'generate_report',
+                action: 'generateReport',
                 reportType: reportType,
                 filters: filters,
                 generatedBy: auth.getCurrentUser()?.name || 'Sistema',
                 generatedAt: new Date().toISOString()
             };
 
-            // For demo, return mock report data
-            const mockReportData = {
-                totalTickets: 150,
-                ticketsByStatus: {
-                    aberto: 45,
-                    em_andamento: 32,
-                    aguardando: 18,
-                    resolvido: 50,
-                    cancelado: 5
-                },
-                ticketsByRegion: {
-                    Norte: 30,
-                    Sul: 25,
-                    Leste: 35,
-                    Oeste: 20,
-                    Centro: 25,
-                    'Grande ABC': 15
-                },
-                ticketsByMonth: {
-                    'Jan/2024': 45,
-                    'Fev/2024': 52,
-                    'Mar/2024': 53
-                },
-                averageResolutionTime: '3.5 dias',
-                topVolunteers: [
-                    { nome: 'Maria Santos', tickets: 25 },
-                    { nome: 'João Silva', tickets: 20 },
-                    { nome: 'Ana Costa', tickets: 18 }
-                ]
-            };
-
-            return { success: true, data: mockReportData };
+            const result = await this.sendToScript(this.endpoints.generateReport, payload);
+            return result;
 
         } catch (error) {
             console.error('Generate report error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    // 👥 Buscar usuários com filtros (para coordenador)
+    async buscarUsuarios(filtros = {}) {
+        try {
+            const payload = {
+                action: 'buscarUsuarios',
+                ...filtros,
+                requestedBy: auth.getCurrentUser()
+            };
+
+            const result = await this.sendToScript('', payload);
+            
+            if (result.success && result.data.success) {
+                return {
+                    success: true,
+                    usuarios: result.data.usuarios
+                };
+            } else {
+                throw new Error(result.data?.error || 'Erro ao buscar usuários');
+            }
+
+        } catch (error) {
+            console.error('Buscar usuários error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    // 🔄 Atualizar status de usuário (para coordenador)
+    async atualizarStatusUsuario(dadosAlteracao) {
+        try {
+            const payload = {
+                action: 'atualizarStatusUsuario',
+                userId: dadosAlteracao.userId,
+                novoStatus: dadosAlteracao.novoStatus,
+                novoCargo: dadosAlteracao.novoCargo,
+                observacoes: dadosAlteracao.observacoes,
+                userInfo: dadosAlteracao.userInfo || auth.getCurrentUser(),
+                timestamp: new Date().toISOString()
+            };
+
+            const result = await this.sendToScript('', payload);
+            
+            if (result.success && result.data.success) {
+                return {
+                    success: true,
+                    message: result.data.message
+                };
+            } else {
+                throw new Error(result.data?.error || 'Erro ao atualizar usuário');
+            }
+
+        } catch (error) {
+            console.error('Atualizar status usuário error:', error);
             return { success: false, error: error.message };
         }
     }

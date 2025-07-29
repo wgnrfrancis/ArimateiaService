@@ -1,5 +1,13 @@
 # 🚀 Guia de Configuração - Google Apps Script
 
+## 🎯 **Sistema 100% Google - Sem Power Automate**
+
+Este sistema utiliza **exclusivamente Google Apps Script** como backend, conectando diretamente com Google Sheets. Não há necessidade de Power Automate, servidores externos ou outras ferramentas.
+
+**Arquitetura**: `Interface Web ↔ Google Apps Script ↔ Google Sheets`
+
+---
+
 ## 📋 Passo a Passo para Configurar a Integração
 
 ### 1️⃣ **Criar a Planilha no Google Sheets**

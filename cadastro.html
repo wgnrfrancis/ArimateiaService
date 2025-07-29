@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Voluntário - Arimateia Service</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo-square">A</div>
+                <h1>ARIMATEIA<br><small>SERVICE</small></h1>
+                <p class="text-light">Cadastro de Novo Voluntário</p>
+            </div>
+
+            <form id="cadastro-form" class="login-form">
+                <div class="form-group">
+                    <label for="nomeCompleto" class="form-label">Nome Completo *</label>
+                    <input 
+                        type="text" 
+                        id="nomeCompleto" 
+                        name="nomeCompleto" 
+                        class="form-input" 
+                        placeholder="Digite seu nome completo"
+                        required
+                        autocomplete="name"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">Email *</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        class="form-input" 
+                        placeholder="seu.email@exemplo.com"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="telefone" class="form-label">Telefone *</label>
+                    <input 
+                        type="tel" 
+                        id="telefone" 
+                        name="telefone" 
+                        class="form-input" 
+                        placeholder="(11) 99999-9999"
+                        required
+                        data-validation="phone"
+                        autocomplete="tel"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="regiao" class="form-label">Região *</label>
+                    <select 
+                        id="regiao" 
+                        name="regiao" 
+                        class="form-select" 
+                        required
+                    >
+                        <option value="">Selecione a região</option>
+                        <!-- Opções serão carregadas dinamicamente -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="igreja" class="form-label">Igreja *</label>
+                    <select 
+                        id="igreja" 
+                        name="igreja" 
+                        class="form-select" 
+                        required
+                    >
+                        <option value="">Primeiro selecione uma região</option>
+                        <!-- Opções serão carregadas dinamicamente -->
+                    </select>
+                </div>
+
+                <!-- Campo oculto para cargo (sempre VOLUNTARIO) -->
+                <input type="hidden" id="cargo" name="cargo" value="VOLUNTARIO">
+
+                <div class="form-group">
+                    <label for="senha" class="form-label">Senha *</label>
+                    <input 
+                        type="password" 
+                        id="senha" 
+                        name="senha" 
+                        class="form-input" 
+                        placeholder="Crie uma senha"
+                        required
+                        minlength="6"
+                        autocomplete="new-password"
+                    >
+                    <small class="text-light">Mínimo 6 caracteres</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmarSenha" class="form-label">Confirmar Senha *</label>
+                    <input 
+                        type="password" 
+                        id="confirmarSenha" 
+                        name="confirmarSenha" 
+                        class="form-input" 
+                        placeholder="Confirme sua senha"
+                        required
+                        minlength="6"
+                        autocomplete="new-password"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="termos" name="termos" required>
+                        <span class="checkmark"></span>
+                        Concordo em atuar como voluntário no Balcão da Cidadania
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-large w-full">
+                        📝 Solicitar Cadastro
+                    </button>
+                </div>
+            </form>
+
+            <div class="login-footer">
+                <div class="text-center">
+                    <p class="text-light">
+                        Já tem uma conta? 
+                        <a href="index.html" class="text-primary">Fazer login</a>
+                    </p>
+                </div>
+
+                <div class="login-info mt-4">
+                    <p class="text-center text-light">
+                        <small>© 2024 Arimateia - Balcão da Cidadania v1.0</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="data/config.js"></script>
+    <script src="scripts/helpers.js"></script>
+    <script src="scripts/flow.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carregar regiões e configurar seleção hierárquica
+            loadRegioes();
+            setupHierarchicalSelection();
+            
+            // Setup form validation
+            Helpers.setupFormValidation(document.getElementById('cadastro-form'));
+            
+            // Setup phone formatting
+            const telefoneInput = document.getElementById('telefone');
+            telefoneInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length <= 11) {
+                    if (value.length === 11) {
+                        value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                    } else if (value.length === 10) {
+                        value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+                    }
+                    e.target.value = value;
+                }
+            });
+
+            // Handle form submission
+            document.getElementById('cadastro-form').addEventListener('submit', handleCadastro);
+        });
+
+        function loadRegioes() {
+            try {
+                const regiaoSelect = document.getElementById('regiao');
+                
+                // Adicionar regiões do config
+                Object.keys(CONFIG.igrejasPorRegiao).forEach(regiao => {
+                    const option = document.createElement('option');
+                    option.value = regiao;
+                    option.textContent = regiao;
+                    regiaoSelect.appendChild(option);
+                });
+
+            } catch (error) {
+                console.error('Erro ao carregar regiões:', error);
+            }
+        }
+
+        function setupHierarchicalSelection() {
+            const regiaoSelect = document.getElementById('regiao');
+            const igrejaSelect = document.getElementById('igreja');
+
+            regiaoSelect.addEventListener('change', function() {
+                // Limpar igrejas
+                igrejaSelect.innerHTML = '<option value="">Selecione uma igreja</option>';
+                
+                const regiao = this.value;
+                if (regiao && CONFIG.igrejasPorRegiao[regiao]) {
+                    // Carregar igrejas da região selecionada
+                    CONFIG.igrejasPorRegiao[regiao].forEach(igreja => {
+                        const option = document.createElement('option');
+                        option.value = igreja.nome;
+                        option.textContent = igreja.nome;
+                        igrejaSelect.appendChild(option);
+                    });
+                    igrejaSelect.disabled = false;
+                } else {
+                    igrejaSelect.disabled = true;
+                }
+            });
+        }
+
+        async function loadIgrejas() {
+            // Esta função agora é desnecessária - mantida para compatibilidade
+            // A seleção hierárquica é configurada em setupHierarchicalSelection()
+        }
+
+        async function handleCadastro(e) {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            // Validar senhas
+            if (data.senha !== data.confirmarSenha) {
+                Helpers.showToast('As senhas não coincidem', 'error');
+                return;
+            }
+
+            // Validar email único (verificar se já existe)
+            try {
+                Helpers.showLoading('Verificando dados...');
+                
+                const checkEmail = await flowManager.validateUser(data.email, 'senha_temporaria');
+                if (checkEmail.success) {
+                    Helpers.hideLoading();
+                    Helpers.showToast('Este email já está cadastrado no sistema', 'error');
+                    return;
+                }
+
+                // Criar usuário
+                Helpers.showLoading('Criando cadastro...');
+                
+                const result = await flowManager.createUser({
+                    nome: data.nomeCompleto,
+                    email: data.email,
+                    senha: data.senha,
+                    telefone: data.telefone,
+                    cargo: 'VOLUNTARIO', // Sempre voluntário para cadastro público
+                    igreja: data.igreja,
+                    regiao: data.regiao
+                });
+
+                Helpers.hideLoading();
+
+                if (result.success) {
+                    // Usar a mensagem retornada pelo backend
+                    const message = result.data?.message || 'Cadastro realizado com sucesso!';
+                    Helpers.showToast(message, 'success');
+                    
+                    // Determinar mensagem baseada no status
+                    const status = result.data?.status || 'Ativo';
+                    let alertMessage;
+                    
+                    if (status === 'Pendente') {
+                        alertMessage = 'Cadastro criado com sucesso!\n\n' +
+                                     'Seu perfil foi criado como VOLUNTÁRIO e está PENDENTE de aprovação.\n' +
+                                     'Aguarde a aprovação do coordenador para poder fazer login.\n\n' +
+                                     'Você receberá uma confirmação quando sua conta for ativada.';
+                    } else {
+                        alertMessage = 'Cadastro criado com sucesso!\n\n' +
+                                     'Seu perfil foi criado como VOLUNTÁRIO.\n' +
+                                     'Você já pode fazer login no sistema.\n\n' +
+                                     'Para alterações de função, entre em contato com o coordenador.';
+                    }
+                    
+                    // Mostrar mensagem de sucesso
+                    setTimeout(() => {
+                        alert(alertMessage);
+                        window.location.href = 'index.html';
+                    }, 1000);
+                } else {
+                    throw new Error(result.error || 'Erro ao criar cadastro');
+                }
+
+            } catch (error) {
+                Helpers.hideLoading();
+                console.error('Erro no cadastro:', error);
+                Helpers.showToast('Erro ao criar cadastro: ' + error.message, 'error');
+            }
+        }
+    </script>
+
+    <style>
+        .form-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+
+        .form-checkbox input[type="checkbox"] {
+            margin: 0;
+            transform: scale(1.2);
+        }
+
+        .text-primary {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .text-primary:hover {
+            text-decoration: underline;
+        }
+
+        .field-error {
+            color: var(--danger-color);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .form-input.error,
+        .form-select.error {
+            border-color: var(--danger-color);
+            box-shadow: 0 0 0 3px rgb(220 38 38 / 0.1);
+        }
+    </style>
+</body>
+</html>

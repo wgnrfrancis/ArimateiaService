@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios de Vereadores - Arimateia Service</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <style>
+        .vereador-container {
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .vereador-header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .vereador-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .vereador-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #28a745;
+        }
+
+        .vereador-card h3 {
+            color: #28a745;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #28a745;
+            margin: 0.5rem 0;
+        }
+
+        .metric-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .success-rate {
+            color: #28a745;
+        }
+
+        .failure-rate {
+            color: #dc3545;
+        }
+
+        .vereador-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .vereador-table h3 {
+            background: #28a745;
+            color: white;
+            margin: 0;
+            padding: 1rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 500px;
+        }
+
+        .vereador-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .vereador-table th,
+        .vereador-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .vereador-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .vereador-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .filter-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .status-eleito {
+            background: #d4edda;
+            color: #155724;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-nao-eleito {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .efficiency-bar {
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .efficiency-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+        }
+
+        .vereador-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .summary-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .partido-badge {
+            background: #007bff;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .mandato-info {
+            background: #6c757d;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        @media (max-width: 768px) {
+            .vereador-container {
+                padding: 1rem;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="vereador-container">
+        <div class="vereador-header">
+            <h1>🏛️ Relatórios de Vereadores</h1>
+            <p>Análise Completa de Candidatos e Eleitos por Região e Município</p>
+            <small>Acesso Restrito - Apenas Coordenadores</small>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filter-section">
+            <h3>🔍 Filtros e Ações</h3>
+            <div class="filter-grid">
+                <div class="form-group">
+                    <label class="form-label">Região</label>
+                    <select id="filter-regiao" class="form-input">
+                        <option value="">Todas as Regiões</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Município</label>
+                    <select id="filter-municipio" class="form-input">
+                        <option value="">Todos os Municípios</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Situação</label>
+                    <select id="filter-situacao" class="form-input">
+                        <option value="">Todos</option>
+                        <option value="eleito">Eleitos</option>
+                        <option value="nao-eleito">Não Eleitos</option>
+                        <option value="suplente">Suplentes</option>
+                    </select>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button id="btn-generate-report" class="btn btn-primary">
+                    📊 Gerar Relatório Completo
+                </button>
+                <button id="btn-add-vereador" class="btn btn-success">
+                    ➕ Adicionar Vereador
+                </button>
+                <button id="btn-export-data" class="btn btn-secondary">
+                    📥 Exportar Dados
+                </button>
+                <button id="btn-refresh" class="btn btn-outline">
+                    🔄 Atualizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Resumo Geral -->
+        <div id="vereador-summary" class="vereador-summary">
+            <!-- Será preenchido dinamicamente -->
+        </div>
+
+        <!-- Métricas Principais -->
+        <div id="vereador-metrics" class="vereador-grid">
+            <!-- Será preenchido dinamicamente -->
+        </div>
+
+        <!-- Ranking de Vereadores Eleitos -->
+        <div class="vereador-table">
+            <h3>🏆 Ranking de Vereadores Eleitos 2024</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Posição</th>
+                            <th>Nome</th>
+                            <th>Município</th>
+                            <th>Região</th>
+                            <th>Partido</th>
+                            <th>Votos 2024</th>
+                            <th>Mandato</th>
+                            <th>Função</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ranking-vereadores">
+                        <tr>
+                            <td colspan="8" class="text-center">Carregando dados...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Análise por Município -->
+        <div class="vereador-table">
+            <h3>🌍 Análise por Município</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Município</th>
+                            <th>Total Candidatos</th>
+                            <th>Eleitos</th>
+                            <th>Não Eleitos</th>
+                            <th>Taxa Sucesso</th>
+                            <th>Total Cadeiras</th>
+                            <th>Eficiência</th>
+                            <th>Votos 2024</th>
+                            <th>Performance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="analise-municipios">
+                        <tr>
+                            <td colspan="9" class="text-center">Carregando dados...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Evolução Eleitoral -->
+        <div class="vereador-table">
+            <h3>📈 Evolução Eleitoral 2016-2024</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Município</th>
+                            <th>Votos 2016</th>
+                            <th>Votos 2020</th>
+                            <th>Votos 2024</th>
+                            <th>Crescimento 2020</th>
+                            <th>Crescimento 2024</th>
+                            <th>Situação 2024</th>
+                        </tr>
+                    </thead>
+                    <tbody id="evolucao-eleitoral">
+                        <tr>
+                            <td colspan="8" class="text-center">Carregando dados...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading-spinner" class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Gerando relatório de vereadores...</p>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Vereador -->
+    <div id="modal-add-vereador" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>➕ Adicionar Vereador</h3>
+                <span class="modal-close">&times;</span>
+            </div>
+            <form id="form-add-vereador" class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Região *</label>
+                        <input type="text" id="new-regiao" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Igreja</label>
+                        <input type="text" id="new-igreja" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Município *</label>
+                        <input type="text" id="new-municipio" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nome 2024 *</label>
+                        <input type="text" id="new-nome2024" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contato</label>
+                        <input type="text" id="new-contato" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Função</label>
+                        <select id="new-funcao" class="form-input">
+                            <option value="">Selecione...</option>
+                            <option value="Obreiro">Obreiro</option>
+                            <option value="Cooperador">Cooperador</option>
+                            <option value="Membro">Membro</option>
+                            <option value="Simpatizante">Simpatizante</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Partido</label>
+                        <input type="text" id="new-partido" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Situação 2024</label>
+                        <select id="new-eleito-nao-eleito" class="form-input">
+                            <option value="">Selecione...</option>
+                            <option value="Eleito">Eleito</option>
+                            <option value="Não Eleito">Não Eleito</option>
+                            <option value="Suplente">Suplente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Qual Mandato Está</label>
+                        <select id="new-qual-mandato" class="form-input">
+                            <option value="">Selecione...</option>
+                            <option value="1º Mandato">1º Mandato</option>
+                            <option value="2º Mandato">2º Mandato</option>
+                            <option value="3º Mandato">3º Mandato</option>
+                            <option value="4º Mandato ou mais">4º Mandato ou mais</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Suplente 2024</label>
+                        <select id="new-suplente" class="form-input">
+                            <option value="">Selecione...</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Votos 2016</label>
+                        <input type="number" id="new-votos2016" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Votos 2020</label>
+                        <input type="number" id="new-votos2020" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Votos 2024</label>
+                        <input type="number" id="new-votos2024" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Total Cadeiras</label>
+                        <input type="number" id="new-total-cadeiras" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Maior Votação Eleito 2016</label>
+                        <input type="number" id="new-maior-eleito-2016" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Menor Votação Eleito 2016</label>
+                        <input type="number" id="new-menor-eleito-2016" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Maior Votação Eleito 2020</label>
+                        <input type="number" id="new-maior-eleito-2020" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Menor Votação Eleito 2020</label>
+                        <input type="number" id="new-menor-eleito-2020" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Maior Votação Eleito 2024</label>
+                        <input type="number" id="new-maior-eleito-2024" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Menor Votação Eleito 2024</label>
+                        <input type="number" id="new-menor-eleito-2024" class="form-input" min="0">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Adicionar Vereador</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="data/config.js"></script>
+    <script src="scripts/helpers.js"></script>
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/flow.js"></script>
+
+    <script>
+        class VereadorReports {
+            constructor() {
+                this.currentUser = AuthSystem.getCurrentUser();
+                this.vereadores = [];
+                this.relatorio = null;
+                this.init();
+            }
+
+            init() {
+                // Verificar se é coordenador
+                if (!this.currentUser || this.currentUser.role !== 'COORDENADOR') {
+                    alert('Acesso negado. Apenas coordenadores podem acessar relatórios de vereadores.');
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+
+                this.setupEventListeners();
+                this.loadInitialData();
+            }
+
+            setupEventListeners() {
+                // Botões principais
+                document.getElementById('btn-generate-report').addEventListener('click', () => this.generateReport());
+                document.getElementById('btn-add-vereador').addEventListener('click', () => this.openAddModal());
+                document.getElementById('btn-export-data').addEventListener('click', () => this.exportData());
+                document.getElementById('btn-refresh').addEventListener('click', () => this.loadInitialData());
+
+                // Filtros
+                document.getElementById('filter-regiao').addEventListener('change', () => this.filterData());
+                document.getElementById('filter-municipio').addEventListener('change', () => this.filterData());
+                document.getElementById('filter-situacao').addEventListener('change', () => this.filterData());
+
+                // Modal
+                document.getElementById('form-add-vereador').addEventListener('submit', (e) => this.addVereador(e));
+                
+                // Fechar modal
+                document.querySelectorAll('.modal-close').forEach(btn => {
+                    btn.addEventListener('click', () => this.closeModal());
+                });
+            }
+
+            async loadInitialData() {
+                try {
+                    this.showLoading(true);
+                    
+                    // Carregar vereadores
+                    await this.loadVereadores();
+                    
+                    // Carregar filtros
+                    this.populateFilters();
+                    
+                    // Gerar relatório inicial
+                    await this.generateReport();
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar dados:', error);
+                    showAlert('Erro ao carregar dados de vereadores', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async loadVereadores() {
+                const response = await FlowManager.makeRequest('buscarVereadores', {
+                    userInfo: this.currentUser
+                });
+
+                if (response.success) {
+                    this.vereadores = response.vereadores || [];
+                } else {
+                    throw new Error(response.error || 'Erro ao carregar vereadores');
+                }
+            }
+
+            populateFilters() {
+                const regioes = [...new Set(this.vereadores.map(v => v.regiao).filter(Boolean))].sort();
+                const municipios = [...new Set(this.vereadores.map(v => v.municipio).filter(Boolean))].sort();
+
+                this.populateSelect('filter-regiao', regioes);
+                this.populateSelect('filter-municipio', municipios);
+            }
+
+            populateSelect(selectId, options) {
+                const select = document.getElementById(selectId);
+                const currentOptions = select.querySelectorAll('option:not(:first-child)');
+                currentOptions.forEach(option => option.remove());
+
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    select.appendChild(optionElement);
+                });
+            }
+
+            async generateReport() {
+                try {
+                    this.showLoading(true);
+                    
+                    const response = await FlowManager.makeRequest('generateVereadorReport', {
+                        userInfo: this.currentUser
+                    });
+
+                    if (response.success) {
+                        this.relatorio = response.relatorioVereadores;
+                        this.renderReport();
+                    } else {
+                        throw new Error(response.error || 'Erro ao gerar relatório');
+                    }
+                    
+                } catch (error) {
+                    console.error('Erro ao gerar relatório:', error);
+                    showAlert('Erro ao gerar relatório de vereadores', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            renderReport() {
+                if (!this.relatorio) return;
+
+                this.renderSummary();
+                this.renderMetrics();
+                this.renderRankingVereadores();
+                this.renderAnaliseMunicipios();
+                this.renderEvolucaoEleitoral();
+            }
+
+            renderSummary() {
+                const summary = this.relatorio.resumoGeral;
+
+                const summaryHTML = `
+                    <div class="summary-card">
+                        <div class="summary-value">${summary.totalVereadores}</div>
+                        <div>Total Candidatos</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${summary.totalEleitos}</div>
+                        <div>Eleitos</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${summary.totalNaoEleitos}</div>
+                        <div>Não Eleitos</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${summary.taxaSucesso}</div>
+                        <div>Taxa de Sucesso</div>
+                    </div>
+                `;
+
+                document.getElementById('vereador-summary').innerHTML = summaryHTML;
+            }
+
+            renderMetrics() {
+                const summary = this.relatorio.resumoGeral;
+                const stats = this.relatorio.estatisticasGerais;
+
+                const metricsHTML = `
+                    <div class="vereador-card">
+                        <h3>📊 Estatísticas Gerais</h3>
+                        <div class="metric-value">${stats.municipiosComCandidatos}</div>
+                        <div class="metric-label">Municípios com Candidatos</div>
+                        <div class="metric-value">${stats.mediaVotosPorCandidato.toLocaleString()}</div>
+                        <div class="metric-label">Média de Votos por Candidato</div>
+                    </div>
+                    <div class="vereador-card">
+                        <h3>🏆 Melhor Performance</h3>
+                        <div class="metric-value">${stats.melhorMunicipio}</div>
+                        <div class="metric-label">Melhor Município</div>
+                        <div class="metric-value">${summary.totalVotos2024.toLocaleString()}</div>
+                        <div class="metric-label">Total de Votos 2024</div>
+                    </div>
+                    <div class="vereador-card">
+                        <h3>📈 Taxa de Sucesso</h3>
+                        <div class="metric-value success-rate">${summary.taxaSucesso}</div>
+                        <div class="metric-label">Candidatos Eleitos</div>
+                        <div class="metric-value">${summary.dataGeracao}</div>
+                        <div class="metric-label">Última Atualização</div>
+                    </div>
+                `;
+
+                document.getElementById('vereador-metrics').innerHTML = metricsHTML;
+            }
+
+            renderRankingVereadores() {
+                const tbody = document.getElementById('ranking-vereadores');
+                
+                if (!this.relatorio.rankingVereadores || this.relatorio.rankingVereadores.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center">Nenhum vereador eleito encontrado</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                this.relatorio.rankingVereadores.forEach((vereador, index) => {
+                    html += `
+                        <tr>
+                            <td>${index + 1}°</td>
+                            <td>${vereador.nome}</td>
+                            <td>${vereador.municipio}</td>
+                            <td>${vereador.regiao}</td>
+                            <td><span class="partido-badge">${vereador.partido}</span></td>
+                            <td>${vereador.votos2024.toLocaleString()}</td>
+                            <td><span class="mandato-info">${vereador.mandato}</span></td>
+                            <td>${vereador.funcao}</td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+            }
+
+            renderAnaliseMunicipios() {
+                const tbody = document.getElementById('analise-municipios');
+                
+                if (!this.relatorio.analisePorMunicipio) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="text-center">Nenhum dado disponível</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                Object.entries(this.relatorio.analisePorMunicipio).forEach(([municipio, dados]) => {
+                    const taxaSucesso = dados.totalCandidatos > 0 ? 
+                        ((dados.eleitos / dados.totalCandidatos) * 100).toFixed(1) + '%' : '0%';
+                    
+                    const eficienciaNum = parseFloat(dados.eficiencia) || 0;
+                    const barWidth = Math.min(eficienciaNum, 100);
+                    
+                    html += `
+                        <tr>
+                            <td>${municipio}</td>
+                            <td>${dados.totalCandidatos}</td>
+                            <td>${dados.eleitos}</td>
+                            <td>${dados.naoEleitos}</td>
+                            <td class="${dados.eleitos > dados.naoEleitos ? 'success-rate' : 'failure-rate'}">${taxaSucesso}</td>
+                            <td>${dados.totalCadeiras}</td>
+                            <td>${dados.eficiencia}</td>
+                            <td>${dados.votos2024.toLocaleString()}</td>
+                            <td>
+                                <div class="efficiency-bar">
+                                    <div class="efficiency-fill" style="width: ${barWidth}%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+            }
+
+            renderEvolucaoEleitoral() {
+                const tbody = document.getElementById('evolucao-eleitoral');
+                
+                if (!this.relatorio.evolucaoEleitoral || this.relatorio.evolucaoEleitoral.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center">Nenhum dado disponível</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                this.relatorio.evolucaoEleitoral.forEach(vereador => {
+                    const crescimento2020 = parseFloat(vereador.crescimento2020);
+                    const crescimento2024 = parseFloat(vereador.crescimento2024);
+                    
+                    const statusClass = vereador.situacao2024.toLowerCase().includes('eleito') ? 
+                        'status-eleito' : 'status-nao-eleito';
+                    
+                    html += `
+                        <tr>
+                            <td>${vereador.nome}</td>
+                            <td>${vereador.municipio}</td>
+                            <td>${vereador.votos2016.toLocaleString()}</td>
+                            <td>${vereador.votos2020.toLocaleString()}</td>
+                            <td>${vereador.votos2024.toLocaleString()}</td>
+                            <td class="${crescimento2020 >= 0 ? 'success-rate' : 'failure-rate'}">
+                                ${vereador.crescimento2020}
+                            </td>
+                            <td class="${crescimento2024 >= 0 ? 'success-rate' : 'failure-rate'}">
+                                ${vereador.crescimento2024}
+                            </td>
+                            <td><span class="${statusClass}">${vereador.situacao2024}</span></td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+            }
+
+            openAddModal() {
+                document.getElementById('modal-add-vereador').style.display = 'flex';
+            }
+
+            closeModal() {
+                document.getElementById('modal-add-vereador').style.display = 'none';
+                document.getElementById('form-add-vereador').reset();
+            }
+
+            async addVereador(e) {
+                e.preventDefault();
+                
+                try {
+                    const data = {
+                        regiao: document.getElementById('new-regiao').value,
+                        igreja: document.getElementById('new-igreja').value,
+                        municipio: document.getElementById('new-municipio').value,
+                        nome2024: document.getElementById('new-nome2024').value,
+                        contato: document.getElementById('new-contato').value,
+                        funcao: document.getElementById('new-funcao').value,
+                        partido: document.getElementById('new-partido').value,
+                        eleitoNaoEleito2024: document.getElementById('new-eleito-nao-eleito').value,
+                        qualMandatoEsta: document.getElementById('new-qual-mandato').value,
+                        suplente2024: document.getElementById('new-suplente').value,
+                        votos2016: parseInt(document.getElementById('new-votos2016').value) || 0,
+                        votos2020: parseInt(document.getElementById('new-votos2020').value) || 0,
+                        votos2024: parseInt(document.getElementById('new-votos2024').value) || 0,
+                        totalCadeiras: parseInt(document.getElementById('new-total-cadeiras').value) || 0,
+                        maiorVotacaoEleito2016: parseInt(document.getElementById('new-maior-eleito-2016').value) || 0,
+                        menorVotacaoEleito2016: parseInt(document.getElementById('new-menor-eleito-2016').value) || 0,
+                        maiorVotacaoEleito2020: parseInt(document.getElementById('new-maior-eleito-2020').value) || 0,
+                        menorVotacaoEleito2020: parseInt(document.getElementById('new-menor-eleito-2020').value) || 0,
+                        maiorVotacaoEleito2024: parseInt(document.getElementById('new-maior-eleito-2024').value) || 0,
+                        menorVotacaoEleito2024: parseInt(document.getElementById('new-menor-eleito-2024').value) || 0,
+                        userInfo: this.currentUser
+                    };
+
+                    const response = await FlowManager.makeRequest('adicionarVereador', data);
+
+                    if (response.success) {
+                        showAlert('Vereador adicionado com sucesso!', 'success');
+                        this.closeModal();
+                        await this.loadInitialData();
+                    } else {
+                        throw new Error(response.error || 'Erro ao adicionar vereador');
+                    }
+                    
+                } catch (error) {
+                    console.error('Erro ao adicionar vereador:', error);
+                    showAlert('Erro ao adicionar vereador: ' + error.message, 'error');
+                }
+            }
+
+            filterData() {
+                // Implementar filtros se necessário
+                console.log('Filtros aplicados');
+            }
+
+            exportData() {
+                if (!this.relatorio) {
+                    showAlert('Gere um relatório primeiro', 'warning');
+                    return;
+                }
+
+                // Criar CSV dos dados
+                let csv = 'Relatório de Vereadores - Arimateia Service\n\n';
+                csv += 'Resumo Geral\n';
+                csv += `Total Candidatos,${this.relatorio.resumoGeral.totalVereadores}\n`;
+                csv += `Total Eleitos,${this.relatorio.resumoGeral.totalEleitos}\n`;
+                csv += `Total Não Eleitos,${this.relatorio.resumoGeral.totalNaoEleitos}\n`;
+                csv += `Taxa de Sucesso,${this.relatorio.resumoGeral.taxaSucesso}\n\n`;
+
+                // Ranking de Vereadores
+                csv += 'Ranking de Vereadores Eleitos\n';
+                csv += 'Posição,Nome,Município,Região,Partido,Votos 2024,Mandato,Função\n';
+                this.relatorio.rankingVereadores.forEach((vereador, index) => {
+                    csv += `${index + 1},${vereador.nome},${vereador.municipio},${vereador.regiao},${vereador.partido},${vereador.votos2024},${vereador.mandato},${vereador.funcao}\n`;
+                });
+
+                // Download
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `relatorio_vereadores_${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+            }
+
+            showLoading(show) {
+                document.getElementById('loading-spinner').style.display = show ? 'block' : 'none';
+            }
+        }
+
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            new VereadorReports();
+        });
+    </script>
+</body>
+</html>

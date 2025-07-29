@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios Eleitorais - Arimateia Service</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <style>
+        .electoral-container {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .electoral-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .electoral-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .electoral-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .electoral-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0.5rem 0;
+        }
+
+        .metric-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .growth-positive {
+            color: #28a745;
+        }
+
+        .growth-negative {
+            color: #dc3545;
+        }
+
+        .electoral-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .electoral-table h3 {
+            background: var(--primary-color);
+            color: white;
+            margin: 0;
+            padding: 1rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 400px;
+        }
+
+        .electoral-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .electoral-table th,
+        .electoral-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .electoral-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .electoral-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .filter-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .efficiency-bar {
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .efficiency-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+        }
+
+        .electoral-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .summary-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .electoral-container {
+                padding: 1rem;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="electoral-container">
+        <div class="electoral-header">
+            <h1>🗳️ Relatórios Eleitorais</h1>
+            <p>Análise Avançada de Dados Eleitorais por Região, Igreja e Município</p>
+            <small>Acesso Restrito - Apenas Coordenadores</small>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filter-section">
+            <h3>📊 Filtros e Ações</h3>
+            <div class="filter-grid">
+                <div class="form-group">
+                    <label class="form-label">Região</label>
+                    <select id="filter-regiao" class="form-input">
+                        <option value="">Todas as Regiões</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Igreja</label>
+                    <select id="filter-igreja" class="form-input">
+                        <option value="">Todas as Igrejas</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Município</label>
+                    <select id="filter-municipio" class="form-input">
+                        <option value="">Todos os Municípios</option>
+                    </select>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button id="btn-generate-report" class="btn btn-primary">
+                    📊 Gerar Relatório Completo
+                </button>
+                <button id="btn-add-municipality" class="btn btn-success">
+                    ➕ Adicionar Município
+                </button>
+                <button id="btn-export-data" class="btn btn-secondary">
+                    📥 Exportar Dados
+                </button>
+                <button id="btn-refresh" class="btn btn-outline">
+                    🔄 Atualizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Resumo Geral -->
+        <div id="electoral-summary" class="electoral-summary">
+            <!-- Será preenchido dinamicamente -->
+        </div>
+
+        <!-- Métricas Principais -->
+        <div id="electoral-metrics" class="electoral-grid">
+            <!-- Será preenchido dinamicamente -->
+        </div>
+
+        <!-- Ranking de Igrejas por Eficiência -->
+        <div class="electoral-table">
+            <h3>🏆 Ranking de Igrejas por Eficiência Eleitoral</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Posição</th>
+                            <th>Região</th>
+                            <th>Igreja</th>
+                            <th>Municípios</th>
+                            <th>Total Arimatéias</th>
+                            <th>Votos 2022</th>
+                            <th>Eficiência</th>
+                            <th>Performance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ranking-igrejas">
+                        <tr>
+                            <td colspan="8" class="text-center">Carregando dados...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Análise por Região -->
+        <div class="electoral-table">
+            <h3>🌍 Análise por Região</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Região</th>
+                            <th>Municípios</th>
+                            <th>Igrejas</th>
+                            <th>Habitantes</th>
+                            <th>Obreiros</th>
+                            <th>Total Arimatéias</th>
+                            <th>DF 2022</th>
+                            <th>DE 2022</th>
+                            <th>Total Votos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="analise-regioes">
+                        <tr>
+                            <td colspan="9" class="text-center">Carregando dados...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Crescimento Eleitoral -->
+        <div class="electoral-table">
+            <h3>📈 Crescimento Eleitoral por Município</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Município</th>
+                            <th>Região</th>
+                            <th>Igreja</th>
+                            <th>DF Crescimento</th>
+                            <th>DE Crescimento</th>
+                            <th>Total Votos 2022</th>
+                            <th>Tendência</th>
+                        </tr>
+                    </thead>
+                    <tbody id="crescimento-municipios">
+                        <tr>
+                            <td colspan="7" class="text-center">Carregando dados...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading-spinner" class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Gerando relatório eleitoral...</p>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Município -->
+    <div id="modal-add-municipality" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➕ Adicionar Município Eleitoral</h3>
+                <span class="modal-close">&times;</span>
+            </div>
+            <form id="form-add-municipality" class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Região *</label>
+                        <select id="new-regiao" class="form-input" required>
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Igreja *</label>
+                        <select id="new-igreja" class="form-input" required>
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Município *</label>
+                        <input type="text" id="new-municipio" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Endereço</label>
+                        <input type="text" id="new-endereco" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Habitantes</label>
+                        <input type="number" id="new-habitantes" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Obreiros</label>
+                        <input type="number" id="new-obreiros" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Grupos (sem Obreiros)</label>
+                        <input type="number" id="new-grupos" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Povo Geral</label>
+                        <input type="number" id="new-povo-geral" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Arimatéias (Somente Obreiros)</label>
+                        <input type="number" id="new-arimateias-obreiros" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Total Arimatéias</label>
+                        <input type="number" id="new-total-arimateias" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Votos DF 2018</label>
+                        <input type="number" id="new-votos-df-2018" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Votos DF 2022</label>
+                        <input type="number" id="new-votos-df-2022" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Votos DE 2018</label>
+                        <input type="number" id="new-votos-de-2018" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Votos DE 2022</label>
+                        <input type="number" id="new-votos-de-2022" class="form-input" min="0">
+                    </div>
+                    <div class="form-group form-group-full">
+                        <label class="form-label">Observações</label>
+                        <textarea id="new-observacoes" class="form-input" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Adicionar Município</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="data/config.js"></script>
+    <script src="scripts/helpers.js"></script>
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/flow.js"></script>
+
+    <script>
+        class ElectoralReports {
+            constructor() {
+                this.currentUser = AuthSystem.getCurrentUser();
+                this.municipios = [];
+                this.relatorio = null;
+                this.init();
+            }
+
+            init() {
+                // Verificar se é coordenador
+                if (!this.currentUser || this.currentUser.role !== 'COORDENADOR') {
+                    alert('Acesso negado. Apenas coordenadores podem acessar relatórios eleitorais.');
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+
+                this.setupEventListeners();
+                this.loadInitialData();
+            }
+
+            setupEventListeners() {
+                // Botões principais
+                document.getElementById('btn-generate-report').addEventListener('click', () => this.generateReport());
+                document.getElementById('btn-add-municipality').addEventListener('click', () => this.openAddModal());
+                document.getElementById('btn-export-data').addEventListener('click', () => this.exportData());
+                document.getElementById('btn-refresh').addEventListener('click', () => this.loadInitialData());
+
+                // Filtros
+                document.getElementById('filter-regiao').addEventListener('change', () => this.filterData());
+                document.getElementById('filter-igreja').addEventListener('change', () => this.filterData());
+                document.getElementById('filter-municipio').addEventListener('change', () => this.filterData());
+
+                // Modal
+                document.getElementById('form-add-municipality').addEventListener('submit', (e) => this.addMunicipality(e));
+                
+                // Fechar modal
+                document.querySelectorAll('.modal-close').forEach(btn => {
+                    btn.addEventListener('click', () => this.closeModal());
+                });
+            }
+
+            async loadInitialData() {
+                try {
+                    this.showLoading(true);
+                    
+                    // Carregar municípios
+                    await this.loadMunicipios();
+                    
+                    // Carregar filtros
+                    this.populateFilters();
+                    
+                    // Gerar relatório inicial
+                    await this.generateReport();
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar dados:', error);
+                    showAlert('Erro ao carregar dados eleitorais', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async loadMunicipios() {
+                const response = await FlowManager.makeRequest('buscarMunicipios', {
+                    userInfo: this.currentUser
+                });
+
+                if (response.success) {
+                    this.municipios = response.municipios || [];
+                } else {
+                    throw new Error(response.error || 'Erro ao carregar municípios');
+                }
+            }
+
+            populateFilters() {
+                const regioes = [...new Set(this.municipios.map(m => m.regiao))].sort();
+                const igrejas = [...new Set(this.municipios.map(m => m.igreja))].sort();
+                const municipios = [...new Set(this.municipios.map(m => m.municipio))].sort();
+
+                this.populateSelect('filter-regiao', regioes);
+                this.populateSelect('filter-igreja', igrejas);
+                this.populateSelect('filter-municipio', municipios);
+
+                // Também popular os selects do modal
+                this.populateSelect('new-regiao', regioes);
+                this.populateSelect('new-igreja', igrejas);
+            }
+
+            populateSelect(selectId, options) {
+                const select = document.getElementById(selectId);
+                const currentOptions = select.querySelectorAll('option:not(:first-child)');
+                currentOptions.forEach(option => option.remove());
+
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    select.appendChild(optionElement);
+                });
+            }
+
+            async generateReport() {
+                try {
+                    this.showLoading(true);
+                    
+                    const response = await FlowManager.makeRequest('generateElectoralReport', {
+                        userInfo: this.currentUser
+                    });
+
+                    if (response.success) {
+                        this.relatorio = response.relatorioEleitoral;
+                        this.renderReport();
+                    } else {
+                        throw new Error(response.error || 'Erro ao gerar relatório');
+                    }
+                    
+                } catch (error) {
+                    console.error('Erro ao gerar relatório:', error);
+                    showAlert('Erro ao gerar relatório eleitoral', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            renderReport() {
+                if (!this.relatorio) return;
+
+                this.renderSummary();
+                this.renderMetrics();
+                this.renderRankingIgrejas();
+                this.renderAnaliseRegioes();
+                this.renderCrescimentoMunicipios();
+            }
+
+            renderSummary() {
+                const summary = this.relatorio.resumoGeral;
+                const votacao = this.relatorio.votacao;
+
+                const summaryHTML = `
+                    <div class="summary-card">
+                        <div class="summary-value">${summary.totalMunicipios}</div>
+                        <div>Municípios</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${summary.totalHabitantes.toLocaleString()}</div>
+                        <div>Habitantes</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${summary.totalArimateias.toLocaleString()}</div>
+                        <div>Total Arimatéias</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${votacao.totalVotos2022.toLocaleString()}</div>
+                        <div>Votos 2022</div>
+                    </div>
+                `;
+
+                document.getElementById('electoral-summary').innerHTML = summaryHTML;
+            }
+
+            renderMetrics() {
+                const summary = this.relatorio.resumoGeral;
+                const votacao = this.relatorio.votacao;
+
+                const metricsHTML = `
+                    <div class="electoral-card">
+                        <h3>👥 Demografia</h3>
+                        <div class="metric-value">${summary.totalObreiros.toLocaleString()}</div>
+                        <div class="metric-label">Total de Obreiros</div>
+                        <div class="metric-value">${summary.totalGrupos.toLocaleString()}</div>
+                        <div class="metric-label">Grupos (sem Obreiros)</div>
+                    </div>
+                    <div class="electoral-card">
+                        <h3>🗳️ Deputado Federal</h3>
+                        <div class="metric-value">${votacao.deputadoFederal.votos2022.toLocaleString()}</div>
+                        <div class="metric-label">Votos 2022</div>
+                        <div class="metric-value ${votacao.deputadoFederal.crescimento.includes('-') ? 'growth-negative' : 'growth-positive'}">
+                            ${votacao.deputadoFederal.crescimento}
+                        </div>
+                        <div class="metric-label">Crescimento</div>
+                    </div>
+                    <div class="electoral-card">
+                        <h3>🏛️ Deputado Estadual</h3>
+                        <div class="metric-value">${votacao.deputadoEstadual.votos2022.toLocaleString()}</div>
+                        <div class="metric-label">Votos 2022</div>
+                        <div class="metric-value ${votacao.deputadoEstadual.crescimento.includes('-') ? 'growth-negative' : 'growth-positive'}">
+                            ${votacao.deputadoEstadual.crescimento}
+                        </div>
+                        <div class="metric-label">Crescimento</div>
+                    </div>
+                    <div class="electoral-card">
+                        <h3>⚡ Eficiência Geral</h3>
+                        <div class="metric-value">${votacao.eficienciaGeral}</div>
+                        <div class="metric-label">Votos por Arimatéia</div>
+                        <div class="metric-value">${summary.percentualArimateiasObreiros}</div>
+                        <div class="metric-label">% Arimatéias Obreiros</div>
+                    </div>
+                `;
+
+                document.getElementById('electoral-metrics').innerHTML = metricsHTML;
+            }
+
+            renderRankingIgrejas() {
+                const tbody = document.getElementById('ranking-igrejas');
+                
+                if (!this.relatorio.rankingIgrejas || this.relatorio.rankingIgrejas.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center">Nenhum dado disponível</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                this.relatorio.rankingIgrejas.forEach((igreja, index) => {
+                    const eficiencia = parseFloat(igreja.eficienciaEleitoral);
+                    const barWidth = Math.min(eficiencia * 10, 100);
+                    
+                    html += `
+                        <tr>
+                            <td>${index + 1}°</td>
+                            <td>${igreja.regiao}</td>
+                            <td>${igreja.igreja}</td>
+                            <td>${igreja.municipios}</td>
+                            <td>${igreja.arimateiasTotal.toLocaleString()}</td>
+                            <td>${igreja.votosTotal2022.toLocaleString()}</td>
+                            <td>${igreja.eficienciaEleitoral}</td>
+                            <td>
+                                <div class="efficiency-bar">
+                                    <div class="efficiency-fill" style="width: ${barWidth}%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+            }
+
+            renderAnaliseRegioes() {
+                const tbody = document.getElementById('analise-regioes');
+                
+                if (!this.relatorio.analisePorRegiao) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="text-center">Nenhum dado disponível</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                Object.entries(this.relatorio.analisePorRegiao).forEach(([regiao, dados]) => {
+                    html += `
+                        <tr>
+                            <td>${regiao}</td>
+                            <td>${dados.municipios}</td>
+                            <td>${dados.totalIgrejas}</td>
+                            <td>${dados.habitantes.toLocaleString()}</td>
+                            <td>${dados.obreiros.toLocaleString()}</td>
+                            <td>${dados.totalArimateias.toLocaleString()}</td>
+                            <td>${dados.votosDF2022.toLocaleString()}</td>
+                            <td>${dados.votosDE2022.toLocaleString()}</td>
+                            <td>${(dados.votosDF2022 + dados.votosDE2022).toLocaleString()}</td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+            }
+
+            renderCrescimentoMunicipios() {
+                const tbody = document.getElementById('crescimento-municipios');
+                
+                if (!this.relatorio.crescimentoPorMunicipio || this.relatorio.crescimentoPorMunicipio.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum dado disponível</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                this.relatorio.crescimentoPorMunicipio.forEach(municipio => {
+                    const crescimentoDF = parseFloat(municipio.crescimentoDF);
+                    const crescimentoDE = parseFloat(municipio.crescimentoDE);
+                    const tendencia = (crescimentoDF + crescimentoDE) / 2;
+                    
+                    const tendenciaIcon = tendencia > 0 ? '📈' : tendencia < 0 ? '📉' : '➡️';
+                    const tendenciaClass = tendencia > 0 ? 'growth-positive' : tendencia < 0 ? 'growth-negative' : '';
+                    
+                    html += `
+                        <tr>
+                            <td>${municipio.municipio}</td>
+                            <td>${municipio.regiao}</td>
+                            <td>${municipio.igreja}</td>
+                            <td class="${crescimentoDF >= 0 ? 'growth-positive' : 'growth-negative'}">
+                                ${municipio.crescimentoDF}%
+                            </td>
+                            <td class="${crescimentoDE >= 0 ? 'growth-positive' : 'growth-negative'}">
+                                ${municipio.crescimentoDE}%
+                            </td>
+                            <td>${municipio.votosTotal2022.toLocaleString()}</td>
+                            <td class="${tendenciaClass}">
+                                ${tendenciaIcon} ${tendencia.toFixed(1)}%
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+            }
+
+            openAddModal() {
+                document.getElementById('modal-add-municipality').style.display = 'flex';
+            }
+
+            closeModal() {
+                document.getElementById('modal-add-municipality').style.display = 'none';
+                document.getElementById('form-add-municipality').reset();
+            }
+
+            async addMunicipality(e) {
+                e.preventDefault();
+                
+                try {
+                    const formData = new FormData(e.target);
+                    const data = {
+                        regiao: document.getElementById('new-regiao').value,
+                        igreja: document.getElementById('new-igreja').value,
+                        municipio: document.getElementById('new-municipio').value,
+                        endereco: document.getElementById('new-endereco').value,
+                        habitantes: parseInt(document.getElementById('new-habitantes').value) || 0,
+                        obreiros: parseInt(document.getElementById('new-obreiros').value) || 0,
+                        grupos: parseInt(document.getElementById('new-grupos').value) || 0,
+                        povoGeral: parseInt(document.getElementById('new-povo-geral').value) || 0,
+                        arimateiasObreiros: parseInt(document.getElementById('new-arimateias-obreiros').value) || 0,
+                        totalArimateias: parseInt(document.getElementById('new-total-arimateias').value) || 0,
+                        votosDF2018: parseInt(document.getElementById('new-votos-df-2018').value) || 0,
+                        votosDF2022: parseInt(document.getElementById('new-votos-df-2022').value) || 0,
+                        votosDE2018: parseInt(document.getElementById('new-votos-de-2018').value) || 0,
+                        votosDE2022: parseInt(document.getElementById('new-votos-de-2022').value) || 0,
+                        observacoes: document.getElementById('new-observacoes').value,
+                        userInfo: this.currentUser
+                    };
+
+                    const response = await FlowManager.makeRequest('adicionarMunicipio', data);
+
+                    if (response.success) {
+                        showAlert('Município adicionado com sucesso!', 'success');
+                        this.closeModal();
+                        await this.loadInitialData();
+                    } else {
+                        throw new Error(response.error || 'Erro ao adicionar município');
+                    }
+                    
+                } catch (error) {
+                    console.error('Erro ao adicionar município:', error);
+                    showAlert('Erro ao adicionar município: ' + error.message, 'error');
+                }
+            }
+
+            filterData() {
+                // Implementar filtros se necessário
+                console.log('Filtros aplicados');
+            }
+
+            exportData() {
+                if (!this.relatorio) {
+                    showAlert('Gere um relatório primeiro', 'warning');
+                    return;
+                }
+
+                // Criar CSV dos dados
+                let csv = 'Relatório Eleitoral - Arimateia Service\n\n';
+                csv += 'Resumo Geral\n';
+                csv += `Total Municípios,${this.relatorio.resumoGeral.totalMunicipios}\n`;
+                csv += `Total Habitantes,${this.relatorio.resumoGeral.totalHabitantes}\n`;
+                csv += `Total Arimatéias,${this.relatorio.resumoGeral.totalArimateias}\n`;
+                csv += `Total Votos 2022,${this.relatorio.votacao.totalVotos2022}\n\n`;
+
+                // Ranking de Igrejas
+                csv += 'Ranking de Igrejas\n';
+                csv += 'Posição,Região,Igreja,Municípios,Arimatéias,Votos 2022,Eficiência\n';
+                this.relatorio.rankingIgrejas.forEach((igreja, index) => {
+                    csv += `${index + 1},${igreja.regiao},${igreja.igreja},${igreja.municipios},${igreja.arimateiasTotal},${igreja.votosTotal2022},${igreja.eficienciaEleitoral}\n`;
+                });
+
+                // Download
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `relatorio_eleitoral_${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+            }
+
+            showLoading(show) {
+                document.getElementById('loading-spinner').style.display = show ? 'block' : 'none';
+            }
+        }
+
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            new ElectoralReports();
+        });
+    </script>
+</body>
+</html>

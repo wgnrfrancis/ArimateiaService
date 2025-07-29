@@ -107,33 +107,16 @@
                     <a href="balcao.html" class="nav-tab">Balcão</a>
                     <a href="secretaria.html" class="nav-tab">Secretaria</a>
                     <a href="coordenador.html" class="nav-tab">Coordenador</a>
+                    <a href="profissionais.html" class="nav-tab" data-permission="secretaria_view">Profissionais</a>
+                    <a href="assessores.html" class="nav-tab" data-permission="secretaria_view">Assessores</a>
+                    <a href="relatorios.html" class="nav-tab">Relatórios</a>
                     <a href="analytics.html" class="nav-tab">Analytics</a>
                 </nav>
                 <div class="card">
-                    <div class="activity-list">
-                        <div class="activity-item">
-                            <div class="activity-icon">📋</div>
-                            <div class="activity-content">
-                                <div class="activity-title">Novo chamado criado</div>
-                                <div class="activity-description">João Silva - Documentação para aposentadoria</div>
-                                <div class="activity-time">Há 2 horas</div>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon">✅</div>
-                            <div class="activity-content">
-                                <div class="activity-title">Chamado resolvido</div>
-                                <div class="activity-description">Maria Santos - Regularização de CPF</div>
-                                <div class="activity-time">Há 4 horas</div>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon">👥</div>
-                            <div class="activity-content">
-                                <div class="activity-title">Novo voluntário cadastrado</div>
-                                <div class="activity-description">Ana Costa - Região Norte</div>
-                                <div class="activity-time">Ontem</div>
-                            </div>
+                    <div class="activity-list" id="recent-activities">
+                        <!-- Atividades recentes serão carregadas dinamicamente -->
+                        <div class="text-center text-light">
+                            <p>Carregando atividades recentes...</p>
                         </div>
                     </div>
                 </div>

@@ -51,28 +51,11 @@
             </form>
 
             <div class="login-footer">
-                <div class="login-help">
-                    <h4>Primeiro acesso?</h4>
-                    <p>Use a senha padrão: <strong>Arimateia1</strong></p>
-                    <p>Você será solicitado a alterar sua senha no primeiro login.</p>
-                </div>
-
-                <div class="login-demo mt-4">
-                    <h4>Contas de demonstração:</h4>
-                    <div class="demo-accounts">
-                        <div class="demo-account">
-                            <strong>Voluntário:</strong><br>
-                            <small>voluntario@arimateia.org</small>
-                        </div>
-                        <div class="demo-account">
-                            <strong>Secretaria:</strong><br>
-                            <small>secretaria@arimateia.org</small>
-                        </div>
-                        <div class="demo-account">
-                            <strong>Coordenador:</strong><br>
-                            <small>coordenador@arimateia.org</small>
-                        </div>
-                    </div>
+                <div class="text-center">
+                    <p class="text-light">
+                        Não tem uma conta? 
+                        <a href="cadastro.html" class="text-primary">Cadastre-se como voluntário</a>
+                    </p>
                 </div>
 
                 <div class="login-info mt-4">
@@ -92,54 +75,13 @@
     <script src="scripts/main.js"></script>
 
     <style>
-        .login-help {
-            background: #f8fafc;
-            padding: 1rem;
-            border-radius: 6px;
-            margin-top: 1.5rem;
-            text-align: center;
-        }
-
-        .login-help h4 {
+        .text-primary {
             color: var(--primary-color);
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
+            text-decoration: none;
         }
 
-        .login-help p {
-            font-size: 0.75rem;
-            color: var(--text-light);
-            margin-bottom: 0.25rem;
-        }
-
-        .login-demo h4 {
-            color: var(--text-dark);
-            font-size: 0.875rem;
-            margin-bottom: 0.75rem;
-            text-align: center;
-        }
-
-        .demo-accounts {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 0.5rem;
-        }
-
-        .demo-account {
-            background: #f1f5f9;
-            padding: 0.75rem;
-            border-radius: 4px;
-            text-align: center;
-            font-size: 0.75rem;
-        }
-
-        .demo-account strong {
-            color: var(--primary-color);
-        }
-
-        .demo-account small {
-            color: var(--text-light);
-            font-family: monospace;
+        .text-primary:hover {
+            text-decoration: underline;
         }
 
         @media (max-width: 480px) {
@@ -151,10 +93,6 @@
             .login-logo {
                 width: 60px;
                 height: 60px;
-            }
-
-            .demo-accounts {
-                grid-template-columns: 1fr;
             }
         }
     </style>

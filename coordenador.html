@@ -120,14 +120,14 @@
                             <h3>🏥 Profissionais e Serviços</h3>
                         </div>
                         <div class="management-actions">
-                            <button class="btn btn-primary w-full" id="add-professional-btn">
-                                ➕ Adicionar Profissional
+                            <button class="btn btn-primary w-full" onclick="window.location.href='profissionais.html'">
+                                👨‍⚕️ Profissionais Liberais
+                            </button>
+                            <button class="btn btn-primary w-full" onclick="window.location.href='assessores.html'">
+                                🏛️ Assessores Parlamentares
                             </button>
                             <button class="btn btn-outline w-full" id="manage-services-btn">
                                 🔧 Gerenciar Serviços
-                            </button>
-                            <button class="btn btn-outline w-full" id="government-offices-btn">
-                                🏛️ Gabinetes e Secretarias
                             </button>
                         </div>
                     </div>
@@ -141,11 +141,20 @@
                             <button class="btn btn-success w-full" id="general-reports-btn">
                                 📈 Relatórios Gerais
                             </button>
+                            <button class="btn btn-primary w-full" onclick="window.location.href='eleicoes.html'">
+                                🗳️ Relatórios Eleitorais
+                            </button>
+                            <button class="btn btn-primary w-full" onclick="window.location.href='vereadores.html'">
+                                🏛️ Relatórios de Vereadores
+                            </button>
+                            <button class="btn btn-primary w-full" onclick="window.location.href='conselho.html'">
+                                🎯 Relatórios de Conselho
+                            </button>
                             <button class="btn btn-outline w-full" id="volunteer-reports-btn">
                                 👥 Ficha dos Voluntários
                             </button>
-                            <button class="btn btn-outline w-full" id="media-events-btn">
-                                📸 Mídias de Eventos
+                            <button class="btn btn-primary w-full" onclick="window.location.href='midias-arimateia.html'">
+                                � Mídias Arimateia
                             </button>
                         </div>
                     </div>
@@ -158,36 +167,12 @@
                     <div class="card-header">
                         <h3>🕒 Atividade Recente do Sistema</h3>
                     </div>
-                    <div class="activity-timeline">
-                        <div class="activity-item">
-                            <div class="activity-time">Há 15 min</div>
-                            <div class="activity-content">
-                                <div class="activity-title">Novo chamado criado</div>
-                                <div class="activity-description">João Silva - Igreja Central - Documentação previdenciária</div>
-                                <div class="activity-user">Por: Maria Santos (Secretaria)</div>
-                            </div>
+                    <div class="activity-timeline" id="activity-timeline">
+                        <!-- Timeline de atividades será carregada dinamicamente -->
+                        <div class="text-center text-light">
+                            <p>Carregando atividades recentes...</p>
                         </div>
-                        <div class="activity-item">
-                            <div class="activity-time">Há 1 hora</div>
-                            <div class="activity-content">
-                                <div class="activity-title">Chamado resolvido</div>
-                                <div class="activity-description">Ana Costa - Igreja do Jardim - Regularização de CPF</div>
-                                <div class="activity-user">Por: Pedro Oliveira (Coordenador)</div>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-time">Há 2 horas</div>
-                            <div class="activity-content">
-                                <div class="activity-title">Novo voluntário cadastrado</div>
-                                <div class="activity-description">Carlos Mendes - Região Norte - Igreja São João</div>
-                                <div class="activity-user">Por: Sistema</div>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-time">Há 3 horas</div>
-                            <div class="activity-content">
-                                <div class="activity-title">Relatório mensal gerado</div>
-                                <div class="activity-description">Relatório de atendimentos - Janeiro 2024</div>
+                    </div>
                                 <div class="activity-user">Por: Sistema Automático</div>
                             </div>
                         </div>
@@ -393,6 +378,11 @@
 
             document.getElementById('add-secretary-btn').addEventListener('click', function() {
                 openAddUserModal('SECRETARIA', 'Adicionar Secretário');
+            });
+
+            // Setup manage users button
+            document.getElementById('manage-users-btn').addEventListener('click', function() {
+                window.location.href = 'gerenciar-usuarios.html';
             });
 
             // Setup other management buttons

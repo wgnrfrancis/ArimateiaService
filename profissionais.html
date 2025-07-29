@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profissionais Liberais - Balcão da Cidadania</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        .profissionais-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .controls-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .profissionais-list {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .profissional-card {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1.5rem;
+            transition: background-color 0.2s;
+        }
+
+        .profissional-card:hover {
+            background: #f9fafb;
+        }
+
+        .profissional-card:last-child {
+            border-bottom: none;
+        }
+
+        .profissional-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .profissional-info {
+            flex: 1;
+        }
+
+        .profissional-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .profissional-profession {
+            color: var(--primary-color);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .profissional-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .detail-icon {
+            font-size: 1rem;
+        }
+
+        .profissional-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-ativo {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-inativo {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-pendente {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .form-grid-full {
+            grid-column: 1 / -1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .add-professional-card {
+            transition: all 0.3s ease;
+            border: 2px dashed var(--primary-color) !important;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0) !important;
+        }
+
+        .add-professional-card:hover {
+            border-color: var(--secondary-color) !important;
+            background: linear-gradient(135deg, #f1f5f9, #ddd6fe) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .add-professional-card .btn-large {
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .floating-add-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .floating-add-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .floating-add-btn:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 768px) {
+            .profissionais-container {
+                padding: 1rem;
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .profissional-details {
+                grid-template-columns: 1fr;
+            }
+
+            .profissional-actions {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="profissionais-container">
+        <div class="page-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>👨‍⚕️ Profissionais Liberais Voluntários</h1>
+                    <p>Cadastro e gestão de profissionais voluntários para atendimento especializado</p>
+                    <div id="profissionaisCounter" style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.8;">
+                        <!-- Contador será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <button onclick="adicionarProfissional()" class="btn btn-success" style="background: #16a34a; border-color: #16a34a; padding: 0.75rem 1.5rem; font-weight: 600;">
+                        ➕ Novo Profissional
+                    </button>
+                    <button onclick="history.back()" class="btn btn-outline" style="background: rgba(255,255,255,0.2); color: white; border-color: rgba(255,255,255,0.3);">
+                        ⬅️ Voltar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <div class="controls-grid">
+                <div class="form-group">
+                    <label for="filtroProfissao" class="form-label">Filtrar por Profissão</label>
+                    <select id="filtroProfissao" class="form-select">
+                        <option value="">Todas as profissões</option>
+                        <!-- Preenchido dinamicamente -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="filtroCidade" class="form-label">Filtrar por Cidade</label>
+                    <input type="text" id="filtroCidade" class="form-input" placeholder="Digite a cidade">
+                </div>
+
+                <div class="form-group">
+                    <label for="filtroStatus" class="form-label">Filtrar por Status</label>
+                    <select id="filtroStatus" class="form-select">
+                        <option value="">Todos os status</option>
+                        <option value="Ativo">Ativo</option>
+                        <option value="Inativo">Inativo</option>
+                        <option value="Pendente">Pendente</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button onclick="adicionarProfissional()" class="btn btn-primary" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); border: none; font-weight: 600; padding: 0.75rem 1.5rem; font-size: 1.1rem;">
+                    ➕ Novo Profissional
+                </button>
+                <button onclick="aplicarFiltros()" class="btn btn-secondary">
+                    🔍 Filtrar
+                </button>
+                <button onclick="limparFiltros()" class="btn btn-outline">
+                    🗑️ Limpar Filtros
+                </button>
+                <button onclick="exportarProfissionais()" class="btn btn-outline">
+                    📥 Exportar Lista
+                </button>
+            </div>
+        </div>
+
+        <!-- Card de Adicionar Novo Profissional -->
+        <div class="card add-professional-card" style="margin-bottom: 2rem; border: 2px dashed var(--primary-color); background: linear-gradient(135deg, #f8fafc, #e2e8f0); cursor: pointer;" onclick="adicionarProfissional()">
+            <div style="text-align: center; padding: 2rem;">
+                <div style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;">➕</div>
+                <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">Adicionar Novo Profissional</h3>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Cadastre um novo profissional liberal voluntário</p>
+                <button class="btn btn-primary btn-large" onclick="adicionarProfissional(); event.stopPropagation();">
+                    👨‍⚕️ Cadastrar Profissional
+                </button>
+            </div>
+        </div>
+
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner"></div>
+            <p>Carregando profissionais...</p>
+        </div>
+
+        <div class="profissionais-list" id="profissionaisList">
+            <!-- Lista de profissionais será inserida aqui -->
+        </div>
+    </div>
+
+    <!-- Botão Flutuante para Adicionar -->
+    <button class="floating-add-btn" onclick="adicionarProfissional()" title="Adicionar Novo Profissional">
+        ➕
+    </button>
+
+    <!-- Modal para Adicionar/Editar Profissional -->
+    <div class="modal" id="profissionalModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Adicionar Profissional</h3>
+                <button class="btn-close" onclick="fecharModal()">&times;</button>
+            </div>
+
+            <form id="profissionalForm" onsubmit="salvarProfissional(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="nome" class="form-label">Nome Completo *</label>
+                        <input type="text" id="nome" name="nome" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefone" class="form-label">Telefone *</label>
+                        <input type="tel" id="telefone" name="telefone" class="form-input" required placeholder="(11) 99999-9999">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profissao" class="form-label">Profissão *</label>
+                        <select id="profissao" name="profissao" class="form-select" required>
+                            <option value="">Selecione a profissão</option>
+                            <!-- Preenchido dinamicamente -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cidade" class="form-label">Cidade *</label>
+                        <input type="text" id="cidade" name="cidade" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" id="email" name="email" class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registro" class="form-label">Registro Profissional</label>
+                        <input type="text" id="registro" name="registro" class="form-input" placeholder="CRM, CRO, OAB, etc.">
+                    </div>
+
+                    <div class="form-group form-grid-full">
+                        <label for="especialidade" class="form-label">Especialidade</label>
+                        <input type="text" id="especialidade" name="especialidade" class="form-input" placeholder="Área específica de atuação">
+                    </div>
+
+                    <div class="form-group form-grid-full">
+                        <label for="disponibilidade" class="form-label">Disponibilidade</label>
+                        <textarea id="disponibilidade" name="disponibilidade" class="form-input" rows="2" placeholder="Horários e dias disponíveis"></textarea>
+                    </div>
+
+                    <div class="form-group form-grid-full">
+                        <label for="observacoes" class="form-label">Observações</label>
+                        <textarea id="observacoes" name="observacoes" class="form-input" rows="3" placeholder="Informações adicionais"></textarea>
+                    </div>
+                </div>
+
+                <div class="btn-group" style="margin-top: 1.5rem;">
+                    <button type="submit" class="btn btn-primary">
+                        💾 Salvar
+                    </button>
+                    <button type="button" onclick="fecharModal()" class="btn btn-outline">
+                        ❌ Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="data/config.js"></script>
+    <script src="scripts/helpers.js"></script>
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/flow.js"></script>
+
+    <script>
+        let profissionaisData = [];
+        let profissaoAtual = null; // Para edição
+        let profissoesDisponiveis = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar autenticação e permissões
+            if (!auth.isAuthenticated()) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const user = auth.getCurrentUser();
+            if (user.role !== 'COORDENADOR' && user.role !== 'SECRETARIA') {
+                Helpers.showToast('Acesso negado. Apenas coordenadores e secretários podem acessar esta página.', 'error');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 2000);
+                return;
+            }
+
+            // Carregar dados iniciais
+            carregarProfissoes();
+            carregarProfissionais();
+
+            // Configurar eventos
+            document.getElementById('telefone').addEventListener('input', formatarTelefone);
+            
+            // Atalho de teclado para adicionar profissional (Ctrl + N)
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'n') {
+                    e.preventDefault();
+                    adicionarProfissional();
+                }
+            });
+        });
+
+        async function carregarProfissoes() {
+            try {
+                const result = await flowManager.getProfissoes();
+                if (result.success) {
+                    profissoesDisponiveis = result.profissoes;
+                    
+                    // Preencher selects
+                    const selectProfissao = document.getElementById('profissao');
+                    const selectFiltroProfissao = document.getElementById('filtroProfissao');
+                    
+                    profissoesDisponiveis.forEach(profissao => {
+                        // Select do modal
+                        const option1 = document.createElement('option');
+                        option1.value = profissao;
+                        option1.textContent = profissao;
+                        selectProfissao.appendChild(option1);
+                        
+                        // Select do filtro
+                        const option2 = document.createElement('option');
+                        option2.value = profissao;
+                        option2.textContent = profissao;
+                        selectFiltroProfissao.appendChild(option2);
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao carregar profissões:', error);
+            }
+        }
+
+        async function carregarProfissionais() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+            
+            try {
+                const result = await flowManager.buscarProfissionais();
+                if (result.success) {
+                    profissionaisData = result.profissionais;
+                    renderizarProfissionais(profissionaisData);
+                } else {
+                    throw new Error(result.error || 'Erro ao carregar profissionais');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar profissionais:', error);
+                Helpers.showToast('Erro ao carregar profissionais: ' + error.message, 'error');
+                renderizarProfissionais([]);
+            } finally {
+                document.getElementById('loadingSpinner').style.display = 'none';
+            }
+        }
+
+        function renderizarProfissionais(profissionais) {
+            const container = document.getElementById('profissionaisList');
+            
+            // Atualizar contador no cabeçalho
+            const counter = document.getElementById('profissionaisCounter');
+            if (profissionais.length === 0) {
+                counter.textContent = '📊 Nenhum profissional cadastrado ainda';
+            } else {
+                const ativos = profissionais.filter(p => p.status === 'Ativo').length;
+                const inativos = profissionais.filter(p => p.status === 'Inativo').length;
+                const pendentes = profissionais.filter(p => p.status === 'Pendente').length;
+                counter.innerHTML = `📊 Total: ${profissionais.length} profissionais | ✅ ${ativos} ativos | ⏳ ${pendentes} pendentes | ❌ ${inativos} inativos`;
+            }
+            
+            if (profissionais.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 4rem; margin-bottom: 1rem; color: var(--text-muted);">👨‍⚕️</div>
+                        <h3>Nenhum profissional cadastrado</h3>
+                        <p style="margin-bottom: 2rem;">Comece cadastrando o primeiro profissional liberal voluntário!</p>
+                        <button onclick="adicionarProfissional()" class="btn btn-primary btn-large" style="padding: 1rem 2rem; font-size: 1.2rem;">
+                            ➕ Cadastrar Primeiro Profissional
+                        </button>
+                        <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted);">
+                            Ou use o atalho <kbd style="background: #f3f4f6; padding: 0.2rem 0.4rem; border-radius: 4px;">Ctrl + N</kbd>
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = profissionais.map(prof => `
+                <div class="profissional-card">
+                    <div class="profissional-header">
+                        <div class="profissional-info">
+                            <div class="profissional-name">${prof.nome}</div>
+                            <div class="profissional-profession">${prof.profissao}</div>
+                            <span class="status-badge status-${prof.status.toLowerCase()}">${prof.status}</span>
+                        </div>
+                    </div>
+
+                    <div class="profissional-details">
+                        <div class="detail-item">
+                            <span class="detail-icon">📱</span>
+                            <span>${prof.telefone}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">🏙️</span>
+                            <span>${prof.cidade}</span>
+                        </div>
+                        ${prof.email ? `
+                            <div class="detail-item">
+                                <span class="detail-icon">📧</span>
+                                <span>${prof.email}</span>
+                            </div>
+                        ` : ''}
+                        ${prof.registro ? `
+                            <div class="detail-item">
+                                <span class="detail-icon">🏥</span>
+                                <span>${prof.registro}</span>
+                            </div>
+                        ` : ''}
+                        ${prof.especialidade ? `
+                            <div class="detail-item">
+                                <span class="detail-icon">⭐</span>
+                                <span>${prof.especialidade}</span>
+                            </div>
+                        ` : ''}
+                        <div class="detail-item">
+                            <span class="detail-icon">📊</span>
+                            <span>${prof.totalAtendimentos} atendimentos</span>
+                        </div>
+                    </div>
+
+                    ${prof.disponibilidade ? `
+                        <div style="margin: 1rem 0; padding: 0.75rem; background: #f9fafb; border-radius: 6px;">
+                            <strong>Disponibilidade:</strong> ${prof.disponibilidade}
+                        </div>
+                    ` : ''}
+
+                    ${prof.observacoes ? `
+                        <div style="margin: 1rem 0; padding: 0.75rem; background: #fef3c7; border-radius: 6px;">
+                            <strong>Observações:</strong> ${prof.observacoes}
+                        </div>
+                    ` : ''}
+
+                    <div class="profissional-actions">
+                        <button onclick="editarProfissional('${prof.id}')" class="btn btn-sm btn-secondary">
+                            ✏️ Editar
+                        </button>
+                        ${auth.getCurrentUser().role === 'COORDENADOR' ? `
+                            <button onclick="removerProfissional('${prof.id}', '${prof.nome}')" class="btn btn-sm btn-danger">
+                                🗑️ Remover
+                            </button>
+                        ` : ''}
+                        <button onclick="contatarProfissional('${prof.telefone}')" class="btn btn-sm btn-outline">
+                            📞 Contatar
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function aplicarFiltros() {
+            const profissao = document.getElementById('filtroProfissao').value;
+            const cidade = document.getElementById('filtroCidade').value.toLowerCase();
+            const status = document.getElementById('filtroStatus').value;
+
+            const profissionaisFiltrados = profissionaisData.filter(prof => {
+                return (!profissao || prof.profissao === profissao) &&
+                       (!cidade || prof.cidade.toLowerCase().includes(cidade)) &&
+                       (!status || prof.status === status);
+            });
+
+            renderizarProfissionais(profissionaisFiltrados);
+        }
+
+        function limparFiltros() {
+            document.getElementById('filtroProfissao').value = '';
+            document.getElementById('filtroCidade').value = '';
+            document.getElementById('filtroStatus').value = '';
+            renderizarProfissionais(profissionaisData);
+        }
+
+        function adicionarProfissional() {
+            profissaoAtual = null;
+            document.getElementById('modalTitle').textContent = 'Adicionar Novo Profissional';
+            document.getElementById('profissionalForm').reset();
+            document.getElementById('profissionalModal').classList.add('show');
+            
+            // Focar no primeiro campo
+            setTimeout(() => {
+                document.getElementById('nome').focus();
+            }, 100);
+        }
+
+        function editarProfissional(profId) {
+            profissaoAtual = profissionaisData.find(p => p.id === profId);
+            if (!profissaoAtual) return;
+
+            document.getElementById('modalTitle').textContent = 'Editar Profissional';
+            
+            // Preencher formulário
+            document.getElementById('nome').value = profissaoAtual.nome;
+            document.getElementById('telefone').value = profissaoAtual.telefone;
+            document.getElementById('profissao').value = profissaoAtual.profissao;
+            document.getElementById('cidade').value = profissaoAtual.cidade;
+            document.getElementById('email').value = profissaoAtual.email || '';
+            document.getElementById('registro').value = profissaoAtual.registro || '';
+            document.getElementById('especialidade').value = profissaoAtual.especialidade || '';
+            document.getElementById('disponibilidade').value = profissaoAtual.disponibilidade || '';
+            document.getElementById('observacoes').value = profissaoAtual.observacoes || '';
+
+            document.getElementById('profissionalModal').classList.add('show');
+        }
+
+        async function salvarProfissional(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const dados = Object.fromEntries(formData.entries());
+
+            try {
+                Helpers.showLoading('Salvando profissional...');
+
+                const result = profissaoAtual ? 
+                    await flowManager.atualizarProfissional(profissaoAtual.id, dados) :
+                    await flowManager.adicionarProfissional(dados);
+
+                if (result.success) {
+                    Helpers.showToast(result.message, 'success');
+                    fecharModal();
+                    carregarProfissionais();
+                } else {
+                    throw new Error(result.error || 'Erro ao salvar profissional');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar profissional:', error);
+                Helpers.showToast('Erro ao salvar: ' + error.message, 'error');
+            } finally {
+                Helpers.hideLoading();
+            }
+        }
+
+        async function removerProfissional(profId, nome) {
+            if (!confirm(`Tem certeza que deseja remover ${nome}?`)) return;
+
+            try {
+                Helpers.showLoading('Removendo profissional...');
+
+                const result = await flowManager.removerProfissional(profId);
+                if (result.success) {
+                    Helpers.showToast(result.message, 'success');
+                    carregarProfissionais();
+                } else {
+                    throw new Error(result.error || 'Erro ao remover profissional');
+                }
+            } catch (error) {
+                console.error('Erro ao remover profissional:', error);
+                Helpers.showToast('Erro ao remover: ' + error.message, 'error');
+            } finally {
+                Helpers.hideLoading();
+            }
+        }
+
+        function contatarProfissional(telefone) {
+            const numeroLimpo = telefone.replace(/\D/g, '');
+            const whatsappUrl = `https://wa.me/55${numeroLimpo}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        function fecharModal() {
+            document.getElementById('profissionalModal').classList.remove('show');
+        }
+
+        function formatarTelefone(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length <= 11) {
+                if (value.length === 11) {
+                    value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                } else if (value.length === 10) {
+                    value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+                }
+                e.target.value = value;
+            }
+        }
+
+        function exportarProfissionais() {
+            if (profissionaisData.length === 0) {
+                Helpers.showToast('Nenhum profissional para exportar!', 'warning');
+                return;
+            }
+
+            const dataStr = JSON.stringify(profissionaisData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `profissionais_liberais_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            Helpers.showToast('Lista exportada!', 'success');
+        }
+
+        // Adicionar métodos ao flowManager
+        if (typeof flowManager !== 'undefined') {
+            flowManager.adicionarProfissional = async function(dados) {
+                return await this.makeRequest('adicionarProfissional', { dados });
+            };
+
+            flowManager.buscarProfissionais = async function(filtros = {}) {
+                return await this.makeRequest('buscarProfissionais', { filtros });
+            };
+
+            flowManager.atualizarProfissional = async function(profId, dados) {
+                return await this.makeRequest('atualizarProfissional', { profId, dados });
+            };
+
+            flowManager.removerProfissional = async function(profId) {
+                return await this.makeRequest('removerProfissional', { profId });
+            };
+
+            flowManager.getProfissoes = async function() {
+                return await this.makeRequest('getProfissoes');
+            };
+        }
+
+        // Fechar modal ao clicar fora
+        document.getElementById('profissionalModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                fecharModal();
+            }
+        });
+    </script>
+</body>
+</html>

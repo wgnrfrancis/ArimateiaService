@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - Balcão da Cidadania</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        .report-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .report-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .report-controls {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .report-results {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .summary-card h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-dark);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .summary-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-card .status {
+            font-size: 0.875rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .status.atingida {
+            background: #10b981;
+            color: white;
+        }
+
+        .status.abaixo {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status.acima {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .report-table th,
+        .report-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .report-table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .report-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .highlight-titulo {
+            background: linear-gradient(90deg, #fef3c7, #fbbf24);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .report-container {
+                padding: 1rem;
+            }
+
+            .control-group {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <div class="report-header">
+            <h1>📊 Relatórios do Balcão da Cidadania</h1>
+            <p>Análise completa de desempenho, metas e estatísticas por região e igreja</p>
+        </div>
+
+        <div class="report-controls">
+            <div class="control-group">
+                <div class="form-group">
+                    <label for="tipoRelatorio" class="form-label">Tipo de Relatório</label>
+                    <select id="tipoRelatorio" class="form-select">
+                        <option value="GERAL">Relatório Geral (Todas as Regiões)</option>
+                        <option value="REGIAO">Por Região Específica</option>
+                        <option value="IGREJA">Por Igreja Específica</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="filtroGroup" style="display: none;">
+                    <label for="filtroNome" class="form-label">Região/Igreja</label>
+                    <select id="filtroNome" class="form-select">
+                        <option value="">Selecione...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button onclick="gerarRelatorio()" class="btn btn-primary">
+                    📊 Gerar Relatório
+                </button>
+                <button onclick="exportarRelatorio()" class="btn btn-secondary">
+                    📥 Exportar Dados
+                </button>
+                <button onclick="limparRelatorio()" class="btn btn-outline">
+                    🗑️ Limpar
+                </button>
+            </div>
+        </div>
+
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner"></div>
+            <p>Gerando relatório...</p>
+        </div>
+
+        <div id="reportResults" class="report-results" style="display: none;">
+            <div class="highlight-titulo">
+                <h3>🎯 Destaque: Título de Eleitor</h3>
+                <p id="tituloEleitorInfo">Carregando informações...</p>
+            </div>
+
+            <div class="summary-cards" id="summaryCards">
+                <!-- Cards de resumo serão inseridos aqui -->
+            </div>
+
+            <div style="padding: 1.5rem;">
+                <h3>📋 Detalhamento por Região/Igreja</h3>
+                <div style="overflow-x: auto;">
+                    <table class="report-table" id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>Região/Igreja</th>
+                                <th>Total Membros</th>
+                                <th>Voluntários</th>
+                                <th>Meta Vol.</th>
+                                <th>Status Vol.</th>
+                                <th>Coordenadores</th>
+                                <th>Meta Coord.</th>
+                                <th>Status Coord.</th>
+                                <th>Chamados</th>
+                                <th>Resolvidos</th>
+                                <th>Taxa</th>
+                                <th>Título Eleitor</th>
+                                <th>% Título</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody">
+                            <!-- Dados serão inseridos aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="data/config.js"></script>
+    <script src="scripts/helpers.js"></script>
+    <script src="scripts/flow.js"></script>
+
+    <script>
+        let dadosRelatorio = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurar eventos
+            document.getElementById('tipoRelatorio').addEventListener('change', handleTipoRelatorioChange);
+            
+            // Carregar opções iniciais
+            carregarOpcoesFiltro();
+        });
+
+        function handleTipoRelatorioChange() {
+            const tipo = document.getElementById('tipoRelatorio').value;
+            const filtroGroup = document.getElementById('filtroGroup');
+            
+            if (tipo === 'GERAL') {
+                filtroGroup.style.display = 'none';
+            } else {
+                filtroGroup.style.display = 'block';
+                carregarOpcoesFiltro();
+            }
+        }
+
+        function carregarOpcoesFiltro() {
+            const tipo = document.getElementById('tipoRelatorio').value;
+            const filtroSelect = document.getElementById('filtroNome');
+            
+            filtroSelect.innerHTML = '<option value="">Selecione...</option>';
+            
+            if (tipo === 'REGIAO') {
+                // Carregar regiões
+                Object.keys(CONFIG.igrejasPorRegiao).forEach(regiao => {
+                    const option = document.createElement('option');
+                    option.value = regiao;
+                    option.textContent = regiao;
+                    filtroSelect.appendChild(option);
+                });
+            } else if (tipo === 'IGREJA') {
+                // Carregar igrejas (todas)
+                CONFIG.churches.forEach(igreja => {
+                    const option = document.createElement('option');
+                    option.value = igreja;
+                    option.textContent = igreja;
+                    filtroSelect.appendChild(option);
+                });
+            }
+        }
+
+        async function gerarRelatorio() {
+            const tipo = document.getElementById('tipoRelatorio').value;
+            const filtro = document.getElementById('filtroNome').value;
+            
+            // Mostrar loading
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('reportResults').style.display = 'none';
+            
+            try {
+                const result = await flowManager.generateAdvancedReport({
+                    tipo: tipo,
+                    filtroNome: filtro || null
+                });
+                
+                if (result.success) {
+                    dadosRelatorio = result.dados;
+                    exibirRelatorio(result.dados);
+                    Helpers.showToast('Relatório gerado com sucesso!', 'success');
+                } else {
+                    throw new Error(result.error || 'Erro ao gerar relatório');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao gerar relatório:', error);
+                Helpers.showToast('Erro ao gerar relatório: ' + error.message, 'error');
+            } finally {
+                document.getElementById('loadingSpinner').style.display = 'none';
+            }
+        }
+
+        function exibirRelatorio(dados) {
+            // Atualizar informações do Título de Eleitor
+            const tituloInfo = document.getElementById('tituloEleitorInfo');
+            const porcentagemTitulo = dados.dadosGerais.totalChamados > 0 ? 
+                Math.round((dados.dadosGerais.chamadosTituloEleitor / dados.dadosGerais.totalChamados) * 100) : 0;
+            
+            tituloInfo.innerHTML = `
+                <strong>${dados.dadosGerais.chamadosTituloEleitor}</strong> chamados de Título de Eleitor 
+                de um total de <strong>${dados.dadosGerais.totalChamados}</strong> chamados 
+                (<strong>${porcentagemTitulo}%</strong> do total).
+                Esta é nossa demanda prioritária com prioridade ALTA automática.
+            `;
+
+            // Gerar cards de resumo
+            gerarSummaryCards(dados.dadosGerais);
+            
+            // Gerar tabela (simulada - em produção viria dos dados retornados)
+            gerarTabelaRelatorio(dados);
+            
+            // Mostrar resultados
+            document.getElementById('reportResults').style.display = 'block';
+        }
+
+        function gerarSummaryCards(dadosGerais) {
+            const container = document.getElementById('summaryCards');
+            const metaVoluntarios = Math.ceil(dadosGerais.totalMembros * 0.01);
+            const metaCoordenadores = dadosGerais.igrejas;
+            
+            const cards = [
+                {
+                    title: 'Total de Membros',
+                    value: dadosGerais.totalMembros.toLocaleString(),
+                    status: null
+                },
+                {
+                    title: 'Voluntários no Sistema',
+                    value: dadosGerais.totalVoluntarios,
+                    status: dadosGerais.totalVoluntarios >= metaVoluntarios ? 'ATINGIDA' : 'ABAIXO',
+                    meta: `Meta: ${metaVoluntarios} (1%)`
+                },
+                {
+                    title: 'Coordenadores',
+                    value: dadosGerais.totalCoordenadores,
+                    status: dadosGerais.totalCoordenadores >= metaCoordenadores ? 'ATINGIDA' : 'ABAIXO',
+                    meta: `Meta: ${metaCoordenadores} (1 por igreja)`
+                },
+                {
+                    title: 'Taxa de Resolução',
+                    value: dadosGerais.totalChamados > 0 ? 
+                        Math.round((dadosGerais.chamadosResolvidos / dadosGerais.totalChamados) * 100) + '%' : '0%',
+                    status: null
+                }
+            ];
+            
+            container.innerHTML = cards.map(card => `
+                <div class="summary-card">
+                    <h3>${card.title}</h3>
+                    <div class="value">${card.value}</div>
+                    ${card.meta ? `<div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem;">${card.meta}</div>` : ''}
+                    ${card.status ? `<span class="status ${card.status.toLowerCase()}">${card.status}</span>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function gerarTabelaRelatorio(dados) {
+            const tbody = document.getElementById('reportTableBody');
+            
+            // Simular dados da tabela baseados nos dados recebidos
+            const linhas = [];
+            
+            if (dados.tipo === 'GERAL') {
+                // Adicionar linha do BLOCO GERAL
+                const geral = dados.dadosGerais;
+                const metaVol = Math.ceil(geral.totalMembros * 0.01);
+                const statusVol = geral.totalVoluntarios >= metaVol ? 'ATINGIDA' : 'ABAIXO';
+                const statusCoord = geral.totalCoordenadores >= geral.igrejas ? 'ATINGIDA' : 'ABAIXO';
+                const taxaResolucao = geral.totalChamados > 0 ? Math.round((geral.chamadosResolvidos / geral.totalChamados) * 100) : 0;
+                const porcentagemTitulo = geral.totalChamados > 0 ? Math.round((geral.chamadosTituloEleitor / geral.totalChamados) * 100) : 0;
+                
+                linhas.push([
+                    'BLOCO GERAL',
+                    geral.totalMembros.toLocaleString(),
+                    geral.totalVoluntarios,
+                    metaVol,
+                    statusVol,
+                    geral.totalCoordenadores,
+                    geral.igrejas,
+                    statusCoord,
+                    geral.totalChamados,
+                    geral.chamadosResolvidos,
+                    taxaResolucao + '%',
+                    geral.chamadosTituloEleitor,
+                    porcentagemTitulo + '%'
+                ]);
+                
+                // Adicionar dados simulados por região
+                Object.keys(CONFIG.igrejasPorRegiao).forEach(regiao => {
+                    const igrejasRegiao = CONFIG.igrejasPorRegiao[regiao].length;
+                    const membrosEstimados = Math.floor(geral.totalMembros / 9); // Dividir por 9 regiões
+                    const voluntariosEstimados = Math.floor(geral.totalVoluntarios / 9);
+                    const chamadosEstimados = Math.floor(geral.totalChamados / 9);
+                    const resolvidosEstimados = Math.floor(geral.chamadosResolvidos / 9);
+                    const tituloEstimados = Math.floor(geral.chamadosTituloEleitor / 9);
+                    
+                    linhas.push([
+                        regiao,
+                        membrosEstimados.toLocaleString(),
+                        voluntariosEstimados,
+                        Math.ceil(membrosEstimados * 0.01),
+                        voluntariosEstimados >= Math.ceil(membrosEstimados * 0.01) ? 'ATINGIDA' : 'ABAIXO',
+                        Math.min(igrejasRegiao, Math.floor(geral.totalCoordenadores / 9)),
+                        igrejasRegiao,
+                        Math.min(igrejasRegiao, Math.floor(geral.totalCoordenadores / 9)) >= igrejasRegiao ? 'ATINGIDA' : 'ABAIXO',
+                        chamadosEstimados,
+                        resolvidosEstimados,
+                        chamadosEstimados > 0 ? Math.round((resolvidosEstimados / chamadosEstimados) * 100) + '%' : '0%',
+                        tituloEstimados,
+                        chamadosEstimados > 0 ? Math.round((tituloEstimados / chamadosEstimados) * 100) + '%' : '0%'
+                    ]);
+                });
+            }
+            
+            tbody.innerHTML = linhas.map(linha => `
+                <tr>
+                    ${linha.map((cell, index) => {
+                        let className = '';
+                        if (index === 4 || index === 7) { // Colunas de status
+                            className = `status ${cell.toLowerCase()}`;
+                        }
+                        return `<td><span class="${className}">${cell}</span></td>`;
+                    }).join('')}
+                </tr>
+            `).join('');
+        }
+
+        function exportarRelatorio() {
+            if (!dadosRelatorio) {
+                Helpers.showToast('Gere um relatório primeiro!', 'warning');
+                return;
+            }
+            
+            // Simular exportação
+            const dataStr = JSON.stringify(dadosRelatorio, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `relatorio_balcao_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            Helpers.showToast('Relatório exportado!', 'success');
+        }
+
+        function limparRelatorio() {
+            document.getElementById('reportResults').style.display = 'none';
+            dadosRelatorio = null;
+            Helpers.showToast('Relatório limpo!', 'info');
+        }
+
+        // Adicionar ao flowManager
+        if (typeof flowManager !== 'undefined') {
+            flowManager.generateAdvancedReport = async function(data) {
+                return await this.makeRequest('generateAdvancedReport', data);
+            };
+        }
+    </script>
+</body>
+</html>

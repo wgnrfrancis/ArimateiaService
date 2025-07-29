@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessores Parlamentares - Balcão da Cidadania</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        .assessores-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #0f766e, #0891b2);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .controls-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .assessores-list {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .assessor-card {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1.5rem;
+            transition: background-color 0.2s;
+        }
+
+        .assessor-card:hover {
+            background: #f9fafb;
+        }
+
+        .assessor-card:last-child {
+            border-bottom: none;
+        }
+
+        .assessor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .assessor-info {
+            flex: 1;
+        }
+
+        .assessor-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .assessor-parlamentar {
+            color: #0f766e;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .assessor-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .detail-icon {
+            font-size: 1rem;
+        }
+
+        .assessor-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .add-assessor-card {
+            transition: all 0.3s ease;
+            border: 2px dashed #0f766e !important;
+            background: linear-gradient(135deg, #f0fdfa, #e6fffa) !important;
+        }
+
+        .add-assessor-card:hover {
+            border-color: #0891b2 !important;
+            background: linear-gradient(135deg, #ccfbf1, #a7f3d0) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .add-assessor-card .btn-large {
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .floating-add-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0f766e, #0891b2);
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .floating-add-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .form-grid-full {
+            grid-column: 1 / -1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .assessores-container {
+                padding: 1rem;
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .assessor-details {
+                grid-template-columns: 1fr;
+            }
+
+            .assessor-actions {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="assessores-container">
+        <div class="page-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>🏛️ Assessores Parlamentares</h1>
+                    <p>Cadastro e gestão de assessores vinculados aos parlamentares</p>
+                    <div id="assessoresCounter" style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.8;">
+                        <!-- Contador será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <button onclick="adicionarAssessor()" class="btn btn-success" style="background: #059669; border-color: #059669; padding: 0.75rem 1.5rem; font-weight: 600;">
+                        ➕ Novo Assessor
+                    </button>
+                    <button onclick="history.back()" class="btn btn-outline" style="background: rgba(255,255,255,0.2); color: white; border-color: rgba(255,255,255,0.3);">
+                        ⬅️ Voltar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <div class="controls-grid">
+                <div class="form-group">
+                    <label for="filtroParlamentar" class="form-label">Filtrar por Parlamentar</label>
+                    <input type="text" id="filtroParlamentar" class="form-input" placeholder="Digite o nome do parlamentar">
+                </div>
+
+                <div class="form-group">
+                    <label for="filtroCidade" class="form-label">Filtrar por Cidade</label>
+                    <input type="text" id="filtroCidade" class="form-input" placeholder="Digite a cidade do gabinete">
+                </div>
+
+                <div class="form-group">
+                    <label for="filtroAssessor" class="form-label">Filtrar por Assessor</label>
+                    <input type="text" id="filtroAssessor" class="form-input" placeholder="Digite o nome do assessor">
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button onclick="adicionarAssessor()" class="btn btn-primary" style="background: linear-gradient(135deg, #0f766e, #0891b2); border: none; font-weight: 600; padding: 0.75rem 1.5rem; font-size: 1.1rem;">
+                    ➕ Novo Assessor
+                </button>
+                <button onclick="aplicarFiltros()" class="btn btn-secondary">
+                    🔍 Filtrar
+                </button>
+                <button onclick="limparFiltros()" class="btn btn-outline">
+                    🗑️ Limpar Filtros
+                </button>
+                <button onclick="exportarAssessores()" class="btn btn-outline">
+                    📥 Exportar Lista
+                </button>
+            </div>
+        </div>
+
+        <!-- Card de Adicionar Novo Assessor -->
+        <div class="card add-assessor-card" style="margin-bottom: 2rem; border: 2px dashed #0f766e; background: linear-gradient(135deg, #f0fdfa, #e6fffa); cursor: pointer;" onclick="adicionarAssessor()">
+            <div style="text-align: center; padding: 2rem;">
+                <div style="font-size: 3rem; color: #0f766e; margin-bottom: 1rem;">🏛️</div>
+                <h3 style="color: #0f766e; margin-bottom: 0.5rem;">Adicionar Novo Assessor</h3>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Cadastre um novo assessor parlamentar</p>
+                <button class="btn btn-primary btn-large" style="background: #0f766e;" onclick="adicionarAssessor(); event.stopPropagation();">
+                    🏛️ Cadastrar Assessor
+                </button>
+            </div>
+        </div>
+
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner"></div>
+            <p>Carregando assessores...</p>
+        </div>
+
+        <div class="assessores-list" id="assessoresList">
+            <!-- Lista de assessores será inserida aqui -->
+        </div>
+    </div>
+
+    <!-- Botão Flutuante para Adicionar -->
+    <button class="floating-add-btn" onclick="adicionarAssessor()" title="Adicionar Novo Assessor">
+        ➕
+    </button>
+
+    <!-- Modal para Adicionar/Editar Assessor -->
+    <div class="modal" id="assessorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Adicionar Assessor</h3>
+                <button class="btn-close" onclick="fecharModal()">&times;</button>
+            </div>
+
+            <form id="assessorForm" onsubmit="salvarAssessor(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="acessor" class="form-label">Nome do Assessor *</label>
+                        <input type="text" id="acessor" name="acessor" class="form-input" required placeholder="Nome completo do assessor">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefone" class="form-label">Telefone *</label>
+                        <input type="tel" id="telefone" name="telefone" class="form-input" required placeholder="(11) 99999-9999">
+                    </div>
+
+                    <div class="form-group form-grid-full">
+                        <label for="parlamentar" class="form-label">Parlamentar *</label>
+                        <input type="text" id="parlamentar" name="parlamentar" class="form-input" required placeholder="Nome do parlamentar">
+                    </div>
+
+                    <div class="form-group form-grid-full">
+                        <label for="gabinete" class="form-label">Gabinete - Cidade *</label>
+                        <input type="text" id="gabinete" name="gabinete" class="form-input" required placeholder="Ex: Gabinete São Paulo - SP">
+                    </div>
+
+                    <div class="form-group form-grid-full">
+                        <label for="observacoes" class="form-label">Observações</label>
+                        <textarea id="observacoes" name="observacoes" class="form-input" rows="3" placeholder="Informações adicionais sobre o assessor"></textarea>
+                    </div>
+                </div>
+
+                <div class="btn-group" style="margin-top: 1.5rem;">
+                    <button type="submit" class="btn btn-primary">
+                        💾 Salvar
+                    </button>
+                    <button type="button" onclick="fecharModal()" class="btn btn-outline">
+                        ❌ Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="data/config.js"></script>
+    <script src="scripts/helpers.js"></script>
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/flow.js"></script>
+
+    <script>
+        let assessoresData = [];
+        let assessorAtual = null; // Para edição
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar autenticação e permissões
+            if (!auth.isAuthenticated()) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const user = auth.getCurrentUser();
+            if (user.role !== 'COORDENADOR' && user.role !== 'SECRETARIA') {
+                Helpers.showToast('Acesso negado. Apenas coordenadores e secretários podem acessar esta página.', 'error');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 2000);
+                return;
+            }
+
+            // Carregar dados iniciais
+            carregarAssessores();
+
+            // Configurar eventos
+            document.getElementById('telefone').addEventListener('input', formatarTelefone);
+            
+            // Atalho de teclado para adicionar assessor (Ctrl + N)
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'n') {
+                    e.preventDefault();
+                    adicionarAssessor();
+                }
+            });
+        });
+
+        async function carregarAssessores() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+            
+            try {
+                const result = await flowManager.buscarAssessores();
+                if (result.success) {
+                    assessoresData = result.assessores;
+                    renderizarAssessores(assessoresData);
+                } else {
+                    throw new Error(result.error || 'Erro ao carregar assessores');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar assessores:', error);
+                Helpers.showToast('Erro ao carregar assessores: ' + error.message, 'error');
+                renderizarAssessores([]);
+            } finally {
+                document.getElementById('loadingSpinner').style.display = 'none';
+            }
+        }
+
+        function renderizarAssessores(assessores) {
+            const container = document.getElementById('assessoresList');
+            
+            // Atualizar contador no cabeçalho
+            const counter = document.getElementById('assessoresCounter');
+            if (assessores.length === 0) {
+                counter.textContent = '📊 Nenhum assessor cadastrado ainda';
+            } else {
+                // Contar parlamentares únicos
+                const parlamentares = [...new Set(assessores.map(a => a.parlamentar))];
+                counter.innerHTML = `📊 Total: ${assessores.length} assessores | 🏛️ ${parlamentares.length} parlamentares`;
+            }
+            
+            if (assessores.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 4rem; margin-bottom: 1rem; color: var(--text-muted);">🏛️</div>
+                        <h3>Nenhum assessor cadastrado</h3>
+                        <p style="margin-bottom: 2rem;">Comece cadastrando o primeiro assessor parlamentar!</p>
+                        <button onclick="adicionarAssessor()" class="btn btn-primary btn-large" style="padding: 1rem 2rem; font-size: 1.2rem; background: #0f766e;">
+                            ➕ Cadastrar Primeiro Assessor
+                        </button>
+                        <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted);">
+                            Ou use o atalho <kbd style="background: #f3f4f6; padding: 0.2rem 0.4rem; border-radius: 4px;">Ctrl + N</kbd>
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = assessores.map(assessor => `
+                <div class="assessor-card">
+                    <div class="assessor-header">
+                        <div class="assessor-info">
+                            <div class="assessor-name">${assessor.acessor}</div>
+                            <div class="assessor-parlamentar">${assessor.parlamentar}</div>
+                        </div>
+                    </div>
+
+                    <div class="assessor-details">
+                        <div class="detail-item">
+                            <span class="detail-icon">📱</span>
+                            <span>${assessor.telefone}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">🏛️</span>
+                            <span>${assessor.gabinete}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">📅</span>
+                            <span>Cadastrado em ${new Date(assessor.dataCadastro).toLocaleDateString()}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">👤</span>
+                            <span>Por ${assessor.cadastradoPor}</span>
+                        </div>
+                    </div>
+
+                    ${assessor.observacoes ? `
+                        <div style="margin: 1rem 0; padding: 0.75rem; background: #f0fdfa; border-radius: 6px; border-left: 4px solid #0f766e;">
+                            <strong>Observações:</strong> ${assessor.observacoes}
+                        </div>
+                    ` : ''}
+
+                    <div class="assessor-actions">
+                        <button onclick="editarAssessor('${assessor.id}')" class="btn btn-sm btn-secondary">
+                            ✏️ Editar
+                        </button>
+                        ${auth.getCurrentUser().role === 'COORDENADOR' ? `
+                            <button onclick="removerAssessor('${assessor.id}', '${assessor.acessor}')" class="btn btn-sm btn-danger">
+                                🗑️ Remover
+                            </button>
+                        ` : ''}
+                        <button onclick="contatarAssessor('${assessor.telefone}')" class="btn btn-sm btn-outline">
+                            📞 Contatar
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function aplicarFiltros() {
+            const parlamentar = document.getElementById('filtroParlamentar').value.toLowerCase();
+            const cidade = document.getElementById('filtroCidade').value.toLowerCase();
+            const assessor = document.getElementById('filtroAssessor').value.toLowerCase();
+
+            const assessoresFiltrados = assessoresData.filter(ass => {
+                return (!parlamentar || ass.parlamentar.toLowerCase().includes(parlamentar)) &&
+                       (!cidade || ass.gabinete.toLowerCase().includes(cidade)) &&
+                       (!assessor || ass.acessor.toLowerCase().includes(assessor));
+            });
+
+            renderizarAssessores(assessoresFiltrados);
+        }
+
+        function limparFiltros() {
+            document.getElementById('filtroParlamentar').value = '';
+            document.getElementById('filtroCidade').value = '';
+            document.getElementById('filtroAssessor').value = '';
+            renderizarAssessores(assessoresData);
+        }
+
+        function adicionarAssessor() {
+            assessorAtual = null;
+            document.getElementById('modalTitle').textContent = 'Adicionar Novo Assessor';
+            document.getElementById('assessorForm').reset();
+            document.getElementById('assessorModal').classList.add('show');
+            
+            // Focar no primeiro campo
+            setTimeout(() => {
+                document.getElementById('acessor').focus();
+            }, 100);
+        }
+
+        function editarAssessor(assessorId) {
+            assessorAtual = assessoresData.find(a => a.id === assessorId);
+            if (!assessorAtual) return;
+
+            document.getElementById('modalTitle').textContent = 'Editar Assessor';
+            
+            // Preencher formulário
+            document.getElementById('acessor').value = assessorAtual.acessor;
+            document.getElementById('telefone').value = assessorAtual.telefone;
+            document.getElementById('parlamentar').value = assessorAtual.parlamentar;
+            document.getElementById('gabinete').value = assessorAtual.gabinete;
+            document.getElementById('observacoes').value = assessorAtual.observacoes || '';
+
+            document.getElementById('assessorModal').classList.add('show');
+        }
+
+        async function salvarAssessor(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const dados = Object.fromEntries(formData.entries());
+
+            try {
+                Helpers.showLoading('Salvando assessor...');
+
+                const result = assessorAtual ? 
+                    await flowManager.atualizarAssessor(assessorAtual.id, dados) :
+                    await flowManager.adicionarAssessor(dados);
+
+                if (result.success) {
+                    Helpers.showToast(result.message, 'success');
+                    fecharModal();
+                    carregarAssessores();
+                } else {
+                    throw new Error(result.error || 'Erro ao salvar assessor');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar assessor:', error);
+                Helpers.showToast('Erro ao salvar: ' + error.message, 'error');
+            } finally {
+                Helpers.hideLoading();
+            }
+        }
+
+        async function removerAssessor(assessorId, nome) {
+            if (!confirm(`Tem certeza que deseja remover o assessor ${nome}?`)) return;
+
+            try {
+                Helpers.showLoading('Removendo assessor...');
+
+                const result = await flowManager.removerAssessor(assessorId);
+                if (result.success) {
+                    Helpers.showToast(result.message, 'success');
+                    carregarAssessores();
+                } else {
+                    throw new Error(result.error || 'Erro ao remover assessor');
+                }
+            } catch (error) {
+                console.error('Erro ao remover assessor:', error);
+                Helpers.showToast('Erro ao remover: ' + error.message, 'error');
+            } finally {
+                Helpers.hideLoading();
+            }
+        }
+
+        function contatarAssessor(telefone) {
+            const numeroLimpo = telefone.replace(/\D/g, '');
+            const whatsappUrl = `https://wa.me/55${numeroLimpo}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        function fecharModal() {
+            document.getElementById('assessorModal').classList.remove('show');
+        }
+
+        function formatarTelefone(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length <= 11) {
+                if (value.length === 11) {
+                    value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                } else if (value.length === 10) {
+                    value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+                }
+                e.target.value = value;
+            }
+        }
+
+        function exportarAssessores() {
+            if (assessoresData.length === 0) {
+                Helpers.showToast('Nenhum assessor para exportar!', 'warning');
+                return;
+            }
+
+            const dataStr = JSON.stringify(assessoresData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `assessores_parlamentares_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            Helpers.showToast('Lista exportada!', 'success');
+        }
+
+        // Adicionar métodos ao flowManager
+        if (typeof flowManager !== 'undefined') {
+            flowManager.adicionarAssessor = async function(dados) {
+                return await this.makeRequest('adicionarAssessor', { dados });
+            };
+
+            flowManager.buscarAssessores = async function(filtros = {}) {
+                return await this.makeRequest('buscarAssessores', { filtros });
+            };
+
+            flowManager.atualizarAssessor = async function(assessorId, dados) {
+                return await this.makeRequest('atualizarAssessor', { assessorId, dados });
+            };
+
+            flowManager.removerAssessor = async function(assessorId) {
+                return await this.makeRequest('removerAssessor', { assessorId });
+            };
+        }
+
+        // Fechar modal ao clicar fora
+        document.getElementById('assessorModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                fecharModal();
+            }
+        });
+    </script>
+</body>
+</html>

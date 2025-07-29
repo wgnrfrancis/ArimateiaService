@@ -2,7 +2,6 @@
 const CONFIG = {
     // Authentication settings
     auth: {
-        defaultPassword: "Arimateia1",
         sessionTimeout: 8 * 60 * 60 * 1000, // 8 hours in milliseconds
     },
 
@@ -42,27 +41,107 @@ const CONFIG = {
 
     // Available regions
     regions: [
-        "Norte",
-        "Sul", 
-        "Leste",
-        "Oeste",
-        "Centro",
-        "Grande ABC",
-        "Interior"
+        "CATEDRAL",
+        "Presidente Prudente",
+        "Pirapozinho",
+        "Presidente Venceslau",
+        "Rancharia",
+        "Andradina",
+        "Tupã",
+        "Assis",
+        "Dracena"
     ],
 
-    // Churches list (can be expanded)
+    // Churches organized by region with IDs
+    igrejasPorRegiao: {
+        "CATEDRAL": [
+            { id: "IGR001", nome: "CATEDRAL DA FÉ" }
+        ],
+        "Presidente Prudente": [
+            { id: "IGR002", nome: "Cecap" },
+            { id: "IGR003", nome: "Humberto Salvador" },
+            { id: "IGR004", nome: "Santo Expedito" },
+            { id: "IGR005", nome: "Montalvão" },
+            { id: "IGR006", nome: "Indiana" },
+            { id: "IGR007", nome: "Ana Jacinta" },
+            { id: "IGR008", nome: "Alvares Machado" },
+            { id: "IGR009", nome: "Pinheiros" },
+            { id: "IGR010", nome: "Taciba" },
+            { id: "IGR011", nome: "Regente Feijo" }
+        ],
+        "Pirapozinho": [
+            { id: "IGR012", nome: "Pirapozinho" },
+            { id: "IGR013", nome: "Anhumas" },
+            { id: "IGR014", nome: "Tarabai" },
+            { id: "IGR015", nome: "Teodoro Sampaio" },
+            { id: "IGR016", nome: "Mirante" },
+            { id: "IGR017", nome: "Primavera" },
+            { id: "IGR018", nome: "Rosana" },
+            { id: "IGR019", nome: "Euclides da Cunha" }
+        ],
+        "Presidente Venceslau": [
+            { id: "IGR020", nome: "Presidente Venceslau" },
+            { id: "IGR021", nome: "Presidente Epitácio" },
+            { id: "IGR022", nome: "Presidente Bernardes" },
+            { id: "IGR023", nome: "Santo Anastácio" },
+            { id: "IGR024", nome: "Piquerobi" }
+        ],
+        "Rancharia": [
+            { id: "IGR025", nome: "RANCHARIA" },
+            { id: "IGR026", nome: "Martinopólis" },
+            { id: "IGR027", nome: "Quatá" },
+            { id: "IGR028", nome: "Iepe" },
+            { id: "IGR029", nome: "Paraguaçu Paulista" }
+        ],
+        "Andradina": [
+            { id: "IGR030", nome: "ANDRADINA" },
+            { id: "IGR031", nome: "Mirandopolis" },
+            { id: "IGR032", nome: "Castilho" },
+            { id: "IGR033", nome: "Guaracaí" }
+        ],
+        "Tupã": [
+            { id: "IGR034", nome: "TUPÃ" },
+            { id: "IGR035", nome: "Bastos" },
+            { id: "IGR036", nome: "Quintana" },
+            { id: "IGR037", nome: "Queiroz" },
+            { id: "IGR038", nome: "Osvaldo Cruz" },
+            { id: "IGR039", nome: "Parapuã" },
+            { id: "IGR040", nome: "Salmourão" },
+            { id: "IGR041", nome: "Herculândia" }
+        ],
+        "Assis": [
+            { id: "IGR042", nome: "ASSIS" },
+            { id: "IGR043", nome: "Tarumã" },
+            { id: "IGR044", nome: "Prudenciana" },
+            { id: "IGR045", nome: "Echaporã" },
+            { id: "IGR046", nome: "Candido Mota" },
+            { id: "IGR047", nome: "Palmital" },
+            { id: "IGR048", nome: "Ibirarema" }
+        ],
+        "Dracena": [
+            { id: "IGR049", nome: "DRACENA" },
+            { id: "IGR050", nome: "Junqueiropolis" },
+            { id: "IGR051", nome: "Panorama" },
+            { id: "IGR052", nome: "Tupi Paulista" },
+            { id: "IGR053", nome: "Irapuru" },
+            { id: "IGR054", nome: "Paraiso" },
+            { id: "IGR055", nome: "Adamantina" },
+            { id: "IGR056", nome: "Lucélia" }
+        ]
+    },
+
+    // Flat list of all churches (for backward compatibility)
     churches: [
-        "Igreja Central",
-        "Igreja do Bairro Alto",
-        "Igreja da Vila Nova",
-        "Igreja do Centro",
-        "Igreja São João",
-        "Igreja Santa Maria",
-        "Igreja do Jardim",
-        "Igreja da Paz",
-        "Igreja Esperança",
-        "Igreja Vida Nova"
+        "CATEDRAL DA FÉ", "Cecap", "Humberto Salvador", "Santo Expedito", "Montalvão", 
+        "Indiana", "Ana Jacinta", "Alvares Machado", "Pinheiros", "Taciba", "Regente Feijo",
+        "Pirapozinho", "Anhumas", "Tarabai", "Teodoro Sampaio", "Mirante", "Primavera", 
+        "Rosana", "Euclides da Cunha", "Presidente Venceslau", "Presidente Epitácio", 
+        "Presidente Bernardes", "Santo Anastácio", "Piquerobi", "RANCHARIA", "Martinopólis", 
+        "Quatá", "Iepe", "Paraguaçu Paulista", "ANDRADINA", "Mirandopolis", "Castilho", 
+        "Guaracaí", "TUPÃ", "Bastos", "Quintana", "Queiroz", "Osvaldo Cruz", "Parapuã", 
+        "Salmourão", "Herculândia", "ASSIS", "Tarumã", "Prudenciana", "Echaporã", 
+        "Candido Mota", "Palmital", "Ibirarema", "DRACENA", "Junqueiropolis", "Panorama", 
+        "Tupi Paulista", "Irapuru", "Paraiso", "Adamantina", "Lucélia"
     ],
 
     // Ticket status options

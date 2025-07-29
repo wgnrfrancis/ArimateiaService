@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Usuários - Balcão da Cidadania</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+    <style>
+        .usuarios-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .filtros-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .filtros-row {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .filtro-grupo {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filtro-grupo label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .filtro-grupo select,
+        .filtro-grupo button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .btn-filtrar {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-filtrar:hover {
+            background: #0056b3;
+        }
+
+        .usuarios-lista {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .usuario-card {
+            border-bottom: 1px solid #eee;
+            padding: 20px;
+            transition: background 0.3s ease;
+        }
+
+        .usuario-card:hover {
+            background: #f8f9fa;
+        }
+
+        .usuario-card:last-child {
+            border-bottom: none;
+        }
+
+        .usuario-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .usuario-nome {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .usuario-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pendente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-ativo {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inativo {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .usuario-acoes {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-acao {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-aprovar {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-aprovar:hover {
+            background: #218838;
+        }
+
+        .btn-promover {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-promover:hover {
+            background: #0056b3;
+        }
+
+        .btn-inativar {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-inativar:hover {
+            background: #c82333;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .modal-acoes {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancelar {
+            background: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-confirmar {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .filtros-row {
+                flex-direction: column;
+            }
+
+            .usuario-info {
+                grid-template-columns: 1fr;
+            }
+
+            .usuario-acoes {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="assets/avatar.png" alt="Avatar" class="avatar">
+            <div class="user-info">
+                <div class="user-name" id="userName">Carregando...</div>
+                <div class="user-role" id="userRole">Coordenador</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-link">
+                <span>📊</span> Dashboard
+            </a>
+            <a href="coordenador.html" class="nav-link">
+                <span>👥</span> Gerenciar Sistema
+            </a>
+            <a href="gerenciar-usuarios.html" class="nav-link active">
+                <span>👤</span> Gerenciar Usuários
+            </a>
+            <a href="analytics.html" class="nav-link">
+                <span>📈</span> Analytics
+            </a>
+            <a href="#" class="nav-link" onclick="logout()">
+                <span>🚪</span> Sair
+            </a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="usuarios-container">
+            <h1>Gerenciar Usuários</h1>
+            
+            <!-- Filtros -->
+            <div class="filtros-container">
+                <div class="filtros-row">
+                    <div class="filtro-grupo">
+                        <label for="filtroStatus">Status</label>
+                        <select id="filtroStatus">
+                            <option value="">Todos os status</option>
+                            <option value="Pendente">Pendente</option>
+                            <option value="Ativo">Ativo</option>
+                            <option value="Inativo">Inativo</option>
+                        </select>
+                    </div>
+                    <div class="filtro-grupo">
+                        <label for="filtroCargo">Cargo</label>
+                        <select id="filtroCargo">
+                            <option value="">Todos os cargos</option>
+                            <option value="VOLUNTARIO">Voluntário</option>
+                            <option value="SECRETARIA">Secretária</option>
+                            <option value="COORDENADOR">Coordenador</option>
+                        </select>
+                    </div>
+                    <div class="filtro-grupo">
+                        <label for="filtroIgreja">Igreja</label>
+                        <select id="filtroIgreja">
+                            <option value="">Todas as igrejas</option>
+                        </select>
+                    </div>
+                    <div class="filtro-grupo">
+                        <button type="button" class="btn-filtrar" onclick="buscarUsuarios()">
+                            🔍 Buscar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Usuários -->
+            <div class="usuarios-lista" id="usuariosLista">
+                <div class="loading">
+                    <p>Carregando usuários...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Alteração -->
+    <div id="modalAlteracao" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Alterar Usuário</h2>
+            </div>
+            <form id="formAlteracao">
+                <div class="form-group">
+                    <label for="novoStatus">Novo Status</label>
+                    <select id="novoStatus" required>
+                        <option value="">Selecione o status</option>
+                        <option value="Ativo">Ativo</option>
+                        <option value="Inativo">Inativo</option>
+                        <option value="Pendente">Pendente</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="novoCargo">Novo Cargo (opcional)</label>
+                    <select id="novoCargo">
+                        <option value="">Manter cargo atual</option>
+                        <option value="VOLUNTARIO">Voluntário</option>
+                        <option value="SECRETARIA">Secretária</option>
+                        <option value="COORDENADOR">Coordenador</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="observacoes">Observações</label>
+                    <textarea id="observacoes" rows="3" placeholder="Motivo da alteração..."></textarea>
+                </div>
+                <div class="modal-acoes">
+                    <button type="button" class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+                    <button type="submit" class="btn-confirmar">Confirmar Alteração</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/helpers.js"></script>
+    <script src="scripts/flow.js"></script>
+    <script>
+        let usuarioAtual = null;
+        let usuarioSelecionado = null;
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            usuarioAtual = getCurrentUser();
+            
+            if (!usuarioAtual || usuarioAtual.role !== 'COORDENADOR') {
+                alert('Acesso negado. Apenas coordenadores podem acessar esta página.');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            updateUserInfo(usuarioAtual);
+            carregarIgrejas();
+            buscarUsuarios();
+        });
+
+        // Carregar lista de igrejas no filtro
+        async function carregarIgrejas() {
+            try {
+                const config = await import('./data/config.js');
+                const select = document.getElementById('filtroIgreja');
+                
+                config.igrejas.forEach(igreja => {
+                    const option = document.createElement('option');
+                    option.value = igreja.nome;
+                    option.textContent = igreja.nome;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar igrejas:', error);
+            }
+        }
+
+        // Buscar usuários com filtros
+        async function buscarUsuarios() {
+            const container = document.getElementById('usuariosLista');
+            container.innerHTML = '<div class="loading"><p>Carregando usuários...</p></div>';
+
+            try {
+                const filtros = {
+                    status: document.getElementById('filtroStatus').value,
+                    cargo: document.getElementById('filtroCargo').value,
+                    igreja: document.getElementById('filtroIgreja').value
+                };
+
+                // Remover filtros vazios
+                Object.keys(filtros).forEach(key => {
+                    if (!filtros[key]) delete filtros[key];
+                });
+
+                const result = await flowManager.buscarUsuarios(filtros);
+                
+                if (result.success) {
+                    renderizarUsuarios(result.usuarios);
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <h3>Erro ao carregar usuários</h3>
+                            <p>${result.error}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro ao buscar usuários:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>Erro ao carregar usuários</h3>
+                        <p>Tente novamente em alguns instantes</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Renderizar lista de usuários
+        function renderizarUsuarios(usuarios) {
+            const container = document.getElementById('usuariosLista');
+            
+            if (!usuarios || usuarios.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>Nenhum usuário encontrado</h3>
+                        <p>Tente ajustar os filtros de busca</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = usuarios.map(usuario => `
+                <div class="usuario-card">
+                    <div class="usuario-header">
+                        <div class="usuario-nome">${usuario.NOME_COMPLETO}</div>
+                        <span class="status-badge status-${usuario.STATUS.toLowerCase()}">${usuario.STATUS}</span>
+                    </div>
+                    <div class="usuario-info">
+                        <div class="info-item">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">${usuario.EMAIL}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Cargo</span>
+                            <span class="info-value">${usuario.CARGO}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Igreja</span>
+                            <span class="info-value">${usuario.IGREJA}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Região</span>
+                            <span class="info-value">${usuario.REGIAO}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Data Cadastro</span>
+                            <span class="info-value">${new Date(usuario.DATA_CADASTRO).toLocaleDateString()}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Criado Por</span>
+                            <span class="info-value">${usuario.CRIADO_POR || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="usuario-acoes">
+                        ${gerarBotoesAcao(usuario)}
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        // Gerar botões de ação baseado no status
+        function gerarBotoesAcao(usuario) {
+            let botoes = [];
+
+            if (usuario.STATUS === 'Pendente') {
+                botoes.push(`<button class="btn-acao btn-aprovar" onclick="abrirModal('${usuario.ID}', 'aprovar')">✅ Aprovar</button>`);
+            }
+
+            if (usuario.STATUS === 'Ativo') {
+                if (usuario.CARGO === 'VOLUNTARIO') {
+                    botoes.push(`<button class="btn-acao btn-promover" onclick="abrirModal('${usuario.ID}', 'promover')">⬆️ Promover</button>`);
+                }
+                botoes.push(`<button class="btn-acao btn-inativar" onclick="abrirModal('${usuario.ID}', 'inativar')">❌ Inativar</button>`);
+            }
+
+            if (usuario.STATUS === 'Inativo') {
+                botoes.push(`<button class="btn-acao btn-aprovar" onclick="abrirModal('${usuario.ID}', 'reativar')">🔄 Reativar</button>`);
+            }
+
+            // Sempre permitir edição manual
+            botoes.push(`<button class="btn-acao btn-promover" onclick="abrirModal('${usuario.ID}', 'editar')">✏️ Editar</button>`);
+
+            return botoes.join('');
+        }
+
+        // Abrir modal de alteração
+        async function abrirModal(userId, acao) {
+            // Buscar dados do usuário
+            const usuarios = await flowManager.buscarUsuarios({});
+            usuarioSelecionado = usuarios.usuarios.find(u => u.ID === userId);
+            
+            if (!usuarioSelecionado) {
+                alert('Usuário não encontrado');
+                return;
+            }
+
+            const modal = document.getElementById('modalAlteracao');
+            const title = document.getElementById('modalTitle');
+            const statusSelect = document.getElementById('novoStatus');
+            const cargoSelect = document.getElementById('novoCargo');
+
+            // Configurar título e valores baseado na ação
+            switch (acao) {
+                case 'aprovar':
+                    title.textContent = `Aprovar ${usuarioSelecionado.NOME_COMPLETO}`;
+                    statusSelect.value = 'Ativo';
+                    statusSelect.disabled = true;
+                    break;
+                case 'promover':
+                    title.textContent = `Promover ${usuarioSelecionado.NOME_COMPLETO}`;
+                    statusSelect.value = 'Ativo';
+                    statusSelect.disabled = true;
+                    cargoSelect.value = 'SECRETARIA';
+                    break;
+                case 'inativar':
+                    title.textContent = `Inativar ${usuarioSelecionado.NOME_COMPLETO}`;
+                    statusSelect.value = 'Inativo';
+                    statusSelect.disabled = true;
+                    break;
+                case 'reativar':
+                    title.textContent = `Reativar ${usuarioSelecionado.NOME_COMPLETO}`;
+                    statusSelect.value = 'Ativo';
+                    statusSelect.disabled = true;
+                    break;
+                case 'editar':
+                    title.textContent = `Editar ${usuarioSelecionado.NOME_COMPLETO}`;
+                    statusSelect.disabled = false;
+                    break;
+            }
+
+            modal.style.display = 'block';
+        }
+
+        // Fechar modal
+        function fecharModal() {
+            const modal = document.getElementById('modalAlteracao');
+            modal.style.display = 'none';
+            
+            // Limpar formulário
+            document.getElementById('formAlteracao').reset();
+            document.getElementById('novoStatus').disabled = false;
+            usuarioSelecionado = null;
+        }
+
+        // Processar alteração
+        document.getElementById('formAlteracao').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!usuarioSelecionado) {
+                alert('Nenhum usuário selecionado');
+                return;
+            }
+
+            const novoStatus = document.getElementById('novoStatus').value;
+            const novoCargo = document.getElementById('novoCargo').value;
+            const observacoes = document.getElementById('observacoes').value;
+
+            if (!novoStatus) {
+                alert('Selecione um status');
+                return;
+            }
+
+            try {
+                const result = await flowManager.atualizarStatusUsuario({
+                    userId: usuarioSelecionado.ID,
+                    novoStatus: novoStatus,
+                    novoCargo: novoCargo || null,
+                    observacoes: observacoes,
+                    userInfo: usuarioAtual
+                });
+
+                if (result.success) {
+                    alert(result.message);
+                    fecharModal();
+                    buscarUsuarios(); // Recarregar lista
+                } else {
+                    alert('Erro: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar usuário:', error);
+                alert('Erro ao processar alteração. Tente novamente.');
+            }
+        });
+
+        // Fechar modal ao clicar fora
+        document.getElementById('modalAlteracao').addEventListener('click', function(e) {
+            if (e.target === this) {
+                fecharModal();
+            }
+        });
+    </script>
+</body>
+</html>

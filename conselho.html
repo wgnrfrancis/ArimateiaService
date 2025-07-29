@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios de Conselho - Arimateia Service</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <style>
+        .conselho-container {
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .conselho-header {
+            background: linear-gradient(135deg, #6f42c1, #e83e8c);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .conselho-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .conselho-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #6f42c1;
+        }
+
+        .conselho-card h3 {
+            color: #6f42c1;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #6f42c1;
+            margin: 0.5rem 0;
+        }
+
+        .metric-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .success-rate {
+            color: #28a745;
+        }
+
+        .failure-rate {
+            color: #dc3545;
+        }
+
+        .growth-positive {
+            color: #28a745;
+        }
+
+        .growth-negative {
+            color: #dc3545;
+        }
+
+        .conselho-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .conselho-table h3 {
+            background: #6f42c1;
+            color: white;
+            margin: 0;
+            padding: 1rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 500px;
+        }
+
+        .conselho-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .conselho-table th,
+        .conselho-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .conselho-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .conselho-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .filter-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .status-eleito {
+            background: #d4edda;
+            color: #155724;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-nao-eleito {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .posicao-badge {
+            background: #6f42c1;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .funcao-info {
+            background: #17a2b8;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        .conselho-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #6f42c1, #e83e8c);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .summary-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .growth-bar {
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .growth-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .conselho-container {
+                padding: 1rem;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="conselho-container">
+        <div class="conselho-header">
+            <h1>🏛️ Relatórios de Conselho</h1>
+            <p>Análise Completa de Eleições para Conselho Regional</p>
+            <small>Acesso Restrito - Apenas Coordenadores</small>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filter-section">
+            <h3>🔍 Filtros e Ações</h3>
+            <div class="filter-grid">
+                <div class="form-group">
+                    <label class="form-label">Região</label>
+                    <select id="filter-regiao" class="form-input">
+                        <option value="">Todas as Regiões</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Município</label>
+                    <select id="filter-municipio" class="form-input">
+                        <option value="">Todos os Municípios</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Situação</label>
+                    <select id="filter-situacao" class="form-input">
+                        <option value="">Todos</option>
+                        <option value="eleito">Eleitos</option>
+                        <option value="nao-eleito">Não Eleitos</option>
+                    </select>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button id="btn-generate-report" class="btn btn-primary">
+                    📊 Gerar Relatório Completo
+                </button>
+                <button id="btn-add-conselheiro" class="btn btn-success">
+                    ➕ Adicionar Conselheiro
+                </button>
+                <button id="btn-export-data" class="btn btn-secondary">
+                    📥 Exportar Dados
+                </button>
+                <button id="btn-refresh" class="btn btn-outline">
+                    🔄 Atualizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Resumo Geral -->
+        <div id="conselho-summary" class="conselho-summary">
+            <!-- Será preenchido dinamicamente -->
+        </div>
+
+        <!-- Métricas Principais -->
+        <div id="conselho-metrics" class="conselho-grid">
+            <!-- Será preenchido dinamicamente -->
+        </div>
+
+        <!-- Ranking de Conselheiros Eleitos -->
+        <div class="conselho-table">
+            <h3>🏆 Ranking de Conselheiros Eleitos 2023</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Posição</th>
+                            <th>Nome</th>
+                            <th>Região</th>
+                            <th>Município</th>
+                            <th>Votos 2023</th>
+                            <th>Votos 2019</th>
+                            <th>Crescimento</th>
+                            <th>Posição 2023</th>
+                            <th>Função</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ranking-conselheiros">
+                        <tr>
+                            <td colspan="9" class="text-center">Carregando dados...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Análise por Região -->
+        <div class="conselho-table">
+            <h3>🌍 Análise por Região</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Região</th>
+                            <th>Total Conselheiros</th>
+                            <th>Eleitos</th>
+                            <th>Não Eleitos</th>
+                            <th>Taxa Sucesso</th>
+                            <th>Igrejas</th>
+                            <th>Municípios</th>
+                            <th>Votos 2023</th>
+                            <th>Crescimento</th>
+                        </tr>
+                    </thead>
+                    <tbody id="analise-regioes">
+                        <tr>
+                            <td colspan="9" class="text-center">Carregando dados...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Evolução Eleitoral -->
+        <div class="conselho-table">
+            <h3>📈 Evolução Eleitoral 2019-2023</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Região</th>
+                            <th>Município</th>
+                            <th>Votos 2019</th>
+                            <th>Votos 2023</th>
+                            <th>Crescimento</th>
+                            <th>Posição 2023</th>
+                            <th>Situação 2023</th>
+                        </tr>
+                    </thead>
+                    <tbody id="evolucao-eleitoral">
+                        <tr>
+                            <td colspan="8" class="text-center">Carregando dados...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading-spinner" class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Gerando relatório de conselho...</p>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Conselheiro -->
+    <div id="modal-add-conselheiro" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>➕ Adicionar Conselheiro</h3>
+                <span class="modal-close">&times;</span>
+            </div>
+            <form id="form-add-conselheiro" class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Região *</label>
+                        <input type="text" id="new-regiao" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Igreja</label>
+                        <input type="text" id="new-igreja" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Município *</label>
+                        <input type="text" id="new-municipio" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nome 2023 *</label>
+                        <input type="text" id="new-nomes2023" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contato</label>
+                        <input type="text" id="new-contato" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Função</label>
+                        <select id="new-funcao" class="form-input">
+                            <option value="">Selecione...</option>
+                            <option value="Obreiro">Obreiro</option>
+                            <option value="Cooperador">Cooperador</option>
+                            <option value="Ancião">Ancião</option>
+                            <option value="Diácono">Diácono</option>
+                            <option value="Membro">Membro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Votos 2019</label>
+                        <input type="number" id="new-votos2019" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Situação 2023</label>
+                        <select id="new-eleito-nao-eleito" class="form-input">
+                            <option value="">Selecione...</option>
+                            <option value="Eleito">Eleito</option>
+                            <option value="Não Eleito">Não Eleito</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Votos 2023</label>
+                        <input type="number" id="new-votos2023" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Posição 2023</label>
+                        <input type="text" id="new-posicao2023" class="form-input" placeholder="Ex: 1º lugar, 2º lugar">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Adicionar Conselheiro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="data/config.js"></script>
+    <script src="scripts/helpers.js"></script>
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/flow.js"></script>
+
+    <script>
+        class ConselhoReports {
+            constructor() {
+                this.currentUser = AuthSystem.getCurrentUser();
+                this.conselheiros = [];
+                this.relatorio = null;
+                this.init();
+            }
+
+            init() {
+                // Verificar se é coordenador
+                if (!this.currentUser || this.currentUser.role !== 'COORDENADOR') {
+                    alert('Acesso negado. Apenas coordenadores podem acessar relatórios de conselho.');
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+
+                this.setupEventListeners();
+                this.loadInitialData();
+            }
+
+            setupEventListeners() {
+                // Botões principais
+                document.getElementById('btn-generate-report').addEventListener('click', () => this.generateReport());
+                document.getElementById('btn-add-conselheiro').addEventListener('click', () => this.openAddModal());
+                document.getElementById('btn-export-data').addEventListener('click', () => this.exportData());
+                document.getElementById('btn-refresh').addEventListener('click', () => this.loadInitialData());
+
+                // Filtros
+                document.getElementById('filter-regiao').addEventListener('change', () => this.filterData());
+                document.getElementById('filter-municipio').addEventListener('change', () => this.filterData());
+                document.getElementById('filter-situacao').addEventListener('change', () => this.filterData());
+
+                // Modal
+                document.getElementById('form-add-conselheiro').addEventListener('submit', (e) => this.addConselheiro(e));
+                
+                // Fechar modal
+                document.querySelectorAll('.modal-close').forEach(btn => {
+                    btn.addEventListener('click', () => this.closeModal());
+                });
+            }
+
+            async loadInitialData() {
+                try {
+                    this.showLoading(true);
+                    
+                    // Carregar conselheiros
+                    await this.loadConselheiros();
+                    
+                    // Carregar filtros
+                    this.populateFilters();
+                    
+                    // Gerar relatório inicial
+                    await this.generateReport();
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar dados:', error);
+                    showAlert('Erro ao carregar dados de conselho', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async loadConselheiros() {
+                const response = await FlowManager.makeRequest('buscarConselheiros', {
+                    userInfo: this.currentUser
+                });
+
+                if (response.success) {
+                    this.conselheiros = response.conselheiros || [];
+                } else {
+                    throw new Error(response.error || 'Erro ao carregar conselheiros');
+                }
+            }
+
+            populateFilters() {
+                const regioes = [...new Set(this.conselheiros.map(c => c.regiao).filter(Boolean))].sort();
+                const municipios = [...new Set(this.conselheiros.map(c => c.municipio).filter(Boolean))].sort();
+
+                this.populateSelect('filter-regiao', regioes);
+                this.populateSelect('filter-municipio', municipios);
+            }
+
+            populateSelect(selectId, options) {
+                const select = document.getElementById(selectId);
+                const currentOptions = select.querySelectorAll('option:not(:first-child)');
+                currentOptions.forEach(option => option.remove());
+
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    select.appendChild(optionElement);
+                });
+            }
+
+            async generateReport() {
+                try {
+                    this.showLoading(true);
+                    
+                    const response = await FlowManager.makeRequest('generateConselhoReport', {
+                        userInfo: this.currentUser
+                    });
+
+                    if (response.success) {
+                        this.relatorio = response.relatorioConselho;
+                        this.renderReport();
+                    } else {
+                        throw new Error(response.error || 'Erro ao gerar relatório');
+                    }
+                    
+                } catch (error) {
+                    console.error('Erro ao gerar relatório:', error);
+                    showAlert('Erro ao gerar relatório de conselho', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            renderReport() {
+                if (!this.relatorio) return;
+
+                this.renderSummary();
+                this.renderMetrics();
+                this.renderRankingConselheiros();
+                this.renderAnaliseRegioes();
+                this.renderEvolucaoEleitoral();
+            }
+
+            renderSummary() {
+                const summary = this.relatorio.resumoGeral;
+
+                const summaryHTML = `
+                    <div class="summary-card">
+                        <div class="summary-value">${summary.totalConselheiros}</div>
+                        <div>Total Candidatos</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${summary.totalEleitos}</div>
+                        <div>Eleitos</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${summary.totalNaoEleitos}</div>
+                        <div>Não Eleitos</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${summary.taxaSucesso}</div>
+                        <div>Taxa de Sucesso</div>
+                    </div>
+                `;
+
+                document.getElementById('conselho-summary').innerHTML = summaryHTML;
+            }
+
+            renderMetrics() {
+                const summary = this.relatorio.resumoGeral;
+                const stats = this.relatorio.estatisticasGerais;
+
+                const metricsHTML = `
+                    <div class="conselho-card">
+                        <h3>📊 Estatísticas Gerais</h3>
+                        <div class="metric-value">${stats.regioesComConselheiros}</div>
+                        <div class="metric-label">Regiões com Candidatos</div>
+                        <div class="metric-value">${stats.mediaVotosPorConselheiro.toLocaleString()}</div>
+                        <div class="metric-label">Média de Votos por Candidato</div>
+                    </div>
+                    <div class="conselho-card">
+                        <h3>🏆 Melhor Performance</h3>
+                        <div class="metric-value">${stats.melhorRegiao}</div>
+                        <div class="metric-label">Melhor Região</div>
+                        <div class="metric-value">${summary.totalVotos2023.toLocaleString()}</div>
+                        <div class="metric-label">Total de Votos 2023</div>
+                    </div>
+                    <div class="conselho-card">
+                        <h3>📈 Crescimento Geral</h3>
+                        <div class="metric-value ${summary.crescimentoGeral.includes('-') ? 'growth-negative' : 'growth-positive'}">${summary.crescimentoGeral}</div>
+                        <div class="metric-label">Crescimento 2019-2023</div>
+                        <div class="metric-value">${summary.dataGeracao}</div>
+                        <div class="metric-label">Última Atualização</div>
+                    </div>
+                `;
+
+                document.getElementById('conselho-metrics').innerHTML = metricsHTML;
+            }
+
+            renderRankingConselheiros() {
+                const tbody = document.getElementById('ranking-conselheiros');
+                
+                if (!this.relatorio.rankingConselheiros || this.relatorio.rankingConselheiros.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="text-center">Nenhum conselheiro eleito encontrado</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                this.relatorio.rankingConselheiros.forEach((conselheiro, index) => {
+                    const crescimento = conselheiro.votos2019 > 0 ? 
+                        (((conselheiro.votos2023 - conselheiro.votos2019) / conselheiro.votos2019) * 100).toFixed(1) + '%' : 'N/A';
+                    
+                    html += `
+                        <tr>
+                            <td>${index + 1}°</td>
+                            <td>${conselheiro.nome}</td>
+                            <td>${conselheiro.regiao}</td>
+                            <td>${conselheiro.municipio}</td>
+                            <td>${conselheiro.votos2023.toLocaleString()}</td>
+                            <td>${conselheiro.votos2019.toLocaleString()}</td>
+                            <td class="${crescimento.includes('-') ? 'growth-negative' : 'growth-positive'}">${crescimento}</td>
+                            <td><span class="posicao-badge">${conselheiro.posicao2023}</span></td>
+                            <td><span class="funcao-info">${conselheiro.funcao}</span></td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+            }
+
+            renderAnaliseRegioes() {
+                const tbody = document.getElementById('analise-regioes');
+                
+                if (!this.relatorio.analisePorRegiao) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="text-center">Nenhum dado disponível</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                Object.entries(this.relatorio.analisePorRegiao).forEach(([regiao, dados]) => {
+                    const taxaSucesso = dados.totalConselheiros > 0 ? 
+                        ((dados.eleitos / dados.totalConselheiros) * 100).toFixed(1) + '%' : '0%';
+                    
+                    html += `
+                        <tr>
+                            <td>${regiao}</td>
+                            <td>${dados.totalConselheiros}</td>
+                            <td>${dados.eleitos}</td>
+                            <td>${dados.naoEleitos}</td>
+                            <td class="${dados.eleitos > dados.naoEleitos ? 'success-rate' : 'failure-rate'}">${taxaSucesso}</td>
+                            <td>${dados.totalIgrejas}</td>
+                            <td>${dados.totalMunicipios}</td>
+                            <td>${dados.votos2023.toLocaleString()}</td>
+                            <td class="${dados.crescimento.includes('-') ? 'growth-negative' : 'growth-positive'}">${dados.crescimento}</td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+            }
+
+            renderEvolucaoEleitoral() {
+                const tbody = document.getElementById('evolucao-eleitoral');
+                
+                if (!this.relatorio.evolucaoEleitoral || this.relatorio.evolucaoEleitoral.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center">Nenhum dado disponível</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                this.relatorio.evolucaoEleitoral.forEach(conselheiro => {
+                    const crescimento = parseFloat(conselheiro.crescimento);
+                    
+                    const statusClass = conselheiro.situacao2023.toLowerCase().includes('eleito') ? 
+                        'status-eleito' : 'status-nao-eleito';
+                    
+                    html += `
+                        <tr>
+                            <td>${conselheiro.nome}</td>
+                            <td>${conselheiro.regiao}</td>
+                            <td>${conselheiro.municipio}</td>
+                            <td>${conselheiro.votos2019.toLocaleString()}</td>
+                            <td>${conselheiro.votos2023.toLocaleString()}</td>
+                            <td class="${crescimento >= 0 ? 'growth-positive' : 'growth-negative'}">
+                                ${conselheiro.crescimento}
+                            </td>
+                            <td><span class="posicao-badge">${conselheiro.posicao2023}</span></td>
+                            <td><span class="${statusClass}">${conselheiro.situacao2023}</span></td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+            }
+
+            openAddModal() {
+                document.getElementById('modal-add-conselheiro').style.display = 'flex';
+            }
+
+            closeModal() {
+                document.getElementById('modal-add-conselheiro').style.display = 'none';
+                document.getElementById('form-add-conselheiro').reset();
+            }
+
+            async addConselheiro(e) {
+                e.preventDefault();
+                
+                try {
+                    const data = {
+                        regiao: document.getElementById('new-regiao').value,
+                        igreja: document.getElementById('new-igreja').value,
+                        municipio: document.getElementById('new-municipio').value,
+                        nomes2023: document.getElementById('new-nomes2023').value,
+                        contato: document.getElementById('new-contato').value,
+                        funcao: document.getElementById('new-funcao').value,
+                        votos2019: parseInt(document.getElementById('new-votos2019').value) || 0,
+                        eleitoNaoEleito2023: document.getElementById('new-eleito-nao-eleito').value,
+                        votos2023: parseInt(document.getElementById('new-votos2023').value) || 0,
+                        posicao2023: document.getElementById('new-posicao2023').value,
+                        userInfo: this.currentUser
+                    };
+
+                    const response = await FlowManager.makeRequest('adicionarConselheiro', data);
+
+                    if (response.success) {
+                        showAlert('Conselheiro adicionado com sucesso!', 'success');
+                        this.closeModal();
+                        await this.loadInitialData();
+                    } else {
+                        throw new Error(response.error || 'Erro ao adicionar conselheiro');
+                    }
+                    
+                } catch (error) {
+                    console.error('Erro ao adicionar conselheiro:', error);
+                    showAlert('Erro ao adicionar conselheiro: ' + error.message, 'error');
+                }
+            }
+
+            filterData() {
+                // Implementar filtros se necessário
+                console.log('Filtros aplicados');
+            }
+
+            exportData() {
+                if (!this.relatorio) {
+                    showAlert('Gere um relatório primeiro', 'warning');
+                    return;
+                }
+
+                // Criar CSV dos dados
+                let csv = 'Relatório de Conselho - Arimateia Service\n\n';
+                csv += 'Resumo Geral\n';
+                csv += `Total Candidatos,${this.relatorio.resumoGeral.totalConselheiros}\n`;
+                csv += `Total Eleitos,${this.relatorio.resumoGeral.totalEleitos}\n`;
+                csv += `Total Não Eleitos,${this.relatorio.resumoGeral.totalNaoEleitos}\n`;
+                csv += `Taxa de Sucesso,${this.relatorio.resumoGeral.taxaSucesso}\n`;
+                csv += `Crescimento Geral,${this.relatorio.resumoGeral.crescimentoGeral}\n\n`;
+
+                // Ranking de Conselheiros
+                csv += 'Ranking de Conselheiros Eleitos\n';
+                csv += 'Posição,Nome,Região,Município,Votos 2023,Votos 2019,Posição 2023,Função\n';
+                this.relatorio.rankingConselheiros.forEach((conselheiro, index) => {
+                    csv += `${index + 1},${conselheiro.nome},${conselheiro.regiao},${conselheiro.municipio},${conselheiro.votos2023},${conselheiro.votos2019},${conselheiro.posicao2023},${conselheiro.funcao}\n`;
+                });
+
+                // Download
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `relatorio_conselho_${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+            }
+
+            showLoading(show) {
+                document.getElementById('loading-spinner').style.display = show ? 'block' : 'none';
+            }
+        }
+
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            new ConselhoReports();
+        });
+    </script>
+</body>
+</html>
