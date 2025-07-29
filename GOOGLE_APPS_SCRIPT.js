@@ -165,6 +165,10 @@ function doPost(e) {
       case 'getMidiaPreview':
         return createResponse(getMidiaPreview(data));
         
+      // 🏛️ Igrejas e Regiões
+      case 'getIgrejasRegioes':
+        return createResponse(getIgrejasRegioes());
+        
       default:
         return createResponse({ error: 'Ação não reconhecida: ' + action }, false);
     }
@@ -4991,6 +4995,86 @@ function getFolderSize(folder) {
     return totalSize;
   } catch (error) {
     return 0;
+  }
+}
+
+/**
+ * 🏛️ BUSCAR IGREJAS E REGIÕES
+ */
+function getIgrejasRegioes() {
+  try {
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEETS.IGREJAS_REGIOES);
+    const data = sheet.getDataRange().getValues();
+    
+    if (data.length <= 1) {
+      return {
+        regioes: [],
+        igrejasPorRegiao: {},
+        message: 'Nenhuma igreja cadastrada'
+      };
+    }
+
+    // Obter cabeçalhos
+    const headers = data[0];
+    const nomeIgrejaIndex = headers.indexOf('NOME_IGREJA');
+    const regiaoIndex = headers.indexOf('REGIAO');
+    const statusIndex = headers.indexOf('STATUS');
+
+    if (nomeIgrejaIndex === -1 || regiaoIndex === -1) {
+      throw new Error('Colunas NOME_IGREJA ou REGIAO não encontradas');
+    }
+
+    const igrejasPorRegiao = {};
+    const regioesSet = new Set();
+
+    // Processar dados (pular cabeçalho)
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const nomeIgreja = row[nomeIgrejaIndex];
+      const regiao = row[regiaoIndex];
+      const status = statusIndex !== -1 ? row[statusIndex] : 'Ativa';
+
+      // Pular linhas vazias ou igrejas inativas
+      if (!nomeIgreja || !regiao || status === 'Inativa') {
+        continue;
+      }
+
+      regioesSet.add(regiao);
+
+      if (!igrejasPorRegiao[regiao]) {
+        igrejasPorRegiao[regiao] = [];
+      }
+
+      igrejasPorRegiao[regiao].push({
+        nome: nomeIgreja,
+        status: status || 'Ativa'
+      });
+    }
+
+    // Ordenar regiões e igrejas
+    const regioes = Array.from(regioesSet).sort();
+    
+    // Ordenar igrejas dentro de cada região
+    Object.keys(igrejasPorRegiao).forEach(regiao => {
+      igrejasPorRegiao[regiao].sort((a, b) => a.nome.localeCompare(b.nome));
+    });
+
+    return {
+      regioes: regioes,
+      igrejasPorRegiao: igrejasPorRegiao,
+      total: {
+        regioes: regioes.length,
+        igrejas: Object.values(igrejasPorRegiao).reduce((total, igrejas) => total + igrejas.length, 0)
+      }
+    };
+
+  } catch (error) {
+    console.error('Erro ao buscar igrejas e regiões:', error);
+    return {
+      error: 'Erro ao carregar igrejas e regiões: ' + error.message,
+      regioes: [],
+      igrejasPorRegiao: {}
+    };
   }
 }
 

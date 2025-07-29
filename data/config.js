@@ -19,7 +19,8 @@ const CONFIG = {
             validateUser: "?action=validateUser",
             getTickets: "?action=getTickets",
             getUsers: "?action=getUsers",
-            generateReport: "?action=generateReport"
+            generateReport: "?action=generateReport",
+            getIgrejasRegioes: "?action=getIgrejasRegioes"
         }
     },
 

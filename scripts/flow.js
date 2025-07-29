@@ -301,6 +301,38 @@ class FlowManager {
             return { success: false, error: error.message };
         }
     }
+    // Buscar igrejas e regiões da planilha
+    async getIgrejasRegioes() {
+        try {
+            const payload = {
+                action: 'getIgrejasRegioes'
+            };
+
+            const response = await fetch(this.baseUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            if (result.success) {
+                return { success: true, data: result.data };
+            } else {
+                throw new Error(result.error || 'Erro ao buscar igrejas e regiões');
+            }
+
+        } catch (error) {
+            console.error('Buscar igrejas e regiões error:', error);
+            return { success: false, error: error.message };
+        }
+    }
 }
 
 // Initialize flow manager

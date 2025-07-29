@@ -155,7 +155,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Carregar regiões e configurar seleção hierárquica
-            loadRegioes();
+            loadRegioesFromSheet();
             setupHierarchicalSelection();
             
             // Setup form validation
@@ -179,11 +179,51 @@
             document.getElementById('cadastro-form').addEventListener('submit', handleCadastro);
         });
 
+        async function loadRegioesFromSheet() {
+            try {
+                Helpers.showLoading('Carregando regiões...');
+                
+                const result = await flowManager.getIgrejasRegioes();
+                
+                if (result.success) {
+                    const data = result.data;
+                    const regiaoSelect = document.getElementById('regiao');
+                    
+                    // Limpar opções existentes (exceto a primeira)
+                    regiaoSelect.innerHTML = '<option value="">Selecione a região</option>';
+                    
+                    // Adicionar regiões da planilha
+                    data.regioes.forEach(regiao => {
+                        const option = document.createElement('option');
+                        option.value = regiao;
+                        option.textContent = regiao;
+                        regiaoSelect.appendChild(option);
+                    });
+                    
+                    // Armazenar dados para uso na seleção hierárquica
+                    window.igrejasData = data.igrejasPorRegiao;
+                    
+                    console.log(`Carregadas ${data.regioes.length} regiões e ${data.total.igrejas} igrejas`);
+                } else {
+                    throw new Error(result.error || 'Erro ao carregar regiões');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar regiões:', error);
+                Helpers.showToast('Erro ao carregar regiões: ' + error.message, 'error');
+                
+                // Fallback para regiões do config.js se houver erro
+                loadRegioes();
+            } finally {
+                Helpers.hideLoading();
+            }
+        }
+
         function loadRegioes() {
             try {
                 const regiaoSelect = document.getElementById('regiao');
                 
-                // Adicionar regiões do config
+                // Adicionar regiões do config (fallback)
                 Object.keys(CONFIG.igrejasPorRegiao).forEach(regiao => {
                     const option = document.createElement('option');
                     option.value = regiao;
@@ -205,14 +245,29 @@
                 igrejaSelect.innerHTML = '<option value="">Selecione uma igreja</option>';
                 
                 const regiao = this.value;
-                if (regiao && CONFIG.igrejasPorRegiao[regiao]) {
+                
+                if (regiao) {
+                    let igrejas = [];
+                    
+                    // Usar dados da planilha se disponível
+                    if (window.igrejasData && window.igrejasData[regiao]) {
+                        igrejas = window.igrejasData[regiao];
+                    } 
+                    // Fallback para config.js
+                    else if (CONFIG.igrejasPorRegiao[regiao]) {
+                        igrejas = CONFIG.igrejasPorRegiao[regiao];
+                    }
+                    
                     // Carregar igrejas da região selecionada
-                    CONFIG.igrejasPorRegiao[regiao].forEach(igreja => {
+                    igrejas.forEach(igreja => {
                         const option = document.createElement('option');
-                        option.value = igreja.nome;
-                        option.textContent = igreja.nome;
+                        // Se vier da planilha, usar igreja.nome; se vier do config, usar igreja diretamente
+                        const nomeIgreja = igreja.nome || igreja;
+                        option.value = nomeIgreja;
+                        option.textContent = nomeIgreja;
                         igrejaSelect.appendChild(option);
                     });
+                    
                     igrejaSelect.disabled = false;
                 } else {
                     igrejaSelect.disabled = true;
