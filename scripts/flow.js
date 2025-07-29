@@ -39,33 +39,52 @@ class FlowManager {
     // Send data to Google Apps Script
     async sendToScript(endpoint, data) {
         try {
+            console.log('🌐 Enviando para Google Apps Script...');
+            console.log('📍 URL:', `${this.baseUrl}${endpoint}`);
+            console.log('📦 Dados:', data);
+            
             Helpers.showLoading('Enviando dados...');
+
+            const requestBody = {
+                ...data,
+                timestamp: new Date().toISOString(),
+                userInfo: (typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser() : null,
+                spreadsheetId: this.spreadsheetId
+            };
+            
+            console.log('📤 Request body completo:', requestBody);
 
             const response = await fetch(`${this.baseUrl}${endpoint}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    ...data,
-                    timestamp: new Date().toISOString(),
-                    userInfo: (typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser() : null,
-                    spreadsheetId: this.spreadsheetId
-                })
+                body: JSON.stringify(requestBody)
             });
 
+            console.log('📥 Response status:', response.status);
+            console.log('📥 Response ok:', response.ok);
+
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorText = await response.text();
+                console.error('❌ Response error text:', errorText);
+                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
             }
 
             const result = await response.json();
+            console.log('✅ Response result:', result);
+            
             Helpers.hideLoading();
             
             return { success: true, data: result };
 
         } catch (error) {
             Helpers.hideLoading();
-            console.error('Google Apps Script error:', error);
+            console.error('❌ Google Apps Script error details:', {
+                message: error.message,
+                stack: error.stack,
+                name: error.name
+            });
             throw error;
         }
     }
@@ -85,7 +104,7 @@ class FlowManager {
                 userInfo: (typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser() : null
             };
 
-            const result = await this.sendToScript(this.endpoints.newTicket, payload);
+            const result = await this.sendToScript('', payload);
             return result;
 
         } catch (error) {
@@ -129,7 +148,7 @@ class FlowManager {
                 userInfo: user || { name: 'Sistema', email: '' }
             };
 
-            const result = await this.sendToScript(this.endpoints.updateTicket, payload);
+            const result = await this.sendToScript('', payload);
             
             if (result.success) {
                 Helpers.showToast('Chamado atualizado com sucesso!', 'success');
@@ -156,7 +175,7 @@ class FlowManager {
                 userInfo: user || { name: 'Sistema', email: '' }
             };
 
-            const result = await this.sendToScript(this.endpoints.deleteTicket, payload);
+            const result = await this.sendToScript('', payload);
             
             if (result.success) {
                 Helpers.showToast('Chamado excluído com sucesso!', 'success');
@@ -175,6 +194,8 @@ class FlowManager {
     // Create new user
     async createUser(userData) {
         try {
+            console.log('🔄 Criando usuário com dados:', userData);
+            
             const payload = {
                 action: 'newUser',
                 nomeCompleto: userData.nome,
@@ -187,10 +208,12 @@ class FlowManager {
                 userInfo: (typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser() : { name: 'Sistema', email: '' }
             };
 
-            const result = await this.sendToScript(this.endpoints.newUser, payload);
+            console.log('📤 Enviando payload para Google Apps Script:', payload);
+            console.log('🌐 URL sendo usada:', this.baseUrl);
+            
+            const result = await this.sendToScript('', payload);
             
             if (result.success) {
-                Helpers.showToast('Usuário criado com sucesso!', 'success');
                 return result;
             } else {
                 throw new Error(result.error || 'Erro ao criar usuário');
@@ -198,7 +221,6 @@ class FlowManager {
 
         } catch (error) {
             console.error('Create user error:', error);
-            Helpers.showToast('Erro ao criar usuário: ' + error.message, 'error');
             return { success: false, error: error.message };
         }
     }
@@ -212,7 +234,7 @@ class FlowManager {
                 password: password
             };
 
-            const result = await this.sendToScript(this.endpoints.validateUser, payload);
+            const result = await this.sendToScript('', payload);
             return result;
 
         } catch (error) {
@@ -229,7 +251,7 @@ class FlowManager {
                 filters: filters
             };
 
-            const result = await this.sendToScript(this.endpoints.getTickets, payload);
+            const result = await this.sendToScript('', payload);
             return result;
 
         } catch (error) {
@@ -246,7 +268,7 @@ class FlowManager {
                 filters: filters
             };
 
-            const result = await this.sendToScript(this.endpoints.getUsers, payload);
+            const result = await this.sendToScript('', payload);
             return result;
 
         } catch (error) {
@@ -266,7 +288,7 @@ class FlowManager {
                 generatedAt: new Date().toISOString()
             };
 
-            const result = await this.sendToScript(this.endpoints.generateReport, payload);
+            const result = await this.sendToScript('', payload);
             return result;
 
         } catch (error) {
