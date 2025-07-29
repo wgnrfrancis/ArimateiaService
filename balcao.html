@@ -4,14 +4,238 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Balcão da Cidadania - Atendimentos</title>
-    <link rel="stylesheet" href="assets/st            // Setup new ticket modal and form
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="assets/logo.png" alt="Logo" width="32" height="32" onerror="this.style.display='none'">
+                    <span>Balcão da Cidadania</span>
+                </div>
+                
+                <div class="user-info">
+                    <img src="assets/default-avatar.png" alt="Avatar" class="user-avatar">
+                    <div class="user-details">
+                        <div class="user-name">Carregando...</div>
+                        <div class="user-role text-light">-</div>
+                    </div>
+                    <div class="user-actions">
+                        <button class="btn btn-outline back-to-dashboard">
+                            ⬅️ Dashboard
+                        </button>
+                        <button id="logout-btn" class="btn btn-secondary">
+                            🚪 Sair
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header mb-4">
+                <h1>🏛️ Balcão da Cidadania</h1>
+                <p class="text-light">Gestão de atendimentos e chamados</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="actions-section mb-4">
+                <button id="new-ticket-btn" class="btn btn-primary btn-large" data-permission="balcao_create">
+                    ➕ Novo Chamado
+                </button>
+                <button id="refresh-tickets-btn" class="btn btn-outline">
+                    🔄 Atualizar Lista
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="region-filter" class="form-label">Região</label>
+                    <select id="region-filter" class="form-select">
+                        <option value="">Todas as regiões</option>
+                        <!-- Opções carregadas dinamicamente -->
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="status-filter" class="form-label">Status</label>
+                    <select id="status-filter" class="form-select">
+                        <option value="">Todos os status</option>
+                        <option value="aberto">Aberto</option>
+                        <option value="em_andamento">Em Andamento</option>
+                        <option value="aguardando">Aguardando Retorno</option>
+                        <option value="resolvido">Resolvido</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="church-filter" class="form-label">Igreja</label>
+                    <select id="church-filter" class="form-select">
+                        <option value="">Todas as igrejas</option>
+                        <!-- Opções carregadas dinamicamente -->
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="ticket-search" class="form-label">Buscar</label>
+                    <input 
+                        type="text" 
+                        id="ticket-search" 
+                        class="form-input" 
+                        placeholder="Nome ou descrição..."
+                    >
+                </div>
+            </div>
+
+            <!-- Tickets List -->
+            <div class="tickets-section">
+                <div class="section-header">
+                    <h3>Chamados</h3>
+                    <div class="tickets-count">
+                        <span id="tickets-count">Carregando...</span>
+                    </div>
+                </div>
+                
+                <div id="tickets-container" class="tickets-container">
+                    <!-- Tickets will be loaded here dynamically -->
+                    <div class="text-center">
+                        <p>Carregando chamados...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- New Ticket Modal -->
+    <div id="new-ticket-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➕ Novo Chamado</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            
+            <form id="new-ticket-form">
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label for="nome" class="form-label">Nome do Cidadão *</label>
+                        <input 
+                            type="text" 
+                            id="nome" 
+                            name="nome" 
+                            class="form-input" 
+                            required
+                            placeholder="Nome completo do cidadão"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contato" class="form-label">Telefone/WhatsApp *</label>
+                        <input 
+                            type="tel" 
+                            id="contato" 
+                            name="contato" 
+                            class="form-input" 
+                            data-format="phone"
+                            required
+                            placeholder="(11) 99999-9999"
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">Email (opcional)</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        class="form-input" 
+                        placeholder="email@exemplo.com"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="categoria" class="form-label">Categoria da Demanda *</label>
+                    <select id="categoria" name="categoria" class="form-select" required>
+                        <option value="">Selecione a categoria</option>
+                        <!-- Opções carregadas dinamicamente -->
+                    </select>
+                </div>
+
+                <div class="form-group" id="demanda-container" style="display: none;">
+                    <label for="demanda" class="form-label">Demanda Específica *</label>
+                    <select id="demanda" name="demanda" class="form-select">
+                        <option value="">Primeiro selecione uma categoria</option>
+                        <!-- Opções carregadas dinamicamente baseadas na categoria -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="prioridade" class="form-label">Prioridade *</label>
+                    <select id="prioridade" name="prioridade" class="form-select" required>
+                        <option value="">Selecione a prioridade</option>
+                        <option value="Baixa">🟢 Baixa - Pode aguardar alguns dias</option>
+                        <option value="Média">🟡 Média - Necessita atenção em breve</option>
+                        <option value="Alta">🟠 Alta - Precisa ser resolvido rapidamente</option>
+                        <option value="Urgente">🔴 Urgente - Requer ação imediata</option>
+                    </select>
+                    <small class="text-light" id="prioridade-info" style="display: none;"></small>
+                </div>
+
+                <div class="form-group">
+                    <label for="descricao" class="form-label">Descrição da Demanda *</label>
+                    <textarea 
+                        id="descricao" 
+                        name="descricao" 
+                        class="form-textarea" 
+                        required
+                        placeholder="Descreva detalhadamente a necessidade do cidadão..."
+                        rows="4"
+                    ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        💾 Salvar Chamado
+                    </button>
+                    <button type="button" class="btn btn-outline modal-close">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="data/config.js"></script>
+    <script src="scripts/helpers.js"></script>
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/user.js"></script>
+    <script src="scripts/flow.js"></script>
+    <script src="scripts/main.js"></script>
+
+    <script>
+        // Page-specific initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carregar dados para filtros
+            loadFiltersData();
+            
+            // Setup new ticket modal
             const newTicketBtn = document.getElementById('new-ticket-btn');
             if (newTicketBtn) {
                 newTicketBtn.addEventListener('click', function() {
                     const modal = document.getElementById('new-ticket-modal');
                     if (modal) {
                         modal.classList.add('active');
-                        carregarCategorias(); // Carregar categorias ao abrir modal
+                        carregarCategorias();
                     }
                 });
             }
@@ -47,7 +271,7 @@
                             e.target.reset();
                             document.getElementById('new-ticket-modal').classList.remove('active');
                             
-                            // Recarregar lista de chamados se existir
+                            // Recarregar lista se existir
                             if (typeof app !== 'undefined' && app.loadTickets) {
                                 app.loadTickets();
                             }
@@ -61,111 +285,127 @@
                     }
                 });
             }
+        });
 
-            // Carregar categorias de serviços
-            async function carregarCategorias() {
-                try {
-                    const result = await flowManager.getCategorias();
-                    const categoriaSelect = document.getElementById('categoria');
+        // Carregar dados para filtros
+        async function loadFiltersData() {
+            try {
+                const result = await flowManager.getIgrejasRegioes();
+                
+                if (result.success) {
+                    const data = result.data;
                     
-                    if (result.success && result.categorias) {
-                        // Limpar opções existentes (exceto a primeira)
-                        categoriaSelect.innerHTML = '<option value="">Selecione a categoria</option>';
-                        
-                        result.categorias.forEach(categoria => {
-                            const option = document.createElement('option');
-                            option.value = categoria.nome;
-                            option.textContent = `📁 ${categoria.nome}`;
-                            if (categoria.descricao) {
-                                option.title = categoria.descricao;
-                            }
-                            option.dataset.demandas = JSON.stringify(categoria.demandas || []);
-                            categoriaSelect.appendChild(option);
-                        });
-
-                        // Setup categoria change handler
-                        categoriaSelect.addEventListener('change', function() {
-                            const selectedOption = this.options[this.selectedIndex];
-                            const demandaContainer = document.getElementById('demanda-container');
-                            const demandaSelect = document.getElementById('demanda');
-                            
-                            if (this.value && selectedOption.dataset.demandas) {
-                                const demandas = JSON.parse(selectedOption.dataset.demandas);
-                                
-                                // Mostrar container de demandas
-                                demandaContainer.style.display = 'block';
-                                
-                                // Limpar e popular demandas
-                                demandaSelect.innerHTML = '<option value="">Selecione a demanda específica</option>';
-                                
-                                demandas.forEach(demanda => {
-                                    const option = document.createElement('option');
-                                    option.value = demanda.nome;
-                                    option.textContent = demanda.nome;
-                                    if (demanda.prioridade) {
-                                        option.dataset.prioridade = demanda.prioridade;
-                                    }
-                                    demandaSelect.appendChild(option);
-                                });
-
-                                // Setup demanda change handler
-                                demandaSelect.addEventListener('change', function() {
-                                    const selectedDemandOption = this.options[this.selectedIndex];
-                                    const prioridadeSelect = document.getElementById('prioridade');
-                                    const prioridadeInfo = document.getElementById('prioridade-info');
-                                    
-                                    if (selectedDemandOption.dataset.prioridade) {
-                                        // Auto-selecionar prioridade
-                                        prioridadeSelect.value = selectedDemandOption.dataset.prioridade;
-                                        prioridadeSelect.disabled = true;
-                                        prioridadeInfo.textContent = `Prioridade definida automaticamente como ${selectedDemandOption.dataset.prioridade}`;
-                                        prioridadeInfo.style.display = 'block';
-                                    } else {
-                                        // Permitir seleção manual
-                                        prioridadeSelect.disabled = false;
-                                        prioridadeInfo.style.display = 'none';
-                                    }
-                                });
-                                
-                            } else {
-                                // Esconder container de demandas
-                                demandaContainer.style.display = 'none';
-                                demandaSelect.innerHTML = '<option value="">Primeiro selecione uma categoria</option>';
-                                
-                                // Resetar prioridade
-                                const prioridadeSelect = document.getElementById('prioridade');
-                                const prioridadeInfo = document.getElementById('prioridade-info');
-                                prioridadeSelect.disabled = false;
-                                prioridadeSelect.value = '';
-                                prioridadeInfo.style.display = 'none';
-                            }
-                        });
-                    }
-                } catch (error) {
-                    console.error('Erro ao carregar categorias:', error);
-                    // Fallback para categorias básicas
-                    const categorias = [
-                        'Documentação',
-                        'Benefícios Sociais',
-                        'Jurídico',
-                        'Saúde',
-                        'Outros'
-                    ];
+                    // Carregar regiões
+                    const regiaoFilter = document.getElementById('region-filter');
+                    regiaoFilter.innerHTML = '<option value="">Todas as regiões</option>';
                     
-                    const categoriaSelect = document.getElementById('categoria');
-                    categoriaSelect.innerHTML = '<option value="">Selecione a categoria</option>';
-                    
-                    categorias.forEach(categoria => {
+                    data.regioes.forEach(regiao => {
                         const option = document.createElement('option');
-                        option.value = categoria;
-                        option.textContent = `📁 ${categoria}`;
-                        categoriaSelect.appendChild(option);
+                        option.value = regiao;
+                        option.textContent = regiao;
+                        regiaoFilter.appendChild(option);
+                    });
+                    
+                    // Carregar igrejas
+                    const igrejaFilter = document.getElementById('church-filter');
+                    igrejaFilter.innerHTML = '<option value="">Todas as igrejas</option>';
+                    
+                    Object.values(data.igrejasPorRegiao).forEach(igrejas => {
+                        igrejas.forEach(igreja => {
+                            const option = document.createElement('option');
+                            option.value = igreja.nome;
+                            option.textContent = igreja.nome;
+                            igrejaFilter.appendChild(option);
+                        });
                     });
                 }
+            } catch (error) {
+                console.error('Erro ao carregar dados para filtros:', error);
             }
-    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-</head>
-<body>
+        }
+
+        // Carregar categorias
+        async function carregarCategorias() {
+            try {
+                const categoriaSelect = document.getElementById('categoria');
+                categoriaSelect.innerHTML = '<option value="">Selecione a categoria</option>';
+                
+                // Categorias básicas como fallback
+                const categorias = [
+                    'Documentação',
+                    'Benefícios Sociais', 
+                    'Jurídico',
+                    'Saúde',
+                    'Outros'
+                ];
+                
+                categorias.forEach(categoria => {
+                    const option = document.createElement('option');
+                    option.value = categoria;
+                    option.textContent = `📁 ${categoria}`;
+                    categoriaSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar categorias:', error);
+            }
+        }
+    </script>
+
+    <style>
+        .page-header h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .actions-section {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tickets-count {
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        .tickets-container {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .modal-content {
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .actions-section {
+                flex-direction: column;
+            }
+
+            .actions-section .btn {
+                width: 100%;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</body>
+</html>
     <!-- Header -->
     <header class="header">
         <div class="container">

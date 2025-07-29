@@ -20,7 +20,7 @@ class FlowManager {
                 body: JSON.stringify({
                     ...data,
                     timestamp: new Date().toISOString(),
-                    userInfo: auth.getCurrentUser(),
+                    userInfo: (typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser() : null,
                     spreadsheetId: this.spreadsheetId
                 })
             });
@@ -53,7 +53,7 @@ class FlowManager {
                 prioridade: ticketData.prioridade,
                 categoria: ticketData.categoria,
                 demanda: ticketData.demanda,
-                userInfo: auth.getCurrentUser()
+                userInfo: (typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser() : null
             };
 
             const result = await this.sendToScript(this.endpoints.newTicket, payload);
@@ -92,7 +92,7 @@ class FlowManager {
     // Update existing ticket
     async updateTicket(ticketId, updateData) {
         try {
-            const user = auth.getCurrentUser();
+            const user = (typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser() : null;
             const payload = {
                 action: 'updateTicket',
                 ticketId: ticketId,
@@ -119,7 +119,7 @@ class FlowManager {
     // Delete ticket (logical deletion)
     async deleteTicket(ticketId, reason = '') {
         try {
-            const user = auth.getCurrentUser();
+            const user = (typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser() : null;
             const payload = {
                 action: 'deleteTicket',
                 ticketId: ticketId,
@@ -155,7 +155,7 @@ class FlowManager {
                 cargo: userData.cargo,
                 igreja: userData.igreja,
                 regiao: userData.regiao,
-                userInfo: auth.getCurrentUser() || { name: 'Sistema', email: '' }
+                userInfo: (typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser() : { name: 'Sistema', email: '' }
             };
 
             const result = await this.sendToScript(this.endpoints.newUser, payload);
@@ -233,7 +233,7 @@ class FlowManager {
                 action: 'generateReport',
                 reportType: reportType,
                 filters: filters,
-                generatedBy: auth.getCurrentUser()?.name || 'Sistema',
+                generatedBy: (typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser()?.name : 'Sistema',
                 generatedAt: new Date().toISOString()
             };
 
@@ -252,7 +252,7 @@ class FlowManager {
             const payload = {
                 action: 'buscarUsuarios',
                 ...filtros,
-                requestedBy: auth.getCurrentUser()
+                requestedBy: (typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser() : null
             };
 
             const result = await this.sendToScript('', payload);
@@ -281,7 +281,7 @@ class FlowManager {
                 novoStatus: dadosAlteracao.novoStatus,
                 novoCargo: dadosAlteracao.novoCargo,
                 observacoes: dadosAlteracao.observacoes,
-                userInfo: dadosAlteracao.userInfo || auth.getCurrentUser(),
+                userInfo: dadosAlteracao.userInfo || ((typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser() : null),
                 timestamp: new Date().toISOString()
             };
 
