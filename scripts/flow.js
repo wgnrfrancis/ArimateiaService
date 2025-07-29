@@ -7,6 +7,35 @@ class FlowManager {
         this.spreadsheetId = CONFIG.googleAppsScript.spreadsheetId;
     }
 
+    // Send data to Google Apps Script (without automatic loading)
+    async sendToScriptSilent(endpoint, data) {
+        try {
+            const response = await fetch(`${this.baseUrl}${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...data,
+                    timestamp: new Date().toISOString(),
+                    userInfo: (typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser() : null,
+                    spreadsheetId: this.spreadsheetId
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            return { success: true, data: result };
+
+        } catch (error) {
+            console.error('Google Apps Script error:', error);
+            throw error;
+        }
+    }
+
     // Send data to Google Apps Script
     async sendToScript(endpoint, data) {
         try {
@@ -304,25 +333,11 @@ class FlowManager {
     // Buscar igrejas e regiões da planilha
     async getIgrejasRegioes() {
         try {
-            const payload = {
+            const result = await this.sendToScriptSilent('', {
                 action: 'getIgrejasRegioes'
-            };
-
-            const response = await fetch(this.baseUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload)
             });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
             
-            if (result.success) {
+            if (result.success && result.data) {
                 return { success: true, data: result.data };
             } else {
                 throw new Error(result.error || 'Erro ao buscar igrejas e regiões');

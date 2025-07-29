@@ -184,9 +184,14 @@
             try {
                 Helpers.showLoading('Carregando regiões...');
                 
-                const result = await flowManager.getIgrejasRegioes();
+                // Debug: testar conectividade com Google Apps Script
+                console.log('Testando conexão com Google Apps Script...');
+                console.log('URL:', CONFIG.googleAppsScript.webAppUrl);
                 
-                if (result.success) {
+                const result = await flowManager.getIgrejasRegioes();
+                console.log('Resultado:', result);
+                
+                if (result.success && result.data) {
                     const data = result.data;
                     const regiaoSelect = document.getElementById('regiao');
                     
@@ -194,27 +199,36 @@
                     regiaoSelect.innerHTML = '<option value="">Selecione a região</option>';
                     
                     // Adicionar regiões da planilha
-                    data.regioes.forEach(regiao => {
-                        const option = document.createElement('option');
-                        option.value = regiao;
-                        option.textContent = regiao;
-                        regiaoSelect.appendChild(option);
-                    });
-                    
-                    // Armazenar dados para uso na seleção hierárquica
-                    window.igrejasData = data.igrejasPorRegiao;
-                    
-                    console.log(`Carregadas ${data.regioes.length} regiões e ${data.total.igrejas} igrejas`);
+                    if (data.regioes && data.regioes.length > 0) {
+                        data.regioes.forEach(regiao => {
+                            const option = document.createElement('option');
+                            option.value = regiao;
+                            option.textContent = regiao;
+                            regiaoSelect.appendChild(option);
+                        });
+                        
+                        // Armazenar dados para uso na seleção hierárquica
+                        window.igrejasData = data.igrejasPorRegiao;
+                        
+                        console.log(`Carregadas ${data.regioes.length} regiões e ${data.total?.igrejas || 0} igrejas`);
+                        Helpers.showToast('Regiões carregadas da planilha!', 'success');
+                    } else {
+                        throw new Error('Nenhuma região encontrada na planilha');
+                    }
                 } else {
-                    throw new Error(result.error || 'Erro ao carregar regiões');
+                    throw new Error(result.error || 'Erro na resposta do servidor');
                 }
                 
             } catch (error) {
-                console.error('Erro ao carregar regiões:', error);
-                Helpers.showToast('Erro ao carregar regiões: ' + error.message, 'error');
+                console.error('Erro detalhado:', error);
+                console.log('Usando fallback do config.js...');
                 
-                // Fallback para regiões do config.js se houver erro
+                // Fallback para regiões do config.js
                 loadRegioes();
+                
+                // Mostrar aviso mais amigável
+                Helpers.showToast('Usando dados locais. Algumas funcionalidades podem estar limitadas.', 'warning');
+                
             } finally {
                 Helpers.hideLoading();
             }
