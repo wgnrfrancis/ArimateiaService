@@ -39,7 +39,50 @@ const SHEETS = {
 };
 
 /**
- * 🎯 FUNÇÃO PRINCIPAL - Processa todas as requisições
+ * � TRATAMENTO DE CORS - Permite requisições cross-origin
+ */
+function doOptions(e) {
+  return HtmlService.createHtmlOutput()
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+/**
+ * 🔧 CRIA RESPOSTA COM CABEÇALHOS CORS
+ */
+function createResponse(data, success = true) {
+  const response = success ? { success: true, data: data } : { success: false, error: data };
+  
+  const output = ContentService.createTextOutput(JSON.stringify(response))
+    .setMimeType(ContentService.MimeType.JSON);
+  
+  // Adicionar cabeçalhos CORS para permitir requisições de qualquer origem
+  output.setHeaders({
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type'
+  });
+  
+  return output;
+}
+
+/**
+ * 🎯 FUNÇÃO PARA LIDAR COM REQUISIÇÕES OPTIONS (CORS PREFLIGHT)
+ */
+function doOptions() {
+  const output = ContentService.createTextOutput('')
+    .setMimeType(ContentService.MimeType.TEXT);
+  
+  output.setHeaders({
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type'
+  });
+  
+  return output;
+}
+
+/**
+ * �🎯 FUNÇÃO PRINCIPAL - Processa todas as requisições
  */
 function doPost(e) {
   try {
@@ -48,7 +91,7 @@ function doPost(e) {
     
     console.log(`Ação recebida: ${action}`, data);
     
-    switch (action) {
+    switch(action) {
       case 'newTicket':
         return createResponse(createNewTicket(data));
       case 'updateTicket':
