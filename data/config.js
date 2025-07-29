@@ -7,8 +7,8 @@ const CONFIG = {
 
     // Google Apps Script integration
     googleAppsScript: {
-        // URL real do Google Apps Script Web App implantado
-        webAppUrl: "https://script.google.com/macros/s/AKfycbwt1Phi-BhEe-F6K5qv7fzMd2MJ-ctEhTrI0cRCRad-c4_Mr6y3LuOvktvQG31G3pKj/exec",
+        // URL do Google Apps Script V2 (novo e limpo)
+        webAppUrl: "https://script.google.com/macros/s/AKfycbylYVzywgtIn7JIcIrjaWab-QN4IRAynWL3T4q5dFvrAH_5A7_hmWkQHnJ-Q3yoAoYf/exec",
         // Spreadsheet ID (extraído da URL fornecida)
         spreadsheetId: "1awSUcZPlvM0Ci5ecKWCG4uwDbR3ZT5ZeDOuVdOIGMuc",
         endpoints: {

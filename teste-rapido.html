@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste Rápido - CORS</title>
+</head>
+<body>
+    <h1>Teste Rápido do Sistema</h1>
+    <button onclick="testarSistema()">🧪 Testar Sistema</button>
+    <div id="resultado"></div>
+
+    <script>
+        async function testarSistema() {
+            const resultado = document.getElementById('resultado');
+            resultado.innerHTML = '<p>🔄 Testando...</p>';
+            
+            const url = 'https://script.google.com/macros/s/AKfycbwt1Phi-BhEe-F6K5qv7fzMd2MJ-ctEhTrI0cRCRad-c4_Mr6y3LuOvktvQG31G3pKj/exec';
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'getIgrejasRegioes'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    resultado.innerHTML = `
+                        <h3>✅ SISTEMA FUNCIONANDO!</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>CORS:</strong> ${response.headers.get('Access-Control-Allow-Origin') || 'Configurado'}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultado.innerHTML = `
+                        <h3>⚠️ Resposta com erro</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Erro:</strong> ${await response.text()}</p>
+                    `;
+                }
+            } catch (error) {
+                resultado.innerHTML = `
+                    <h3>❌ Erro de conexão</h3>
+                    <p><strong>Erro:</strong> ${error.message}</p>
+                    <p>Ainda precisa adicionar as funções CORS ao Google Apps Script</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

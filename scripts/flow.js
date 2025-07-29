@@ -10,7 +10,7 @@ class FlowManager {
     // Send data to Google Apps Script (without automatic loading)
     async sendToScriptSilent(endpoint, data) {
         try {
-            const response = await fetch(`${this.baseUrl}${endpoint}`, {
+            const response = await fetch(this.baseUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ class FlowManager {
     async sendToScript(endpoint, data) {
         try {
             console.log('🌐 Enviando para Google Apps Script...');
-            console.log('📍 URL:', `${this.baseUrl}${endpoint}`);
+            console.log('📍 URL:', this.baseUrl);
             console.log('📦 Dados:', data);
             
             Helpers.showLoading('Enviando dados...');
@@ -54,7 +54,7 @@ class FlowManager {
             
             console.log('📤 Request body completo:', requestBody);
 
-            const response = await fetch(`${this.baseUrl}${endpoint}`, {
+            const response = await fetch(this.baseUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -211,7 +211,26 @@ class FlowManager {
             console.log('📤 Enviando payload para Google Apps Script:', payload);
             console.log('🌐 URL sendo usada:', this.baseUrl);
             
-            const result = await this.sendToScript('', payload);
+            // Para Google Apps Script, enviar diretamente sem endpoint adicional
+            const response = await fetch(this.baseUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            });
+
+            console.log('📥 Response status:', response.status);
+            console.log('📥 Response ok:', response.ok);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Response error text:', errorText);
+                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+            }
+
+            const result = await response.json();
+            console.log('✅ Response result:', result);
             
             if (result.success) {
                 return result;
