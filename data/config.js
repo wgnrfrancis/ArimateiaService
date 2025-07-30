@@ -8,9 +8,10 @@ const CONFIG = {
     // Google Apps Script integration
     googleAppsScript: {
         // URL do Google Apps Script V2 (novo e limpo)
-        webAppUrl: "https://script.google.com/macros/s/AKfycbylYVzywgtIn7JIcIrjaWab-QN4IRAynWL3T4q5dFvrAH_5A7_hmWkQHnJ-Q3yoAoYf/exec",
+        webAppUrl: 'https://script.google.com/macros/s/AKfycbylYVzywgtIn7JIcIrjaWab-QN4IRAynWL3T4q5dFvrAH_5A7_hmWkQHnJ-Q3yoAoYf/exec',
+        spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/1awSUcZPlvM0Ci5ecKWCG4uwDbR3ZT5ZeDOuVdOIGMuc/edit?gid=0#gid=0',
         // Spreadsheet ID (extraído da URL fornecida)
-        spreadsheetId: "1awSUcZPlvM0Ci5ecKWCG4uwDbR3ZT5ZeDOuVdOIGMuc",
+        spreadsheetId: '1awSUcZPlvM0Ci5ecKWCG4uwDbR3ZT5ZeDOuVdOIGMuc',
         endpoints: {
             newTicket: "?action=newTicket",
             updateTicket: "?action=updateTicket",
@@ -21,6 +22,58 @@ const CONFIG = {
             getUsers: "?action=getUsers",
             generateReport: "?action=generateReport",
             getIgrejasRegioes: "?action=getIgrejasRegioes"
+        }
+    },
+
+    // Estrutura das abas da planilha (para referência)
+    spreadsheetTabs: {
+        CHAMADOS: {
+            name: 'CHAMADOS',
+            columns: ['ID', 'DATA_ABERTURA', 'NOME_CIDADAO', 'CONTATO', 'EMAIL', 'IGREJA', 'REGIAO', 'DESCRICAO_DEMANDA', 'STATUS', 'PRIORIDADE', 'CATEGORIA', 'CRIADO_POR', 'CRIADO_POR_EMAIL', 'RESPONSAVEL_ATUAL', 'DATA_ULTIMA_ATUALIZACAO', 'OBSERVACOES', 'ANEXOS', 'TEMPO_RESOLUCAO', 'SATISFACAO_CIDADAO']
+        },
+        OBSERVACOES_CHAMADOS: {
+            name: 'OBSERVACOES_CHAMADOS',
+            columns: ['ID_OBSERVACAO', 'ID_CHAMADO', 'DATA_HORA', 'USUARIO', 'USUARIO_EMAIL', 'TIPO_ACAO', 'STATUS_ANTERIOR', 'STATUS_NOVO', 'OBSERVACAO', 'ANEXOS']
+        },
+        CHAMADOS_EXCLUIDOS: {
+            name: 'CHAMADOS_EXCLUIDOS',
+            columns: ['ID_ORIGINAL', 'DATA_EXCLUSAO', 'EXCLUIDO_POR', 'EXCLUIDO_POR_EMAIL', 'MOTIVO_EXCLUSAO', 'DADOS_ORIGINAIS']
+        },
+        USUARIOS: {
+            name: 'USUARIOS',
+            columns: ['ID', 'NOME_COMPLETO', 'EMAIL', 'SENHA', 'TELEFONE', 'CARGO', 'IGREJA', 'REGIAO', 'DATA_CADASTRO', 'STATUS', 'ULTIMO_ACESSO', 'TOTAL_CHAMADOS', 'CHAMADOS_RESOLVIDOS', 'TAXA_RESOLUCAO', 'CRIADO_POR', 'OBSERVACOES']
+        },
+        CATEGORIAS_SERVICOS: {
+            name: 'CATEGORIAS_SERVICOS',
+            columns: ['ID', 'NOME_CATEGORIA', 'DESCRICAO', 'COR_IDENTIFICACAO', 'ICONE', 'ATIVA', 'ORDEM_EXIBICAO']
+        },
+        IGREJAS_REGIOES: {
+            name: 'IGREJAS_REGIOES',
+            columns: ['ID', 'NOME_IGREJA', 'REGIAO', 'OBREIROS', 'VOLUNTARIOS_DOS_GRUPOS', 'MEMBROS_DOMINGO', 'TOTAL', 'COORDENADOR_LOCAL', 'TOTAL_VOLUNTARIOS', 'TOTAL_ATENDIMENTOS', 'STATUS']
+        },
+        RELATORIOS_MENSAIS: {
+            name: 'RELATORIOS_MENSAIS',
+            columns: ['ANO_MES', 'TOTAL_CHAMADOS', 'CHAMADOS_RESOLVIDOS', 'TAXA_RESOLUCAO', 'TEMPO_MEDIO_RESOLUCAO', 'TOTAL_VOLUNTARIOS_ATIVOS', 'IGREJA_MAIS_ATIVA', 'CATEGORIA_MAIS_DEMANDADA', 'SATISFACAO_MEDIA']
+        },
+        PROFISSIONAIS_LIBERAIS: {
+            name: 'PROFISSIONAIS_LIBERAIS',
+            columns: ['NOME', 'TELEFONE', 'PROFISSAO', 'CIDADE']
+        },
+        ASSESSORES: {
+            name: 'ASSESSORES',
+            columns: ['ASSESSOR', 'TELEFONE', 'PARLAMENTAR', 'GABINETE']
+        },
+        ELEICOES_DEPUTADOS: {
+            name: 'ELEICOES_DEPUTADOS',
+            columns: ['REGIAO', 'IGREJAS', 'MUNICIPIO', 'ENDERECOS', 'HABITANTES', 'OBREIROS', 'GRUPOS', 'POVO_GERAL', 'QUANTIDADE_ARIMATEIA_OBREIROS', 'TOTAL_GERAL_ARIMATEIA', 'VOTOS_DF_2018', 'VOTOS_DF_2022', 'VOTOS_DE_2018', 'VOTOS_DE_2022']
+        },
+        ELEICOES_VEREADORES: {
+            name: 'ELEICOES_VEREADORES',
+            columns: ['REGIAO', 'IGREJAS', 'MUNICIPIO', 'NOME_2024', 'CONTATO', 'FUNCAO', 'PARTIDO', 'ELEITO_NAO_ELEITO_2024', 'QUAL_MANDATO_ESTA', 'SUPLENTE_2024', 'VOTOS_2016', 'VOTOS_2020', 'VOTOS_2024', 'TOTAL_CADEIRAS', 'MAIOR_VOTACAO_ELEITO_2016', 'MENOR_VOTACAO_ELEITO_2016', 'MAIOR_VOTACAO_ELEITO_2020', 'MENOR_VOTACAO_ELEITO_2020', 'MAIOR_VOTACAO_ELEITO_2024', 'MENOR_VOTACAO_ELEITO_2024']
+        },
+        ELEICOES_CONSELHO: {
+            name: 'ELEICOES_CONSELHO',
+            columns: ['REGIAO', 'IGREJAS', 'MUNICIPIO', 'NOMES_2023', 'CONTATO', 'FUNCAO', 'VOTOS_2019', 'ELEITO_NAO_ELEITO_2023', 'VOTOS_2023', 'POSICAO_2023']
         }
     },
 

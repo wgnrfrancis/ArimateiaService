@@ -2,91 +2,148 @@
 // Handles all communication with Google Sheets via Google Apps Script Web App
 class FlowManager {
     constructor() {
-        this.baseUrl = CONFIG.googleAppsScript.webAppUrl;
-        this.endpoints = CONFIG.googleAppsScript.endpoints;
-        this.spreadsheetId = CONFIG.googleAppsScript.spreadsheetId;
+        this.isOnline = navigator.onLine;
+        this.retryAttempts = 3;
+        this.retryDelay = 1000;
     }
 
-    // Send data to Google Apps Script (without automatic loading)
-    async sendToScriptSilent(endpoint, data) {
-        try {
-            const response = await fetch(this.baseUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
+    // Método específico para Google Apps Script com tratamento de CORS
+    async sendToScript(data, useFormData = false) {
+        console.log('🌐 Enviando para Google Apps Script...');
+        console.log('📍 URL:', CONFIG.googleAppsScript.webAppUrl);
+        console.log('📦 Dados:', data);
+
+        for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
+            try {
+                // Adicionar timestamp e informações do cliente
+                const payload = {
                     ...data,
                     timestamp: new Date().toISOString(),
-                    userInfo: (typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser() : null,
-                    spreadsheetId: this.spreadsheetId
-                })
-            });
+                    userInfo: this.getUserInfo(),
+                    clientOrigin: window.location.origin
+                };
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                console.log('📤 Request body completo:', payload);
+
+                let requestOptions;
+
+                if (useFormData) {
+                    // Para uploads ou dados complexos
+                    const formData = new FormData();
+                    Object.keys(payload).forEach(key => {
+                        if (payload[key] !== null && payload[key] !== undefined) {
+                            formData.append(key, typeof payload[key] === 'object' ? JSON.stringify(payload[key]) : payload[key]);
+                        }
+                    });
+
+                    requestOptions = {
+                        method: 'POST',
+                        body: formData,
+                        mode: 'no-cors', // Importante para evitar preflight
+                        cache: 'no-cache'
+                    };
+                } else {
+                    // Para dados JSON simples - usar URLSearchParams para evitar CORS preflight
+                    const urlParams = new URLSearchParams();
+                    Object.keys(payload).forEach(key => {
+                        if (payload[key] !== null && payload[key] !== undefined) {
+                            urlParams.append(key, typeof payload[key] === 'object' ? JSON.stringify(payload[key]) : payload[key]);
+                        }
+                    });
+
+                    requestOptions = {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: urlParams,
+                        mode: 'cors',
+                        cache: 'no-cache'
+                    };
+                }
+
+                const response = await fetch(CONFIG.googleAppsScript.webAppUrl, requestOptions);
+
+                // Para mode: 'no-cors', assumir sucesso se não houver erro
+                if (requestOptions.mode === 'no-cors') {
+                    console.log('✅ Requisição enviada (mode: no-cors)');
+                    return { 
+                        success: true, 
+                        data: { message: 'Requisição enviada com sucesso' },
+                        mode: 'no-cors'
+                    };
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                console.log('✅ Resposta do Google Apps Script:', result);
+                return result;
+
+            } catch (error) {
+                console.log(`❌ Tentativa ${attempt} falhou:`, error.message);
+                
+                if (attempt === this.retryAttempts) {
+                    console.error('❌ Google Apps Script error details:', {
+                        message: error.message,
+                        stack: error.stack,
+                        name: error.name
+                    });
+                    throw error;
+                }
+                
+                // Aguardar antes da próxima tentativa
+                await new Promise(resolve => setTimeout(resolve, this.retryDelay * attempt));
             }
-
-            const result = await response.json();
-            return { success: true, data: result };
-
-        } catch (error) {
-            console.error('Google Apps Script error:', error);
-            throw error;
         }
     }
 
-    // Send data to Google Apps Script
-    async sendToScript(endpoint, data) {
+    // Método silencioso para buscar dados (sem retry em caso de erro)
+    async sendToScriptSilent(data) {
         try {
-            console.log('🌐 Enviando para Google Apps Script...');
-            console.log('📍 URL:', this.baseUrl);
-            console.log('📦 Dados:', data);
-            
-            Helpers.showLoading('Enviando dados...');
-
-            const requestBody = {
+            const payload = {
                 ...data,
                 timestamp: new Date().toISOString(),
-                userInfo: (typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser() : null,
-                spreadsheetId: this.spreadsheetId
+                clientOrigin: window.location.origin
             };
-            
-            console.log('📤 Request body completo:', requestBody);
 
-            const response = await fetch(this.baseUrl, {
+            const urlParams = new URLSearchParams();
+            Object.keys(payload).forEach(key => {
+                if (payload[key] !== null && payload[key] !== undefined) {
+                    urlParams.append(key, typeof payload[key] === 'object' ? JSON.stringify(payload[key]) : payload[key]);
+                }
+            });
+
+            const response = await fetch(CONFIG.googleAppsScript.webAppUrl, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: JSON.stringify(requestBody)
+                body: urlParams,
+                mode: 'cors',
+                cache: 'no-cache'
             });
-
-            console.log('📥 Response status:', response.status);
-            console.log('📥 Response ok:', response.ok);
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('❌ Response error text:', errorText);
-                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
-            const result = await response.json();
-            console.log('✅ Response result:', result);
-            
-            Helpers.hideLoading();
-            
-            return { success: true, data: result };
-
+            return await response.json();
         } catch (error) {
-            Helpers.hideLoading();
-            console.error('❌ Google Apps Script error details:', {
-                message: error.message,
-                stack: error.stack,
-                name: error.name
-            });
-            throw error;
+            console.log('Google Apps Script error:', error);
+            return { success: false, error: error.message };
         }
+    }
+
+    getUserInfo() {
+        return {
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString(),
+            url: window.location.href,
+            referrer: document.referrer || 'direct'
+        };
     }
 
     // Create new ticket
