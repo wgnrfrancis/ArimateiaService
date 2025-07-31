@@ -7,112 +7,27 @@ class FlowManager {
         this.retryDelay = 1000;
     }
 
-    // Método específico para Google Apps Script com tratamento de CORS
     async sendToScript(data, useFormData = false) {
         console.log('🌐 Enviando para Google Apps Script...');
         console.log('📍 URL:', CONFIG.googleAppsScript.webAppUrl);
         console.log('📦 Dados:', data);
 
-        for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
-            try {
-                // Adicionar timestamp e informações do cliente
-                const payload = {
-                    ...data,
-                    timestamp: new Date().toISOString(),
-                    userInfo: this.getUserInfo(),
-                    clientOrigin: window.location.origin
-                };
-
-                console.log('📤 Request body completo:', payload);
-
-                let requestOptions;
-
-                if (useFormData) {
-                    // Para uploads ou dados complexos
-                    const formData = new FormData();
-                    Object.keys(payload).forEach(key => {
-                        if (payload[key] !== null && payload[key] !== undefined) {
-                            formData.append(key, typeof payload[key] === 'object' ? JSON.stringify(payload[key]) : payload[key]);
-                        }
-                    });
-
-                    requestOptions = {
-                        method: 'POST',
-                        body: formData,
-                        mode: 'no-cors', // Importante para evitar preflight
-                        cache: 'no-cache'
-                    };
-                } else {
-                    // Para dados JSON simples - usar URLSearchParams para evitar CORS preflight
-                    const urlParams = new URLSearchParams();
-                    Object.keys(payload).forEach(key => {
-                        if (payload[key] !== null && payload[key] !== undefined) {
-                            urlParams.append(key, typeof payload[key] === 'object' ? JSON.stringify(payload[key]) : payload[key]);
-                        }
-                    });
-
-                    requestOptions = {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: urlParams,
-                        mode: 'cors',
-                        cache: 'no-cache'
-                    };
-                }
-
-                const response = await fetch(CONFIG.googleAppsScript.webAppUrl, requestOptions);
-
-                // Para mode: 'no-cors', assumir sucesso se não houver erro
-                if (requestOptions.mode === 'no-cors') {
-                    console.log('✅ Requisição enviada (mode: no-cors)');
-                    return { 
-                        success: true, 
-                        data: { message: 'Requisição enviada com sucesso' },
-                        mode: 'no-cors'
-                    };
-                }
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
-                const result = await response.json();
-                console.log('✅ Resposta do Google Apps Script:', result);
-                return result;
-
-            } catch (error) {
-                console.log(`❌ Tentativa ${attempt} falhou:`, error.message);
-                
-                if (attempt === this.retryAttempts) {
-                    console.error('❌ Google Apps Script error details:', {
-                        message: error.message,
-                        stack: error.stack,
-                        name: error.name
-                    });
-                    throw error;
-                }
-                
-                // Aguardar antes da próxima tentativa
-                await new Promise(resolve => setTimeout(resolve, this.retryDelay * attempt));
-            }
-        }
-    }
-
-    // Método silencioso para buscar dados (sem retry em caso de erro)
-    async sendToScriptSilent(data) {
         try {
+            // Adicionar timestamp e informações do cliente
             const payload = {
                 ...data,
                 timestamp: new Date().toISOString(),
+                userInfo: this.getUserInfo(),
                 clientOrigin: window.location.origin
             };
 
-            const urlParams = new URLSearchParams();
+            console.log('📤 Request body completo:', payload);
+
+            // Usar URLSearchParams para enviar como form data
+            const formData = new URLSearchParams();
             Object.keys(payload).forEach(key => {
                 if (payload[key] !== null && payload[key] !== undefined) {
-                    urlParams.append(key, typeof payload[key] === 'object' ? JSON.stringify(payload[key]) : payload[key]);
+                    formData.append(key, typeof payload[key] === 'object' ? JSON.stringify(payload[key]) : payload[key]);
                 }
             });
 
@@ -121,16 +36,48 @@ class FlowManager {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: urlParams,
+                body: formData,
                 mode: 'cors',
                 cache: 'no-cache'
             });
 
+            // Verificar se a resposta é válida
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
-            return await response.json();
+            // Tentar ler como texto primeiro
+            const responseText = await response.text();
+            console.log('📄 Resposta bruta:', responseText);
+
+            // Verificar se é JSON válido
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('❌ Erro ao fazer parse do JSON:', parseError);
+                console.error('📄 Resposta recebida:', responseText);
+                
+                // Se não for JSON, pode ser uma página de erro HTML
+                if (responseText.includes('<html') || responseText.includes('<!DOCTYPE')) {
+                    throw new Error('Google Apps Script retornou HTML em vez de JSON. Verifique a configuração do script.');
+                }
+                
+                throw new Error(`Resposta inválida do servidor: ${responseText.substring(0, 100)}...`);
+            }
+
+            console.log('✅ Resposta do Google Apps Script:', result);
+            return result;
+
+        } catch (error) {
+            console.error('❌ Erro na requisição:', error);
+            throw error;
+        }
+    }
+
+    async sendToScriptSilent(data) {
+        try {
+            return await this.sendToScript(data);
         } catch (error) {
             console.log('Google Apps Script error:', error);
             return { success: false, error: error.message };
