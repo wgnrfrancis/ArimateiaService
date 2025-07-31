@@ -154,8 +154,134 @@
     <script src="scripts/flow.js"></script>
 
     <script>
+async function handleCadastro(e) {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+
+    // Validar campos obrigatórios
+    if (!data.nomeCompleto || !data.email || !data.telefone || !data.regiao || !data.igreja || !data.senha) {
+        Helpers.showToast('Preencha todos os campos obrigatórios', 'error');
+        return;
+    }
+
+    // Validar senhas
+    if (data.senha !== data.confirmarSenha) {
+        Helpers.showToast('As senhas não coincidem', 'error');
+        return;
+    }
+
+    // Validar aceite dos termos
+    if (!data.termos) {
+        Helpers.showToast('É necessário concordar com os termos', 'error');
+        return;
+    }
+
+    try {
+        Helpers.showLoading('Criando cadastro...');
+        
+        console.log('📤 Enviando dados para cadastro:', {
+            nomeCompleto: data.nomeCompleto,
+            email: data.email,
+            telefone: data.telefone,
+            regiao: data.regiao,
+            igreja: data.igreja,
+            cargo: 'VOLUNTARIO'
+        });
+        
+        // Usar método normal (não FormData) para ter controle da resposta
+        const result = await flowManager.sendToScript({
+            action: 'newUser',
+            nomeCompleto: data.nomeCompleto,
+            email: data.email,
+            senha: data.senha,
+            telefone: data.telefone,
+            cargo: 'VOLUNTARIO',
+            igreja: data.igreja,
+            regiao: data.regiao
+        });
+
+        Helpers.hideLoading();
+        
+        console.log('📋 Resultado do cadastro:', result);
+
+        if (result.success) {
+            Helpers.showToast('Cadastro realizado com sucesso!', 'success');
+            
+            setTimeout(() => {
+                alert(`Cadastro criado com sucesso!\n\n` +
+                     `ID: ${result.data.id}\n` +
+                     `Nome: ${data.nomeCompleto}\n` +
+                     `Email: ${data.email}\n` +
+                     `Igreja: ${data.igreja}\n` +
+                     `Região: ${data.regiao}\n\n` +
+                     `Seu perfil foi criado como VOLUNTÁRIO.\n` +
+                     `Verifique sua conta na planilha!`);
+                
+                // Limpar formulário
+                document.getElementById('cadastro-form').reset();
+                
+                // Redirecionar após 3 segundos
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 3000);
+            }, 1000);
+        } else {
+            throw new Error(result.error || 'Erro desconhecido ao criar cadastro');
+        }
+
+    } catch (error) {
+        Helpers.hideLoading();
+        console.error('❌ Erro no cadastro:', error);
+        
+        let errorMessage = 'Erro ao criar cadastro';
+        
+        if (error.message.includes('CORS')) {
+            errorMessage = 'Erro de conexão. Verifique se o Google Apps Script está configurado corretamente.';
+        } else if (error.message.includes('Failed to fetch')) {
+            errorMessage = 'Erro de rede. Verifique sua conexão com a internet.';
+        } else if (error.message.includes('Email já cadastrado')) {
+            errorMessage = 'Este email já está cadastrado. Use outro email ou faça login.';
+        } else {
+            errorMessage = error.message;
+        }
+        
+        Helpers.showToast(errorMessage, 'error');
+        
+        // Log detalhado para debug
+        console.error('Detalhes do erro:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name,
+            dadosEnviados: data
+        });
+    }
+}
+
+// Adicionar função para testar conexão
+async function testarConexao() {
+    try {
+        console.log('🧪 Testando conexão com Google Apps Script...');
+        
+        const result = await flowManager.sendToScript({
+            action: 'test'
+        });
+        
+        console.log('✅ Teste de conexão:', result);
+        return result.success;
+    } catch (error) {
+        console.error('❌ Erro no teste de conexão:', error);
+        return false;
+    }
+}
+
+// Testar conexão quando a página carregar
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM carregado - Inicializando sistema de cadastro...');
+    
+    // Testar conexão primeiro
+    testarConexao();
     
     // Carregar regiões e configurar seleção hierárquica
     loadRegioesFromSheet();
@@ -296,77 +422,6 @@ function setupHierarchicalSelection() {
 async function loadIgrejas() {
     // Esta função agora é desnecessária - mantida para compatibilidade
     // A seleção hierárquica é configurada em setupHierarchicalSelection()
-}
-
-async function handleCadastro(e) {
-    e.preventDefault();
-
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
-
-    // Validar senhas
-    if (data.senha !== data.confirmarSenha) {
-        Helpers.showToast('As senhas não coincidem', 'error');
-        return;
-    }
-
-    try {
-        Helpers.showLoading('Verificando dados...');
-        
-        // Verificar se email já existe (usando no-cors mode)
-        const checkEmail = await flowManager.sendToScript({
-            action: 'validateUser',
-            email: data.email,
-            password: 'senha_temporaria'
-        }, true); // usar FormData para evitar CORS
-
-        // Para mode no-cors, assumir que a verificação foi feita
-        // e prosseguir com o cadastro
-
-        Helpers.showLoading('Criando cadastro...');
-        
-        const result = await flowManager.sendToScript({
-            action: 'newUser',
-            nomeCompleto: data.nomeCompleto,
-            email: data.email,
-            senha: data.senha,
-            telefone: data.telefone,
-            cargo: 'VOLUNTARIO',
-            igreja: data.igreja,
-            regiao: data.regiao
-        }, true); // usar FormData para evitar CORS
-
-        Helpers.hideLoading();
-
-        // Para mode no-cors, assumir sucesso
-        if (result.mode === 'no-cors' || result.success) {
-            Helpers.showToast('Cadastro realizado com sucesso!', 'success');
-            
-            setTimeout(() => {
-                alert('Cadastro criado com sucesso!\n\n' +
-                     'Seu perfil foi criado como VOLUNTÁRIO.\n' +
-                     'Aguarde a aprovação do coordenador se necessário.\n\n' +
-                     'Você receberá confirmação quando sua conta estiver ativa.');
-                window.location.href = 'index.html';
-            }, 1000);
-        } else {
-            throw new Error(result.error || 'Erro ao criar cadastro');
-        }
-
-    } catch (error) {
-        Helpers.hideLoading();
-        console.error('❌ Erro no cadastro:', error);
-        
-        // Para alguns tipos de erro CORS, ainda tentar mostrar sucesso
-        if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
-            Helpers.showToast('Cadastro enviado! Verifique sua conta em alguns minutos.', 'info');
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 2000);
-        } else {
-            Helpers.showToast('Erro ao criar cadastro: ' + error.message, 'error');
-        }
-    }
 }
     </script>
 
