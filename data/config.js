@@ -8,21 +8,7 @@ const CONFIG = {
     // Google Apps Script integration
     googleAppsScript: {
         // URL do Google Apps Script V2 (novo e limpo)
-        webAppUrl: 'https://script.google.com/macros/s/AKfycbylYVzywgtIn7JIcIrjaWab-QN4IRAynWL3T4q5dFvrAH_5A7_hmWkQHnJ-Q3yoAoYf/exec',
-        spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/1awSUcZPlvM0Ci5ecKWCG4uwDbR3ZT5ZeDOuVdOIGMuc/edit?gid=0#gid=0',
-        // Spreadsheet ID (extraído da URL fornecida)
-        spreadsheetId: '1awSUcZPlvM0Ci5ecKWCG4uwDbR3ZT5ZeDOuVdOIGMuc',
-        endpoints: {
-            newTicket: "?action=newTicket",
-            updateTicket: "?action=updateTicket",
-            deleteTicket: "?action=deleteTicket",
-            newUser: "?action=newUser",
-            validateUser: "?action=validateUser",
-            getTickets: "?action=getTickets",
-            getUsers: "?action=getUsers",
-            generateReport: "?action=generateReport",
-            getIgrejasRegioes: "?action=getIgrejasRegioes"
-        }
+        webAppUrl: 'https://script.google.com/macros/s/AKfycbzW0ZE0J-1RceoEWF9Gn_dnVx29z54RWVoi0RLSso9qhguPCeZpJ2xo2THEUNFDMsv_/exec' // ⚠️ Atualize com a nova URL
     },
 
     // Estrutura das abas da planilha (para referência)
