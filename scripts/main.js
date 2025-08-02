@@ -20,10 +20,8 @@ class App {
 
     initializePage() {
         try {
-            // Inicializar helpers primeiro
-            if (typeof Helpers !== 'undefined') {
-                Helpers.initializeCommonFeatures();
-            }
+            // ✅ REMOVER chamada problemática - inicializar helpers se necessário mais tarde
+            console.log('📱 Inicializando página:', this.currentPage);
 
             // Roteamento por página
             switch (this.currentPage) {
@@ -79,18 +77,12 @@ class App {
                 console.log('📧 Email:', email);
                 
                 if (!email || !password) {
-                    if (typeof Helpers !== 'undefined') {
-                        Helpers.showToast('Preencha todos os campos', 'warning');
-                    } else {
-                        alert('Preencha todos os campos');
-                    }
+                    this.showMessage('Preencha todos os campos', 'warning');
                     return;
                 }
 
                 try {
-                    if (typeof Helpers !== 'undefined') {
-                        Helpers.showLoading();
-                    }
+                    this.showLoading(true);
                     
                     console.log('🔐 Tentando fazer login...');
                     
@@ -104,13 +96,11 @@ class App {
                     console.log('📋 Resultado do login:', result);
                     
                     if (result.success) {
-                        if (typeof Helpers !== 'undefined') {
-                            Helpers.showToast(`Bem-vindo, ${result.user.nome}!`, 'success');
-                        }
+                        this.showMessage(`Bem-vindo, ${result.user.nome}!`, 'success');
                         
                         console.log('✅ Login bem-sucedido, redirecionando...');
                         
-                        // Redirecionar após pequeno delay para mostrar o toast
+                        // Redirecionar após pequeno delay para mostrar a mensagem
                         setTimeout(() => {
                             window.location.href = 'dashboard.html';
                         }, 1500);
@@ -120,16 +110,9 @@ class App {
                     
                 } catch (error) {
                     console.error('❌ Erro no login:', error);
-                    
-                    if (typeof Helpers !== 'undefined') {
-                        Helpers.showToast(error.message || 'Erro ao fazer login', 'error');
-                    } else {
-                        alert(error.message || 'Erro ao fazer login');
-                    }
+                    this.showMessage(error.message || 'Erro ao fazer login', 'error');
                 } finally {
-                    if (typeof Helpers !== 'undefined') {
-                        Helpers.hideLoading();
-                    }
+                    this.showLoading(false);
                 }
             });
         } else {
@@ -151,6 +134,28 @@ class App {
         if (emailInput) {
             emailInput.focus();
         }
+    }
+
+    // ✅ Método próprio para mostrar mensagens (fallback se Helpers não existir)
+    showMessage(message, type = 'info') {
+        if (typeof Helpers !== 'undefined' && Helpers.showToast) {
+            Helpers.showToast(message, type);
+        } else {
+            // Fallback simples
+            alert(message);
+        }
+    }
+
+    // ✅ Método próprio para loading (fallback se Helpers não existir)
+    showLoading(show = true) {
+        if (typeof Helpers !== 'undefined') {
+            if (show && Helpers.showLoading) {
+                Helpers.showLoading();
+            } else if (!show && Helpers.hideLoading) {
+                Helpers.hideLoading();
+            }
+        }
+        // Se não tiver Helpers, não faz nada (loading silencioso)
     }
 
     initCadastroPage() {
@@ -210,9 +215,7 @@ class App {
 
         // Verificar permissão de secretaria
         if (!authManager.hasPermission('secretaria_view')) {
-            if (typeof Helpers !== 'undefined') {
-                Helpers.showToast('Acesso negado. Você não tem permissão para acessar esta página.', 'error');
-            }
+            this.showMessage('Acesso negado. Você não tem permissão para acessar esta página.', 'error');
             window.location.href = 'dashboard.html';
             return;
         }
@@ -237,9 +240,7 @@ class App {
 
         // Verificar permissão de coordenador
         if (!authManager.hasPermission('coordenador_view')) {
-            if (typeof Helpers !== 'undefined') {
-                Helpers.showToast('Acesso negado. Você não tem permissão para acessar esta página.', 'error');
-            }
+            this.showMessage('Acesso negado. Você não tem permissão para acessar esta página.', 'error');
             window.location.href = 'dashboard.html';
             return;
         }
@@ -250,9 +251,7 @@ class App {
 
     async loadDashboardData() {
         try {
-            if (typeof Helpers !== 'undefined') {
-                Helpers.showLoading();
-            }
+            this.showLoading(true);
             
             // Carregar dados do dashboard
             const user = authManager.getCurrentUser();
@@ -267,13 +266,9 @@ class App {
             
         } catch (error) {
             console.error('Erro ao carregar dashboard:', error);
-            if (typeof Helpers !== 'undefined') {
-                Helpers.showToast('Erro ao carregar dados do dashboard', 'error');
-            }
+            this.showMessage('Erro ao carregar dados do dashboard', 'error');
         } finally {
-            if (typeof Helpers !== 'undefined') {
-                Helpers.hideLoading();
-            }
+            this.showLoading(false);
         }
     }
 
@@ -393,17 +388,25 @@ class App {
     }
 
     handleLogout() {
+        const confirmLogout = () => {
+            if (typeof authManager !== 'undefined') {
+                authManager.logout();
+            } else {
+                // Fallback manual
+                localStorage.removeItem('balcao_session');
+                window.location.href = 'index.html';
+            }
+        };
+
         if (typeof Helpers !== 'undefined' && Helpers.showConfirm) {
             Helpers.showConfirm(
                 'Sair do sistema',
                 'Tem certeza que deseja sair?',
-                () => {
-                    authManager.logout();
-                }
+                confirmLogout
             );
         } else {
             if (confirm('Tem certeza que deseja sair?')) {
-                authManager.logout();
+                confirmLogout();
             }
         }
     }
