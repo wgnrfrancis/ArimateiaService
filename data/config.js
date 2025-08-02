@@ -7,8 +7,8 @@ const CONFIG = {
 
     // Google Apps Script integration
     googleAppsScript: {
-        // URL do Google Apps Script V2 (novo e limpo)
-        webAppUrl: 'https://script.google.com/macros/s/AKfycbzW0ZE0J-1RceoEWF9Gn_dnVx29z54RWVoi0RLSso9qhguPCeZpJ2xo2THEUNFDMsv_/exec' // ⚠️ Atualize com a nova URL
+        // Atualize com a nova URL após reimplantação
+        webAppUrl: 'https://script.google.com/macros/s/AKfycbwCBrg0zu3Uq09vTtAn8XTd5KwpZaU7Rsc-AqS9muA7zdpPTIGdBrIL4f9u1tm8qhJt/exec'
     },
 
     // Estrutura das abas da planilha (para referência)
