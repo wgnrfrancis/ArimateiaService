@@ -57,10 +57,9 @@ class App {
     initLoginPage() {
         console.log('🔑 Inicializando página de login...');
         
-        // ✅ USAR authManager em vez de auth
-        // Verificar se já está logado
+        // ✅ Verificar se authManager existe e está carregado
         if (typeof authManager !== 'undefined' && authManager.isLoggedIn()) {
-            console.log('✅ Usuário já logado, redirecionando...');
+            console.log('✅ Usuário já logado, redirecionando para dashboard...');
             window.location.href = 'dashboard.html';
             return;
         }
@@ -68,25 +67,48 @@ class App {
         // Setup do formulário de login
         const loginForm = document.getElementById('login-form');
         if (loginForm) {
+            console.log('📝 Configurando formulário de login...');
+            
             loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                console.log('📤 Formulário de login submetido');
                 
                 const email = document.getElementById('email').value.trim();
                 const password = document.getElementById('password').value;
                 
+                console.log('📧 Email:', email);
+                
                 if (!email || !password) {
-                    Helpers.showToast('Preencha todos os campos', 'warning');
+                    if (typeof Helpers !== 'undefined') {
+                        Helpers.showToast('Preencha todos os campos', 'warning');
+                    } else {
+                        alert('Preencha todos os campos');
+                    }
                     return;
                 }
 
                 try {
-                    Helpers.showLoading();
+                    if (typeof Helpers !== 'undefined') {
+                        Helpers.showLoading();
+                    }
                     
-                    // ✅ USAR authManager.login
+                    console.log('🔐 Tentando fazer login...');
+                    
+                    // ✅ Verificar se authManager existe antes de usar
+                    if (typeof authManager === 'undefined') {
+                        throw new Error('Sistema de autenticação não carregado. Recarregue a página.');
+                    }
+                    
                     const result = await authManager.login(email, password);
                     
+                    console.log('📋 Resultado do login:', result);
+                    
                     if (result.success) {
-                        Helpers.showToast(`Bem-vindo, ${result.user.nome}!`, 'success');
+                        if (typeof Helpers !== 'undefined') {
+                            Helpers.showToast(`Bem-vindo, ${result.user.nome}!`, 'success');
+                        }
+                        
+                        console.log('✅ Login bem-sucedido, redirecionando...');
                         
                         // Redirecionar após pequeno delay para mostrar o toast
                         setTimeout(() => {
@@ -98,11 +120,20 @@ class App {
                     
                 } catch (error) {
                     console.error('❌ Erro no login:', error);
-                    Helpers.showToast(error.message || 'Erro ao fazer login', 'error');
+                    
+                    if (typeof Helpers !== 'undefined') {
+                        Helpers.showToast(error.message || 'Erro ao fazer login', 'error');
+                    } else {
+                        alert(error.message || 'Erro ao fazer login');
+                    }
                 } finally {
-                    Helpers.hideLoading();
+                    if (typeof Helpers !== 'undefined') {
+                        Helpers.hideLoading();
+                    }
                 }
             });
+        } else {
+            console.warn('⚠️ Formulário de login não encontrado');
         }
 
         // Link para cadastro
@@ -110,6 +141,7 @@ class App {
         if (cadastroLink) {
             cadastroLink.addEventListener('click', (e) => {
                 e.preventDefault();
+                console.log('📝 Redirecionando para cadastro...');
                 window.location.href = 'cadastro.html';
             });
         }
@@ -129,8 +161,14 @@ class App {
     initDashboardPage() {
         console.log('📊 Inicializando dashboard...');
         
-        // ✅ USAR authManager
-        if (typeof authManager === 'undefined' || !authManager.requireAuth()) {
+        // ✅ Verificar authManager
+        if (typeof authManager === 'undefined') {
+            console.error('❌ AuthManager não carregado');
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        if (!authManager.requireAuth()) {
             return;
         }
 
@@ -141,8 +179,14 @@ class App {
     initBalcaoPage() {
         console.log('🎫 Inicializando balcão...');
         
-        // ✅ USAR authManager
-        if (typeof authManager === 'undefined' || !authManager.requireAuth()) {
+        // ✅ Verificar authManager
+        if (typeof authManager === 'undefined') {
+            console.error('❌ AuthManager não carregado');
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        if (!authManager.requireAuth()) {
             return;
         }
 
@@ -153,14 +197,22 @@ class App {
     initSecretariaPage() {
         console.log('📋 Inicializando secretaria...');
         
-        // ✅ USAR authManager
-        if (typeof authManager === 'undefined' || !authManager.requireAuth()) {
+        // ✅ Verificar authManager
+        if (typeof authManager === 'undefined') {
+            console.error('❌ AuthManager não carregado');
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        if (!authManager.requireAuth()) {
             return;
         }
 
         // Verificar permissão de secretaria
         if (!authManager.hasPermission('secretaria_view')) {
-            Helpers.showToast('Acesso negado. Você não tem permissão para acessar esta página.', 'error');
+            if (typeof Helpers !== 'undefined') {
+                Helpers.showToast('Acesso negado. Você não tem permissão para acessar esta página.', 'error');
+            }
             window.location.href = 'dashboard.html';
             return;
         }
@@ -172,14 +224,22 @@ class App {
     initCoordenadorPage() {
         console.log('👑 Inicializando coordenador...');
         
-        // ✅ USAR authManager
-        if (typeof authManager === 'undefined' || !authManager.requireAuth()) {
+        // ✅ Verificar authManager
+        if (typeof authManager === 'undefined') {
+            console.error('❌ AuthManager não carregado');
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        if (!authManager.requireAuth()) {
             return;
         }
 
         // Verificar permissão de coordenador
         if (!authManager.hasPermission('coordenador_view')) {
-            Helpers.showToast('Acesso negado. Você não tem permissão para acessar esta página.', 'error');
+            if (typeof Helpers !== 'undefined') {
+                Helpers.showToast('Acesso negado. Você não tem permissão para acessar esta página.', 'error');
+            }
             window.location.href = 'dashboard.html';
             return;
         }
@@ -190,22 +250,30 @@ class App {
 
     async loadDashboardData() {
         try {
-            Helpers.showLoading();
+            if (typeof Helpers !== 'undefined') {
+                Helpers.showLoading();
+            }
             
             // Carregar dados do dashboard
             const user = authManager.getCurrentUser();
             
-            // Atualizar informações do usuário na tela
-            this.updateUserInfo(user);
-            
-            // Carregar estatísticas
-            await this.loadDashboardStats(user);
+            if (user) {
+                // Atualizar informações do usuário na tela
+                this.updateUserInfo(user);
+                
+                // Carregar estatísticas
+                await this.loadDashboardStats(user);
+            }
             
         } catch (error) {
             console.error('Erro ao carregar dashboard:', error);
-            Helpers.showToast('Erro ao carregar dados do dashboard', 'error');
+            if (typeof Helpers !== 'undefined') {
+                Helpers.showToast('Erro ao carregar dados do dashboard', 'error');
+            }
         } finally {
-            Helpers.hideLoading();
+            if (typeof Helpers !== 'undefined') {
+                Helpers.hideLoading();
+            }
         }
     }
 
@@ -223,8 +291,21 @@ class App {
 
     async loadDashboardStats(user) {
         try {
+            // Verificar se flowManager existe
+            if (typeof flowManager === 'undefined') {
+                console.warn('⚠️ FlowManager não carregado, usando dados mock');
+                this.updateDashboardStats({
+                    totalChamados: 0,
+                    chamadosPendentes: 0,
+                    chamadosResolvidos: 0,
+                    taxaResolucao: 0
+                });
+                return;
+            }
+
             // Buscar estatísticas do usuário
-            const stats = await flowManager.generateReport('userStats', {
+            const stats = await flowManager.sendToScript({
+                action: 'getUserStats',
                 userId: user.id,
                 regiao: user.regiao,
                 igreja: user.igreja
@@ -232,9 +313,24 @@ class App {
 
             if (stats.success && stats.data) {
                 this.updateDashboardStats(stats.data);
+            } else {
+                // Usar dados padrão se não conseguir carregar
+                this.updateDashboardStats({
+                    totalChamados: 0,
+                    chamadosPendentes: 0,
+                    chamadosResolvidos: 0,
+                    taxaResolucao: 0
+                });
             }
         } catch (error) {
             console.error('Erro ao carregar estatísticas:', error);
+            // Usar dados padrão em caso de erro
+            this.updateDashboardStats({
+                totalChamados: 0,
+                chamadosPendentes: 0,
+                chamadosResolvidos: 0,
+                taxaResolucao: 0
+            });
         }
     }
 
@@ -297,14 +393,19 @@ class App {
     }
 
     handleLogout() {
-        Helpers.showConfirm(
-            'Sair do sistema',
-            'Tem certeza que deseja sair?',
-            () => {
-                // ✅ USAR authManager.logout
+        if (typeof Helpers !== 'undefined' && Helpers.showConfirm) {
+            Helpers.showConfirm(
+                'Sair do sistema',
+                'Tem certeza que deseja sair?',
+                () => {
+                    authManager.logout();
+                }
+            );
+        } else {
+            if (confirm('Tem certeza que deseja sair?')) {
                 authManager.logout();
             }
-        );
+        }
     }
 
     loadBalcaoData() {
