@@ -1,572 +1,337 @@
 // Main application logic for Balcão da Cidadania
 class App {
     constructor() {
-        this.currentPage = window.location.pathname;
-        this.init();
+        this.currentPage = this.getCurrentPage();
+        this.isLoading = false;
     }
 
     init() {
-        // Wait for DOM to be ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => this.onDOMReady());
-        } else {
-            this.onDOMReady();
-        }
+        document.addEventListener('DOMContentLoaded', () => this.onDOMReady());
     }
 
     onDOMReady() {
-        // Initialize page based on current location
-        this.initializePage();
+        console.log('🚀 App inicializado na página:', this.currentPage);
         
-        // Setup global event listeners
-        this.setupGlobalListeners();
-        
-        // Setup navigation
-        this.setupNavigation();
+        // Aguardar scripts carregarem completamente
+        setTimeout(() => {
+            this.initializePage();
+        }, 100);
     }
 
     initializePage() {
-        const page = this.getCurrentPageName();
-        
-        switch (page) {
-            case 'index':
-                this.initLoginPage();
-                break;
-            case 'dashboard':
-                this.initDashboardPage();
-                break;
-            case 'balcao':
-                this.initBalcaoPage();
-                break;
-            case 'secretaria':
-                this.initSecretariaPage();
-                break;
-            case 'coordenador':
-                this.initCoordenadorPage();
-                break;
-            default:
-                console.warn('Unknown page:', page);
-        }
-    }
-
-    getCurrentPageName() {
-        const path = window.location.pathname;
-        const filename = path.split('/').pop() || 'index.html';
-        return filename.replace('.html', '');
-    }
-
-    // Initialize login page
-    initLoginPage() {
-        // Check if user is already logged in
-        if (auth.isAuthenticated()) {
-            auth.redirectTo('/dashboard.html');
-            return;
-        }
-
-        const loginForm = document.querySelector('#login-form');
-        if (loginForm) {
-            Helpers.setupFormValidation(loginForm);
-            
-            loginForm.addEventListener('validSubmit', async (e) => {
-                const { email, password } = e.detail;
-                
-                Helpers.showLoading('Fazendo login...');
-                const result = await auth.login(email, password);
-                Helpers.hideLoading();
-                
-                if (!result.success) {
-                    Helpers.showToast(result.error, 'error');
-                }
-            });
-        }
-
-        // Setup input formatting
-        this.setupInputFormatting();
-    }
-
-    // Initialize dashboard page
-    initDashboardPage() {
-        // Protect page
-        if (!auth.protectPage()) return;
-
-        // Load user data and setup interface
-        userManager.loadUserData();
-        
-        // Setup logout button
-        const logoutBtn = document.querySelector('#logout-btn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => userManager.logout());
-        }
-
-        // Setup profile button
-        const profileBtn = document.querySelector('#profile-btn');
-        if (profileBtn) {
-            profileBtn.addEventListener('click', () => userManager.showProfileModal());
-        }
-
-        // Setup permission-based visibility
-        this.setupPermissionBasedVisibility();
-    }
-
-    // Initialize Balcão page
-    initBalcaoPage() {
-        // Protect page
-        if (!auth.protectPage('balcao_view')) return;
-
-        // Load tickets
-        this.loadTickets();
-        
-        // Setup new ticket form
-        this.setupNewTicketForm();
-        
-        // Setup filters
-        this.setupTicketFilters();
-        
-        // Setup search
-        this.setupTicketSearch();
-    }
-
-    // Initialize Secretaria page
-    initSecretariaPage() {
-        // Protect page
-        if (!auth.protectPage('secretaria_view')) return;
-
-        // Load tickets with edit capabilities
-        this.loadTickets(true);
-        
-        // Setup filters (pre-select user's region)
-        this.setupTicketFilters(true);
-        
-        // Setup edit modal
-        this.setupEditTicketModal();
-        
-        // Setup delete functionality
-        this.setupDeleteTicketFunctionality();
-    }
-
-    // Initialize Coordenador page
-    initCoordenadorPage() {
-        // Protect page
-        if (!auth.protectPage('coordenador_view')) return;
-
-        // Setup management sections
-        this.setupManagementSections();
-        
-        // Load reports
-        this.loadReports();
-        
-        // Setup user management
-        this.setupUserManagement();
-    }
-
-    // Load tickets
-    async loadTickets(enableEdit = false) {
         try {
-            Helpers.showLoading('Carregando chamados...');
-            
-            const filters = this.getActiveFilters();
-            const result = await flowManager.getTickets(filters);
-            
-            Helpers.hideLoading();
-            
-            if (result.success) {
-                this.displayTickets(result.data, enableEdit);
-            } else {
-                Helpers.showToast('Erro ao carregar chamados', 'error');
+            // Inicializar helpers primeiro
+            if (typeof Helpers !== 'undefined') {
+                Helpers.initializeCommonFeatures();
             }
-        } catch (error) {
-            Helpers.hideLoading();
-            console.error('Load tickets error:', error);
-            Helpers.showToast('Erro ao carregar chamados', 'error');
-        }
-    }
 
-    // Display tickets in the interface
-    displayTickets(tickets, enableEdit = false) {
-        const container = document.querySelector('#tickets-container');
-        if (!container) return;
-
-        if (tickets.length === 0) {
-            container.innerHTML = `
-                <div class="text-center">
-                    <p>Nenhum chamado encontrado.</p>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = tickets.map(ticket => this.createTicketCard(ticket, enableEdit)).join('');
-        
-        // Setup card event listeners
-        this.setupTicketCardListeners();
-    }
-
-    // Create ticket card HTML
-    createTicketCard(ticket, enableEdit = false) {
-        const user = auth.getCurrentUser();
-        const canEdit = enableEdit && auth.hasPermission('balcao_edit');
-        const canDelete = enableEdit && auth.hasPermission('balcao_delete');
-        
-        return `
-            <div class="card ticket-card" data-ticket-id="${ticket.id}" data-region="${ticket.regiao}">
-                <div class="card-header">
-                    <div class="flex justify-between items-center">
-                        <h3 class="card-title">${Helpers.sanitizeHTML(ticket.nome)}</h3>
-                        ${Helpers.getStatusBadge(ticket.status)}
-                    </div>
-                </div>
-                <div class="ticket-info">
-                    <div class="grid grid-2">
-                        <div>
-                            <strong>CPF:</strong> ${Helpers.formatCPF(ticket.cpf)}
-                        </div>
-                        <div>
-                            <strong>Contato:</strong> ${Helpers.formatPhone(ticket.contato)}
-                        </div>
-                        <div>
-                            <strong>Igreja:</strong> ${Helpers.sanitizeHTML(ticket.igreja)}
-                        </div>
-                        <div>
-                            <strong>Região:</strong> ${Helpers.sanitizeHTML(ticket.regiao)}
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <strong>Descrição:</strong>
-                        <p>${Helpers.sanitizeHTML(ticket.descricao)}</p>
-                    </div>
-                    <div class="mt-2">
-                        <small class="text-light">
-                            Criado em ${Helpers.formatDate(ticket.dataAbertura, true)} por ${Helpers.sanitizeHTML(ticket.criadoPor)}
-                        </small>
-                    </div>
-                </div>
-                <div class="ticket-actions mt-3">
-                    <button class="btn btn-outline view-ticket-btn" data-ticket-id="${ticket.id}">
-                        🔍 Visualizar
-                    </button>
-                    ${canEdit ? `
-                        <button class="btn btn-primary edit-ticket-btn" data-ticket-id="${ticket.id}">
-                            ✏️ Editar
-                        </button>
-                    ` : ''}
-                    ${canDelete ? `
-                        <button class="btn btn-danger delete-ticket-btn" data-ticket-id="${ticket.id}">
-                            ❌ Excluir
-                        </button>
-                    ` : ''}
-                </div>
-            </div>
-        `;
-    }
-
-    // Setup new ticket form
-    setupNewTicketForm() {
-        const form = document.querySelector('#new-ticket-form');
-        if (!form) return;
-
-        Helpers.setupFormValidation(form);
-        
-        form.addEventListener('validSubmit', async (e) => {
-            const formData = e.detail;
-            
-            const result = await flowManager.createTicket(formData);
-            
-            if (result.success) {
-                form.reset();
-                this.loadTickets(); // Reload tickets
-                
-                // Close modal if it exists
-                const modal = document.querySelector('#new-ticket-modal');
-                if (modal) {
-                    modal.classList.remove('active');
-                }
-            }
-        });
-
-        // Setup input formatting
-        this.setupInputFormatting(form);
-    }
-
-    // Setup ticket filters
-    setupTicketFilters(preselectRegion = false) {
-        const filtersContainer = document.querySelector('.filters');
-        if (!filtersContainer) return;
-
-        // Pre-select user's region for non-coordinators
-        if (preselectRegion && !auth.hasRole('COORDENADOR')) {
-            const user = auth.getCurrentUser();
-            const regionFilter = document.querySelector('#region-filter');
-            if (regionFilter && user.region) {
-                regionFilter.value = user.region;
-            }
-        }
-
-        // Setup filter change listeners
-        const filterInputs = filtersContainer.querySelectorAll('input, select');
-        filterInputs.forEach(input => {
-            input.addEventListener('change', () => {
-                this.loadTickets(this.getCurrentPageName() === 'secretaria');
-            });
-        });
-    }
-
-    // Setup ticket search
-    setupTicketSearch() {
-        const searchInput = document.querySelector('#ticket-search');
-        if (!searchInput) return;
-
-        const debouncedSearch = Helpers.debounce(() => {
-            this.loadTickets(this.getCurrentPageName() === 'secretaria');
-        }, 500);
-
-        searchInput.addEventListener('input', debouncedSearch);
-    }
-
-    // Get active filters
-    getActiveFilters() {
-        const filters = {};
-        
-        const regionFilter = document.querySelector('#region-filter');
-        if (regionFilter && regionFilter.value) {
-            filters.regiao = regionFilter.value;
-        }
-        
-        const statusFilter = document.querySelector('#status-filter');
-        if (statusFilter && statusFilter.value) {
-            filters.status = statusFilter.value;
-        }
-        
-        const churchFilter = document.querySelector('#church-filter');
-        if (churchFilter && churchFilter.value) {
-            filters.igreja = churchFilter.value;
-        }
-        
-        const searchInput = document.querySelector('#ticket-search');
-        if (searchInput && searchInput.value.trim()) {
-            filters.search = searchInput.value.trim();
-        }
-
-        return filters;
-    }
-
-    // Setup ticket card listeners
-    setupTicketCardListeners() {
-        // View ticket buttons
-        document.querySelectorAll('.view-ticket-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const ticketId = e.target.getAttribute('data-ticket-id');
-                this.viewTicket(ticketId);
-            });
-        });
-
-        // Edit ticket buttons
-        document.querySelectorAll('.edit-ticket-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const ticketId = e.target.getAttribute('data-ticket-id');
-                this.editTicket(ticketId);
-            });
-        });
-
-        // Delete ticket buttons
-        document.querySelectorAll('.delete-ticket-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const ticketId = e.target.getAttribute('data-ticket-id');
-                await this.deleteTicket(ticketId);
-            });
-        });
-    }
-
-    // View ticket details
-    viewTicket(ticketId) {
-        // Implementation for viewing ticket details
-        console.log('Viewing ticket:', ticketId);
-        Helpers.showToast('Funcionalidade de visualização em desenvolvimento', 'info');
-    }
-
-    // Edit ticket
-    editTicket(ticketId) {
-        // Implementation for editing ticket
-        console.log('Editing ticket:', ticketId);
-        const modal = document.querySelector('#edit-ticket-modal');
-        if (modal) {
-            modal.classList.add('active');
-            // Load ticket data into modal
-        }
-    }
-
-    // Delete ticket
-    async deleteTicket(ticketId) {
-        const confirmed = await Helpers.confirm(
-            'Tem certeza que deseja excluir este chamado? Esta ação não pode ser desfeita.',
-            'Confirmar Exclusão'
-        );
-
-        if (confirmed) {
-            const result = await flowManager.deleteTicket(ticketId, 'Excluído pelo usuário');
-            
-            if (result.success) {
-                this.loadTickets(true); // Reload tickets
-            }
-        }
-    }
-
-    // Setup input formatting
-    setupInputFormatting(container = document) {
-        // CPF formatting
-        const cpfInputs = container.querySelectorAll('input[data-format="cpf"]');
-        cpfInputs.forEach(input => {
-            input.addEventListener('input', (e) => {
-                let value = e.target.value.replace(/\D/g, '');
-                value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-                e.target.value = value;
-            });
-        });
-
-        // Phone formatting
-        const phoneInputs = container.querySelectorAll('input[data-format="phone"]');
-        phoneInputs.forEach(input => {
-            input.addEventListener('input', (e) => {
-                let value = e.target.value.replace(/\D/g, '');
-                if (value.length <= 10) {
-                    value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-                } else {
-                    value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-                }
-                e.target.value = value;
-            });
-        });
-    }
-
-    // Setup global event listeners
-    setupGlobalListeners() {
-        // Modal close buttons
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal-close') || e.target.classList.contains('modal')) {
-                const modal = e.target.closest('.modal');
-                if (modal) {
-                    modal.classList.remove('active');
-                }
-            }
-        });
-
-        // Escape key to close modals
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                const activeModal = document.querySelector('.modal.active');
-                if (activeModal) {
-                    activeModal.classList.remove('active');
-                }
-            }
-        });
-    }
-
-    // Setup navigation
-    setupNavigation() {
-        // Back to dashboard buttons
-        document.querySelectorAll('.back-to-dashboard').forEach(btn => {
-            btn.addEventListener('click', () => {
-                window.location.href = '/dashboard.html';
-            });
-        });
-    }
-
-    // Setup edit ticket modal
-    setupEditTicketModal() {
-        const modal = document.querySelector('#edit-ticket-modal');
-        const form = document.querySelector('#edit-ticket-form');
-        
-        if (!modal || !form) return;
-
-        Helpers.setupFormValidation(form);
-        
-        form.addEventListener('validSubmit', async (e) => {
-            const formData = e.detail;
-            const ticketId = form.getAttribute('data-ticket-id');
-            
-            const result = await flowManager.updateTicket(ticketId, formData);
-            
-            if (result.success) {
-                modal.classList.remove('active');
-                this.loadTickets(true); // Reload tickets
-            }
-        });
-    }
-
-    // Setup delete ticket functionality
-    setupDeleteTicketFunctionality() {
-        // Already handled in setupTicketCardListeners
-    }
-
-    // Setup management sections
-    setupManagementSections() {
-        // Implementation for coordinator management sections
-        console.log('Setting up management sections');
-    }
-
-    // Load reports
-    async loadReports() {
-        try {
-            const result = await flowManager.generateReport('general');
-            
-            if (result.success) {
-                this.displayReports(result.data);
-            }
-        } catch (error) {
-            console.error('Load reports error:', error);
-        }
-    }
-
-    // Display reports
-    displayReports(reportData) {
-        // Implementation for displaying reports
-        console.log('Displaying reports:', reportData);
-    }
-
-    // Setup user management
-    setupUserManagement() {
-        // Implementation for user management
-        console.log('Setting up user management');
-    }
-
-    // Setup permission-based visibility
-    setupPermissionBasedVisibility() {
-        const user = auth.getCurrentUser();
-        if (!user) return;
-
-        // Hide/show elements based on permissions
-        const permissionElements = document.querySelectorAll('[data-permission]');
-        
-        permissionElements.forEach(element => {
-            const requiredPermission = element.getAttribute('data-permission');
-            let hasPermission = false;
-
-            switch(requiredPermission) {
-                case 'coordenador_only':
-                    hasPermission = user.role === 'COORDENADOR';
+            // Roteamento por página
+            switch (this.currentPage) {
+                case 'index.html':
+                case '':
+                    this.initLoginPage();
                     break;
-                case 'secretaria_view':
-                    hasPermission = user.role === 'COORDENADOR' || user.role === 'SECRETARIA';
+                case 'cadastro.html':
+                    this.initCadastroPage();
                     break;
-                case 'volunteer_view':
-                    hasPermission = true; // All authenticated users
+                case 'dashboard.html':
+                    this.initDashboardPage();
+                    break;
+                case 'balcao.html':
+                    this.initBalcaoPage();
+                    break;
+                case 'secretaria.html':
+                    this.initSecretariaPage();
+                    break;
+                case 'coordenador.html':
+                    this.initCoordenadorPage();
                     break;
                 default:
-                    hasPermission = true;
+                    console.log('Página não reconhecida:', this.currentPage);
             }
+        } catch (error) {
+            console.error('Erro ao inicializar página:', error);
+        }
+    }
 
-            if (hasPermission) {
-                element.style.display = '';
-            } else {
-                element.style.display = 'none';
+    initLoginPage() {
+        console.log('🔑 Inicializando página de login...');
+        
+        // ✅ USAR authManager em vez de auth
+        // Verificar se já está logado
+        if (typeof authManager !== 'undefined' && authManager.isLoggedIn()) {
+            console.log('✅ Usuário já logado, redirecionando...');
+            window.location.href = 'dashboard.html';
+            return;
+        }
+
+        // Setup do formulário de login
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+                
+                if (!email || !password) {
+                    Helpers.showToast('Preencha todos os campos', 'warning');
+                    return;
+                }
+
+                try {
+                    Helpers.showLoading();
+                    
+                    // ✅ USAR authManager.login
+                    const result = await authManager.login(email, password);
+                    
+                    if (result.success) {
+                        Helpers.showToast(`Bem-vindo, ${result.user.nome}!`, 'success');
+                        
+                        // Redirecionar após pequeno delay para mostrar o toast
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 1500);
+                    } else {
+                        throw new Error(result.error || 'Erro no login');
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Erro no login:', error);
+                    Helpers.showToast(error.message || 'Erro ao fazer login', 'error');
+                } finally {
+                    Helpers.hideLoading();
+                }
+            });
+        }
+
+        // Link para cadastro
+        const cadastroLink = document.getElementById('cadastro-link');
+        if (cadastroLink) {
+            cadastroLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = 'cadastro.html';
+            });
+        }
+
+        // Focar no campo email
+        const emailInput = document.getElementById('email');
+        if (emailInput) {
+            emailInput.focus();
+        }
+    }
+
+    initCadastroPage() {
+        console.log('📝 Inicializando página de cadastro...');
+        // O cadastro já tem sua própria lógica no cadastro.html
+    }
+
+    initDashboardPage() {
+        console.log('📊 Inicializando dashboard...');
+        
+        // ✅ USAR authManager
+        if (typeof authManager === 'undefined' || !authManager.requireAuth()) {
+            return;
+        }
+
+        this.loadDashboardData();
+        this.setupDashboardEvents();
+    }
+
+    initBalcaoPage() {
+        console.log('🎫 Inicializando balcão...');
+        
+        // ✅ USAR authManager
+        if (typeof authManager === 'undefined' || !authManager.requireAuth()) {
+            return;
+        }
+
+        this.loadBalcaoData();
+        this.setupBalcaoEvents();
+    }
+
+    initSecretariaPage() {
+        console.log('📋 Inicializando secretaria...');
+        
+        // ✅ USAR authManager
+        if (typeof authManager === 'undefined' || !authManager.requireAuth()) {
+            return;
+        }
+
+        // Verificar permissão de secretaria
+        if (!authManager.hasPermission('secretaria_view')) {
+            Helpers.showToast('Acesso negado. Você não tem permissão para acessar esta página.', 'error');
+            window.location.href = 'dashboard.html';
+            return;
+        }
+
+        this.loadSecretariaData();
+        this.setupSecretariaEvents();
+    }
+
+    initCoordenadorPage() {
+        console.log('👑 Inicializando coordenador...');
+        
+        // ✅ USAR authManager
+        if (typeof authManager === 'undefined' || !authManager.requireAuth()) {
+            return;
+        }
+
+        // Verificar permissão de coordenador
+        if (!authManager.hasPermission('coordenador_view')) {
+            Helpers.showToast('Acesso negado. Você não tem permissão para acessar esta página.', 'error');
+            window.location.href = 'dashboard.html';
+            return;
+        }
+
+        this.loadCoordenadorData();
+        this.setupCoordenadorEvents();
+    }
+
+    async loadDashboardData() {
+        try {
+            Helpers.showLoading();
+            
+            // Carregar dados do dashboard
+            const user = authManager.getCurrentUser();
+            
+            // Atualizar informações do usuário na tela
+            this.updateUserInfo(user);
+            
+            // Carregar estatísticas
+            await this.loadDashboardStats(user);
+            
+        } catch (error) {
+            console.error('Erro ao carregar dashboard:', error);
+            Helpers.showToast('Erro ao carregar dados do dashboard', 'error');
+        } finally {
+            Helpers.hideLoading();
+        }
+    }
+
+    updateUserInfo(user) {
+        const userNameElements = document.querySelectorAll('.user-name');
+        const userEmailElements = document.querySelectorAll('.user-email');
+        const userCargoElements = document.querySelectorAll('.user-cargo');
+        const userIgrejaElements = document.querySelectorAll('.user-igreja');
+
+        userNameElements.forEach(el => el.textContent = user.nome || '');
+        userEmailElements.forEach(el => el.textContent = user.email || '');
+        userCargoElements.forEach(el => el.textContent = user.cargo || '');
+        userIgrejaElements.forEach(el => el.textContent = user.igreja || '');
+    }
+
+    async loadDashboardStats(user) {
+        try {
+            // Buscar estatísticas do usuário
+            const stats = await flowManager.generateReport('userStats', {
+                userId: user.id,
+                regiao: user.regiao,
+                igreja: user.igreja
+            });
+
+            if (stats.success && stats.data) {
+                this.updateDashboardStats(stats.data);
             }
+        } catch (error) {
+            console.error('Erro ao carregar estatísticas:', error);
+        }
+    }
+
+    updateDashboardStats(stats) {
+        // Atualizar cards de estatísticas
+        const elements = {
+            'total-chamados': stats.totalChamados || 0,
+            'chamados-pendentes': stats.chamadosPendentes || 0,
+            'chamados-resolvidos': stats.chamadosResolvidos || 0,
+            'taxa-resolucao': (stats.taxaResolucao || 0) + '%'
+        };
+
+        Object.entries(elements).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
         });
+    }
+
+    setupDashboardEvents() {
+        // Botão de logout
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.handleLogout();
+            });
+        }
+
+        // Links de navegação
+        this.setupNavigationLinks();
+    }
+
+    setupBalcaoEvents() {
+        // Setup específico do balcão
+        this.setupNavigationLinks();
+    }
+
+    setupSecretariaEvents() {
+        // Setup específico da secretaria
+        this.setupNavigationLinks();
+    }
+
+    setupCoordenadorEvents() {
+        // Setup específico do coordenador
+        this.setupNavigationLinks();
+    }
+
+    setupNavigationLinks() {
+        // Links de navegação comuns
+        const navLinks = document.querySelectorAll('.nav-link[data-page]');
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = link.getAttribute('data-page');
+                if (page) {
+                    window.location.href = page;
+                }
+            });
+        });
+    }
+
+    handleLogout() {
+        Helpers.showConfirm(
+            'Sair do sistema',
+            'Tem certeza que deseja sair?',
+            () => {
+                // ✅ USAR authManager.logout
+                authManager.logout();
+            }
+        );
+    }
+
+    loadBalcaoData() {
+        // Implementar carregamento de dados do balcão
+        console.log('📋 Carregando dados do balcão...');
+    }
+
+    loadSecretariaData() {
+        // Implementar carregamento de dados da secretaria
+        console.log('📋 Carregando dados da secretaria...');
+    }
+
+    loadCoordenadorData() {
+        // Implementar carregamento de dados do coordenador
+        console.log('📋 Carregando dados do coordenador...');
+    }
+
+    getCurrentPage() {
+        const path = window.location.pathname;
+        const page = path.split('/').pop();
+        return page || 'index.html';
     }
 }
 
-// Initialize app when script loads
+// Inicializar aplicação
 const app = new App();
+app.init();
 
-// Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = App;
-}
+// Export para uso global
+window.app = app;
