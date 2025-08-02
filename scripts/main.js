@@ -20,7 +20,6 @@ class App {
 
     initializePage() {
         try {
-            // ✅ REMOVER chamada problemática - inicializar helpers se necessário mais tarde
             console.log('📱 Inicializando página:', this.currentPage);
 
             // Roteamento por página
@@ -55,7 +54,7 @@ class App {
     initLoginPage() {
         console.log('🔑 Inicializando página de login...');
         
-        // ✅ Verificar se authManager existe e está carregado
+        // Verificar se authManager existe e está carregado
         if (typeof authManager !== 'undefined' && authManager.isLoggedIn()) {
             console.log('✅ Usuário já logado, redirecionando para dashboard...');
             window.location.href = 'dashboard.html';
@@ -71,8 +70,8 @@ class App {
                 e.preventDefault();
                 console.log('📤 Formulário de login submetido');
                 
-                const email = document.getElementById('email').value.trim();
-                const password = document.getElementById('password').value;
+                const email = document.getElementById('email')?.value?.trim();
+                const password = document.getElementById('password')?.value;
                 
                 console.log('📧 Email:', email);
                 
@@ -86,7 +85,7 @@ class App {
                     
                     console.log('🔐 Tentando fazer login...');
                     
-                    // ✅ Verificar se authManager existe antes de usar
+                    // Verificar se authManager existe antes de usar
                     if (typeof authManager === 'undefined') {
                         throw new Error('Sistema de autenticação não carregado. Recarregue a página.');
                     }
@@ -136,8 +135,10 @@ class App {
         }
     }
 
-    // ✅ Método próprio para mostrar mensagens (fallback se Helpers não existir)
+    // Método próprio para mostrar mensagens (fallback se Helpers não existir)
     showMessage(message, type = 'info') {
+        console.log(`📢 ${type.toUpperCase()}: ${message}`);
+        
         if (typeof Helpers !== 'undefined' && Helpers.showToast) {
             Helpers.showToast(message, type);
         } else {
@@ -146,8 +147,10 @@ class App {
         }
     }
 
-    // ✅ Método próprio para loading (fallback se Helpers não existir)
+    // Método próprio para loading (fallback se Helpers não existir)
     showLoading(show = true) {
+        console.log('⏳ Loading:', show);
+        
         if (typeof Helpers !== 'undefined') {
             if (show && Helpers.showLoading) {
                 Helpers.showLoading();
@@ -166,7 +169,7 @@ class App {
     initDashboardPage() {
         console.log('📊 Inicializando dashboard...');
         
-        // ✅ Verificar authManager
+        // Verificar authManager
         if (typeof authManager === 'undefined') {
             console.error('❌ AuthManager não carregado');
             window.location.href = 'index.html';
@@ -184,7 +187,7 @@ class App {
     initBalcaoPage() {
         console.log('🎫 Inicializando balcão...');
         
-        // ✅ Verificar authManager
+        // Verificar authManager
         if (typeof authManager === 'undefined') {
             console.error('❌ AuthManager não carregado');
             window.location.href = 'index.html';
@@ -202,7 +205,7 @@ class App {
     initSecretariaPage() {
         console.log('📋 Inicializando secretaria...');
         
-        // ✅ Verificar authManager
+        // Verificar authManager
         if (typeof authManager === 'undefined') {
             console.error('❌ AuthManager não carregado');
             window.location.href = 'index.html';
@@ -227,7 +230,7 @@ class App {
     initCoordenadorPage() {
         console.log('👑 Inicializando coordenador...');
         
-        // ✅ Verificar authManager
+        // Verificar authManager
         if (typeof authManager === 'undefined') {
             console.error('❌ AuthManager não carregado');
             window.location.href = 'index.html';
@@ -257,6 +260,7 @@ class App {
             const user = authManager.getCurrentUser();
             
             if (user) {
+                console.log('👤 Usuário logado:', user.nome);
                 // Atualizar informações do usuário na tela
                 this.updateUserInfo(user);
                 
@@ -359,22 +363,18 @@ class App {
     }
 
     setupBalcaoEvents() {
-        // Setup específico do balcão
         this.setupNavigationLinks();
     }
 
     setupSecretariaEvents() {
-        // Setup específico da secretaria
         this.setupNavigationLinks();
     }
 
     setupCoordenadorEvents() {
-        // Setup específico do coordenador
         this.setupNavigationLinks();
     }
 
     setupNavigationLinks() {
-        // Links de navegação comuns
         const navLinks = document.querySelectorAll('.nav-link[data-page]');
         navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
@@ -398,31 +398,20 @@ class App {
             }
         };
 
-        if (typeof Helpers !== 'undefined' && Helpers.showConfirm) {
-            Helpers.showConfirm(
-                'Sair do sistema',
-                'Tem certeza que deseja sair?',
-                confirmLogout
-            );
-        } else {
-            if (confirm('Tem certeza que deseja sair?')) {
-                confirmLogout();
-            }
+        if (confirm('Tem certeza que deseja sair?')) {
+            confirmLogout();
         }
     }
 
     loadBalcaoData() {
-        // Implementar carregamento de dados do balcão
         console.log('📋 Carregando dados do balcão...');
     }
 
     loadSecretariaData() {
-        // Implementar carregamento de dados da secretaria
         console.log('📋 Carregando dados da secretaria...');
     }
 
     loadCoordenadorData() {
-        // Implementar carregamento de dados do coordenador
         console.log('📋 Carregando dados do coordenador...');
     }
 
