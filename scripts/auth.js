@@ -64,9 +64,9 @@ class AuthManager {
         try {
             console.log('🔍 Validando usuário no Google Apps Script...');
             
-            // ✅ USAR flowManager.sendToScript corretamente
+            // ✅ CORRIGIDO: usar 'loginUser' em vez de 'validateUser'
             const result = await flowManager.sendToScript({
-                action: 'validateUser',
+                action: 'loginUser',
                 email: email,
                 password: password
             });
@@ -183,3 +183,5 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('✅ Usuário autenticado:', authManager.getCurrentUser());
     }
 });
+
+// ✅ FIM DO ARQUIVO - nada mais depois desta linha
