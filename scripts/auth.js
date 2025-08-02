@@ -2,123 +2,117 @@
 class AuthManager {
     constructor() {
         this.currentUser = null;
-        this.sessionKey = 'balcao_session';
-        this.init();
+        this.sessionTimeout = CONFIG.auth.sessionTimeout;
+        this.initializeAuth();
     }
 
-    init() {
-        // Check for existing session on page load
-        this.loadSession();
-        
-        // Set up session timeout
-        this.setupSessionTimeout();
+    initializeAuth() {
+        // Verificar se há sessão salva
+        const savedSession = localStorage.getItem('balcao_session');
+        if (savedSession) {
+            try {
+                const sessionData = JSON.parse(savedSession);
+                if (this.isSessionValid(sessionData)) {
+                    this.currentUser = sessionData.user;
+                    console.log('✅ Sessão restaurada:', this.currentUser.nome);
+                } else {
+                    this.logout();
+                }
+            } catch (error) {
+                console.error('Erro ao restaurar sessão:', error);
+                this.logout();
+            }
+        }
     }
 
     // Login with email and password
     async login(email, password) {
         try {
-            // Validate input
+            console.log('🔐 Tentando fazer login:', email);
+            
+            // Validar campos
             if (!email || !password) {
                 throw new Error('Email e senha são obrigatórios');
             }
 
-            if (!this.validateEmail(email)) {
-                throw new Error('Email inválido');
-            }
-
-            // Check if it's first login with default password
-            const isDefaultPassword = password === CONFIG.auth.defaultPassword;
-
-            // Validate user against database/API
-            const userData = await this.validateUser(email, password);
+            // Chamar API via flowManager.sendToScript
+            const result = await this.validateUser(email, password);
             
-            if (!userData) {
-                throw new Error('Email ou senha incorretos');
-            }
-
-            // Create session
-            this.currentUser = {
-                id: userData.id,
-                email: userData.email,
-                name: userData.name,
-                role: userData.role,
-                region: userData.region,
-                church: userData.church,
-                avatar: userData.avatar || '/assets/default-avatar.png',
-                loginTime: new Date().toISOString(),
-                isFirstLogin: isDefaultPassword
-            };
-
-            // Save session
-            this.saveSession();
-
-            // Redirect based on role and first login status
-            if (isDefaultPassword) {
-                this.redirectTo('/change-password.html');
+            if (result.success) {
+                console.log('✅ Login bem-sucedido:', result.data);
+                
+                // Salvar usuário e sessão
+                this.currentUser = result.data;
+                this.saveSession();
+                
+                return {
+                    success: true,
+                    user: this.currentUser
+                };
             } else {
-                this.redirectTo('/dashboard.html');
+                throw new Error(result.error || 'Email ou senha incorretos');
             }
-
-            return { success: true, user: this.currentUser };
-
+            
         } catch (error) {
             console.error('Login error:', error);
-            return { success: false, error: error.message };
+            throw error;
         }
     }
 
-    // Validate user credentials (mock implementation - replace with actual API call)
-   // Validate user credentials via Google Apps Script
-async validateUser(email, password) {
-    try {
-        const response = await fetch(`${CONFIG.googleAppsScript.webAppUrl}${CONFIG.googleAppsScript.endpoints.validateUser}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, password })
-        });
+    // Validate user credentials (via Google Apps Script)
+    async validateUser(email, password) {
+        try {
+            console.log('🔍 Validando usuário no Google Apps Script...');
+            
+            // ✅ USAR flowManager.sendToScript corretamente
+            const result = await flowManager.sendToScript({
+                action: 'validateUser',
+                email: email,
+                password: password
+            });
 
-        const result = await response.json();
-        console.log('[Login] Resultado da API:', result);
-
-        if (result.success && result.user) {
-            return result.user;
+            console.log('📋 Resultado da validação:', result);
+            return result;
+            
+        } catch (error) {
+            console.error('Erro ao validar usuário na API:', error);
+            return {
+                success: false,
+                error: error.message || 'Erro de conexão'
+            };
         }
-
-        return null;
-
-    } catch (error) {
-        console.error('Erro ao validar usuário na API:', error);
-        return null;
     }
-}
-
 
     // Logout user
     logout() {
-        this.currentUser = null;
-        localStorage.removeItem(this.sessionKey);
-        sessionStorage.removeItem(this.sessionKey);
-        this.redirectTo('/index.html');
-    }
-
-    // Check if user is authenticated
-    isAuthenticated() {
-        return this.currentUser !== null;
-    }
-
-    // Check if user has specific permission
-    hasPermission(permission) {
-        if (!this.currentUser) return false;
+        console.log('🚪 Fazendo logout...');
         
-        const userRole = CONFIG.roles[this.currentUser.role];
-        return userRole && userRole.permissions.includes(permission);
+        this.currentUser = null;
+        localStorage.removeItem('balcao_session');
+        
+        // Redirecionar para login
+        window.location.href = 'index.html';
     }
 
-    // Check if user has specific role
-    hasRole(role) {
-        return this.currentUser && this.currentUser.role === role;
+    // Save session to localStorage
+    saveSession() {
+        const sessionData = {
+            user: this.currentUser,
+            timestamp: Date.now()
+        };
+        
+        localStorage.setItem('balcao_session', JSON.stringify(sessionData));
+        console.log('💾 Sessão salva');
+    }
+
+    // Check if session is valid (not expired)
+    isSessionValid(sessionData) {
+        if (!sessionData || !sessionData.timestamp) {
+            return false;
+        }
+        
+        const timeElapsed = Date.now() - sessionData.timestamp;
+        return timeElapsed < this.sessionTimeout;
     }
 
     // Get current user data
@@ -126,152 +120,66 @@ async validateUser(email, password) {
         return this.currentUser;
     }
 
-    // Save session to localStorage
-    saveSession() {
-        if (this.currentUser) {
-            const sessionData = {
-                user: this.currentUser,
-                timestamp: Date.now()
-            };
-            localStorage.setItem(this.sessionKey, JSON.stringify(sessionData));
-        }
+    // Check if user is logged in
+    isLoggedIn() {
+        return this.currentUser !== null;
     }
 
-    // Load session from localStorage
-    loadSession() {
-        try {
-            const sessionData = localStorage.getItem(this.sessionKey);
-            if (sessionData) {
-                const { user, timestamp } = JSON.parse(sessionData);
-                
-                // Check if session is still valid (not expired)
-                const now = Date.now();
-                const sessionAge = now - timestamp;
-                
-                if (sessionAge < CONFIG.auth.sessionTimeout) {
-                    this.currentUser = user;
-                    return true;
-                }
-            }
-        } catch (error) {
-            console.error('Session load error:', error);
-        }
+    // Check if user has specific permission
+    hasPermission(permission) {
+        if (!this.currentUser) return false;
         
-        // Clear invalid session
-        localStorage.removeItem(this.sessionKey);
-        return false;
-    }
-
-    // Setup session timeout
-    setupSessionTimeout() {
-        setInterval(() => {
-            if (this.currentUser) {
-                const sessionData = localStorage.getItem(this.sessionKey);
-                if (sessionData) {
-                    const { timestamp } = JSON.parse(sessionData);
-                    const now = Date.now();
-                    const sessionAge = now - timestamp;
-                    
-                    if (sessionAge >= CONFIG.auth.sessionTimeout) {
-                        this.logout();
-                        alert('Sua sessão expirou. Faça login novamente.');
-                    }
-                }
-            }
-        }, 60000); // Check every minute
+        const userRole = this.currentUser.cargo;
+        const roleConfig = CONFIG.roles[userRole];
+        
+        return roleConfig && roleConfig.permissions.includes(permission);
     }
 
     // Protect page (redirect to login if not authenticated)
-    protectPage(requiredPermission = null) {
-        if (!this.isAuthenticated()) {
-            this.redirectTo('/index.html');
+    requireAuth() {
+        if (!this.isLoggedIn()) {
+            console.log('⚠️ Usuário não autenticado, redirecionando...');
+            window.location.href = 'index.html';
             return false;
         }
-
-        if (requiredPermission && !this.hasPermission(requiredPermission)) {
-            alert('Você não tem permissão para acessar esta página.');
-            this.redirectTo('/dashboard.html');
-            return false;
-        }
-
         return true;
     }
 
-    // Redirect to specific page
-    redirectTo(url) {
-        window.location.href = url;
+    // Get user info for display
+    getUserInfo() {
+        return this.currentUser ? {
+            id: this.currentUser.id,
+            nome: this.currentUser.nome,
+            email: this.currentUser.email,
+            cargo: this.currentUser.cargo,
+            igreja: this.currentUser.igreja,
+            regiao: this.currentUser.regiao
+        } : null;
     }
 
-    // Validate email format
-    validateEmail(email) {
-        return CONFIG.validation.email.pattern.test(email);
-    }
-
-    // Format CPF
-    formatCPF(cpf) {
-        return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    }
-
-    // Validate CPF format
-    validateCPF(cpf) {
-        const cleanCPF = cpf.replace(/\D/g, '');
-        return cleanCPF.length === 11;
-    }
-
-    // Format phone number
-    formatPhone(phone) {
-        const cleanPhone = phone.replace(/\D/g, '');
-        if (cleanPhone.length === 11) {
-            return cleanPhone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-        } else if (cleanPhone.length === 10) {
-            return cleanPhone.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-        }
-        return phone;
-    }
-
-    // Validate phone format
-    validatePhone(phone) {
-        const cleanPhone = phone.replace(/\D/g, '');
-        return cleanPhone.length >= 10 && cleanPhone.length <= 11;
-    }
-
-    // Change password (for first login)
-    async changePassword(currentPassword, newPassword, confirmPassword) {
-        try {
-            if (!this.currentUser) {
-                throw new Error('Usuário não autenticado');
-            }
-
-            if (currentPassword !== CONFIG.auth.defaultPassword) {
-                throw new Error('Senha atual incorreta');
-            }
-
-            if (newPassword !== confirmPassword) {
-                throw new Error('Nova senha e confirmação não coincidem');
-            }
-
-            if (newPassword.length < 6) {
-                throw new Error('Nova senha deve ter pelo menos 6 caracteres');
-            }
-
-            // In a real implementation, update password in database
-            // For now, just update the session
-            this.currentUser.isFirstLogin = false;
+    // Método para atualizar dados do usuário na sessão
+    updateUserData(userData) {
+        if (this.currentUser) {
+            this.currentUser = { ...this.currentUser, ...userData };
             this.saveSession();
-
-            return { success: true, message: 'Senha alterada com sucesso!' };
-
-        } catch (error) {
-            console.error('Password change error:', error);
-            return { success: false, error: error.message };
         }
     }
 }
 
-// Initialize auth manager
-const auth = new AuthManager();
+// Inicializar gerenciador de autenticação globalmente
+window.authManager = new AuthManager();
 
-// Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = AuthManager;
-}
+// Verificar autenticação em páginas protegidas
+document.addEventListener('DOMContentLoaded', function() {
+    // Lista de páginas que requerem autenticação
+    const protectedPages = ['dashboard.html', 'balcao.html', 'secretaria.html', 'coordenador.html'];
+    const currentPage = window.location.pathname.split('/').pop();
+    
+    if (protectedPages.includes(currentPage)) {
+        if (!authManager.requireAuth()) {
+            return; // Usuário será redirecionado
+        }
+        
+        console.log('✅ Usuário autenticado:', authManager.getCurrentUser());
+    }
+});

@@ -57,12 +57,6 @@ class FlowManager {
             } catch (parseError) {
                 console.error('❌ Erro ao fazer parse do JSON:', parseError);
                 console.error('📄 Resposta recebida:', responseText);
-                
-                // Se não for JSON, pode ser uma página de erro HTML
-                if (responseText.includes('<html') || responseText.includes('<!DOCTYPE')) {
-                    throw new Error('Google Apps Script retornou HTML em vez de JSON. Verifique a configuração do script.');
-                }
-                
                 throw new Error(`Resposta inválida do servidor: ${responseText.substring(0, 100)}...`);
             }
 
@@ -72,15 +66,6 @@ class FlowManager {
         } catch (error) {
             console.error('❌ Erro na requisição:', error);
             throw error;
-        }
-    }
-
-    async sendToScriptSilent(data) {
-        try {
-            return await this.sendToScript(data);
-        } catch (error) {
-            console.log('Google Apps Script error:', error);
-            return { success: false, error: error.message };
         }
     }
 
@@ -402,3 +387,6 @@ const flowManager = new FlowManager();
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = FlowManager;
 }
+
+// Inicializar o flowManager globalmente
+window.flowManager = new FlowManager();
