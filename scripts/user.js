@@ -14,7 +14,7 @@ class UserManager {
 
     // Load and display user data in the interface
     loadUserData() {
-        const user = authManager.getCurrentUser();  // ✅ CORRIGIDO: auth → authManager
+        const user = authManager.getCurrentUser();
         if (!user) return;
 
         // Update user info in header
@@ -43,12 +43,19 @@ class UserManager {
         }
 
         if (userRole) {
-            const roleName = CONFIG.roles[user.cargo || user.role]?.name || user.cargo || user.role;
+            // ✅ DEPURAÇÃO: vamos ver os dados
+            console.log('🔍 Dados do usuário:', user);
+            console.log('🔍 Cargo do usuário:', user.cargo);
+            console.log('🔍 CONFIG disponível:', CONFIG);
+            console.log('🔍 Role config:', CONFIG.roles[user.cargo]);
+            
+            const roleName = CONFIG.roles[user.cargo]?.name || user.cargo || 'Usuário';
             userRole.textContent = roleName;
+            console.log('🔍 Nome da função:', roleName);
         }
 
         if (userRegion) {
-            userRegion.textContent = user.regiao || user.region;
+            userRegion.textContent = user.regiao || user.region || 'Não definida';
         }
     }
 
@@ -74,53 +81,53 @@ class UserManager {
         const cards = [];
 
         // Balcão da Cidadania - Available to all roles
-        if (authManager.hasPermission('balcao_view')) {  // ✅ CORRIGIDO
+        if (authManager.hasPermission('balcao_view')) {
             cards.push({
                 title: 'Balcão da Cidadania',
                 description: 'Gerenciar atendimentos e chamados',
                 icon: '🏛️',
-                url: 'balcao.html',  // ✅ CORRIGIDO: remover / inicial
+                url: 'balcao.html',
                 color: 'primary'
             });
         }
 
         // Secretaria - Available to Secretaria and Coordenador
-        if (authManager.hasPermission('secretaria_view')) {  // ✅ CORRIGIDO
+        if (authManager.hasPermission('secretaria_view')) {
             cards.push({
                 title: 'Secretaria',
                 description: 'Visualizar e editar chamados',
                 icon: '📋',
-                url: 'secretaria.html',  // ✅ CORRIGIDO
+                url: 'secretaria.html',
                 color: 'secondary'
             });
         }
 
         // Coordenador - Available only to Coordenador
-        if (authManager.hasPermission('coordenador_view')) {  // ✅ CORRIGIDO
+        if (authManager.hasPermission('coordenador_view')) {
             cards.push({
                 title: 'Coordenação',
                 description: 'Gestão completa do sistema',
                 icon: '⚙️',
-                url: 'coordenador.html',  // ✅ CORRIGIDO
+                url: 'coordenador.html',
                 color: 'success'
             });
         }
 
         // Additional cards for Coordenador
-        if (authManager.hasRole('COORDENADOR_GERAL') || authManager.hasRole('COORDENADOR_LOCAL')) {  // ✅ CORRIGIDO
+        if (authManager.hasRole('COORDENADOR_GERAL') || authManager.hasRole('COORDENADOR_LOCAL')) {
             cards.push(
                 {
                     title: 'Adicionar Voluntário',
                     description: 'Cadastrar novos voluntários',
                     icon: '👥',
-                    url: 'add-voluntario.html',  // ✅ CORRIGIDO
+                    url: 'add-voluntario.html',
                     color: 'warning'
                 },
                 {
                     title: 'Relatórios',
                     description: 'Visualizar relatórios e estatísticas',
                     icon: '📊',
-                    url: 'relatorios.html',  // ✅ CORRIGIDO
+                    url: 'relatorios.html',
                     color: 'info'
                 }
             );
@@ -147,7 +154,7 @@ class UserManager {
 
     // Setup user interface based on permissions
     setupUserInterface() {
-        const user = authManager.getCurrentUser();  // ✅ CORRIGIDO
+        const user = authManager.getCurrentUser();
         if (!user) return;
 
         // Hide/show navigation items based on permissions
@@ -163,7 +170,7 @@ class UserManager {
         
         navItems.forEach(item => {
             const requiredPermission = item.getAttribute('data-permission');
-            if (!authManager.hasPermission(requiredPermission)) {  // ✅ CORRIGIDO
+            if (!authManager.hasPermission(requiredPermission)) {
                 item.style.display = 'none';
             }
         });
@@ -173,7 +180,7 @@ class UserManager {
         
         roleItems.forEach(item => {
             const requiredRole = item.getAttribute('data-role');
-            if (!authManager.hasRole(requiredRole)) {  // ✅ CORRIGIDO
+            if (!authManager.hasRole(requiredRole)) {
                 item.style.display = 'none';
             }
         });
@@ -181,7 +188,7 @@ class UserManager {
 
     // Setup page-specific functionality
     setupPageFunctionality(user) {
-        const currentPage = window.location.pathname.split('/').pop(); // ✅ CORRIGIDO para pegar apenas o nome do arquivo
+        const currentPage = window.location.pathname.split('/').pop();
 
         switch (currentPage) {
             case 'balcao.html':
@@ -200,12 +207,12 @@ class UserManager {
     setupBalcaoPage(user) {
         // Enable/disable buttons based on permissions
         const newTicketBtn = document.querySelector('#new-ticket-btn');
-        if (newTicketBtn && !authManager.hasPermission('balcao_create')) {  // ✅ CORRIGIDO
+        if (newTicketBtn && !authManager.hasPermission('balcao_create')) {
             newTicketBtn.style.display = 'none';
         }
 
         // Filter tickets by user region for Voluntários
-        if (authManager.hasRole('VOLUNTARIO')) {  // ✅ CORRIGIDO
+        if (authManager.hasRole('VOLUNTARIO')) {
             this.filterTicketsByRegion(user.regiao || user.region);
         }
     }
@@ -221,7 +228,7 @@ class UserManager {
         // Enable/disable edit buttons based on permissions
         const editButtons = document.querySelectorAll('.edit-ticket-btn');
         editButtons.forEach(btn => {
-            if (!authManager.hasPermission('balcao_edit')) {  // ✅ CORRIGIDO
+            if (!authManager.hasPermission('balcao_edit')) {
                 btn.style.display = 'none';
             }
         });
@@ -229,7 +236,7 @@ class UserManager {
         // Enable/disable delete buttons based on permissions
         const deleteButtons = document.querySelectorAll('.delete-ticket-btn');
         deleteButtons.forEach(btn => {
-            if (!authManager.hasPermission('balcao_delete')) {  // ✅ CORRIGIDO
+            if (!authManager.hasPermission('balcao_delete')) {
                 btn.style.display = 'none';
             }
         });
@@ -257,13 +264,13 @@ class UserManager {
 
     // Get user profile data
     getUserProfile() {
-        return authManager.getCurrentUser();  // ✅ CORRIGIDO
+        return authManager.getCurrentUser();
     }
 
     // Update user profile
     async updateUserProfile(profileData) {
         try {
-            const user = authManager.getCurrentUser();  // ✅ CORRIGIDO
+            const user = authManager.getCurrentUser();
             if (!user) {
                 throw new Error('Usuário não autenticado');
             }
@@ -273,22 +280,22 @@ class UserManager {
                 throw new Error('Nome deve ter pelo menos 2 caracteres');
             }
 
-            if (!profileData.email || !authManager.validateEmail(profileData.email)) {  // ✅ CORRIGIDO
+            if (!profileData.email || !authManager.validateEmail(profileData.email)) {
                 throw new Error('Email inválido');
             }
 
             // Update user data
             const updatedUser = {
                 ...user,
-                nome: profileData.name.trim(),  // ✅ usar 'nome' em vez de 'name'
+                nome: profileData.name.trim(),
                 email: profileData.email.trim(),
                 igreja: profileData.church,
                 regiao: profileData.region
             };
 
             // Save updated session
-            authManager.currentUser = updatedUser;  // ✅ CORRIGIDO
-            authManager.saveSession();  // ✅ CORRIGIDO
+            authManager.currentUser = updatedUser;
+            authManager.saveSession();
 
             // Update interface
             this.updateUserHeader(updatedUser);
@@ -304,13 +311,13 @@ class UserManager {
     // Logout user
     logout() {
         if (confirm('Tem certeza que deseja sair?')) {
-            authManager.logout();  // ✅ CORRIGIDO
+            authManager.logout();
         }
     }
 
     // Show user profile modal
     showProfileModal() {
-        const user = authManager.getCurrentUser();  // ✅ CORRIGIDO
+        const user = authManager.getCurrentUser();
         if (!user) return;
 
         const modal = document.querySelector('#profile-modal');
