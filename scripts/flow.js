@@ -13,22 +13,25 @@ class FlowManager {
         console.log('📦 Dados:', data);
 
         try {
-            // Adicionar informações extras
-            const payload = {
+            // ✅ USAR URLSearchParams para Google Apps Script
+            const formData = new URLSearchParams();
+            
+            // Adicionar action como parâmetro
+            formData.append('action', data.action);
+            
+            // Adicionar dados como JSON no body
+            formData.append('data', JSON.stringify({
                 ...data,
                 timestamp: new Date().toISOString(),
                 clientOrigin: window.location.origin
-            };
+            }));
 
-            console.log('📤 Request body completo:', payload);
+            console.log('📤 FormData enviado:', Object.fromEntries(formData));
 
-            // ✅ USAR URLSearchParams para melhor compatibilidade
             const response = await fetch(this.scriptUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams(payload)
+                body: formData,
+                redirect: 'follow'
             });
 
             console.log('📡 Response status:', response.status);
@@ -51,55 +54,138 @@ class FlowManager {
 
         } catch (error) {
             console.error('❌ Erro na requisição:', error);
-            
-            // ✅ FALLBACK: Simulação para desenvolvimento
-            if (data.action === 'loginUser') {
-                return this.simulateLogin(data.email, data.password);
-            }
-            
-            throw error;
+            return { 
+                success: false, 
+                error: `Erro de conexão: ${error.message}` 
+            };
         }
     }
 
-    // ✅ SIMULAÇÃO TEMPORÁRIA DE LOGIN
-    async simulateLogin(email, password) {
-        console.log('🔐 Simulando login para desenvolvimento...');
-        
-        const testUsers = [
-            {
-                id: 1,
-                nome: 'Wagner Duarte',
-                email: 'wagduarte@universal.org',
-                senha: 'minhaflor',
-                cargo: 'COORDENADOR_GERAL',
-                igreja: 'CATEDRAL DA FÉ',
-                regiao: 'CATEDRAL',
-                telefone: '(18) 99999-9999'
-            }
-        ];
+    // ✅ LOGIN REAL via Google Apps Script
+    async validateUser(email, password) {
+        try {
+            const result = await this.sendToScript({
+                action: 'validateUser',
+                email: email,
+                password: password
+            });
 
-        const user = testUsers.find(u => u.email === email);
-        
-        if (!user || user.senha !== password) {
-            return {
-                success: false,
-                error: 'Email ou senha incorretos'
-            };
+            return result;
+
+        } catch (error) {
+            console.error('Validate user error:', error);
+            return { success: false, error: error.message };
         }
+    }
 
-        return {
-            success: true,
-            data: {
-                id: user.id,
-                nome: user.nome,
-                email: user.email,
-                telefone: user.telefone,
-                cargo: user.cargo,
+    // ✅ CRIAR CHAMADO REAL
+    async createTicket(ticketData) {
+        try {
+            const user = authManager.getCurrentUser();
+            const result = await this.sendToScript({
+                action: 'newTicket',
+                nomeCidadao: ticketData.nome,
+                cpf: ticketData.cpf,
+                contato: ticketData.contato,
+                email: ticketData.email,
                 igreja: user.igreja,
                 regiao: user.regiao,
-                status: 'ATIVO'
-            }
-        };
+                descricao: ticketData.descricao,
+                prioridade: ticketData.prioridade,
+                categoria: ticketData.categoria,
+                userInfo: {
+                    name: user.nome,
+                    email: user.email
+                }
+            });
+
+            return result;
+
+        } catch (error) {
+            console.error('Create ticket error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    // ✅ BUSCAR CHAMADOS REAIS
+    async getTickets(filters = {}) {
+        try {
+            const result = await this.sendToScript({
+                action: 'getTickets',
+                filters: filters
+            });
+
+            return result;
+
+        } catch (error) {
+            console.error('Get tickets error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    // ✅ ATUALIZAR CHAMADO REAL
+    async updateTicket(ticketId, updateData) {
+        try {
+            const user = authManager.getCurrentUser();
+            const result = await this.sendToScript({
+                action: 'updateTicket',
+                ticketId: ticketId,
+                ...updateData,
+                userInfo: {
+                    name: user.nome,
+                    email: user.email
+                }
+            });
+
+            return result;
+
+        } catch (error) {
+            console.error('Update ticket error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    // ✅ BUSCAR USUÁRIOS REAIS
+    async getUsers(filters = {}) {
+        try {
+            const result = await this.sendToScript({
+                action: 'getUsers',
+                filters: filters
+            });
+
+            return result;
+
+        } catch (error) {
+            console.error('Get users error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    // ✅ CRIAR USUÁRIO REAL
+    async createUser(userData) {
+        try {
+            const currentUser = authManager.getCurrentUser();
+            const result = await this.sendToScript({
+                action: 'newUser',
+                nomeCompleto: userData.nome,
+                email: userData.email,
+                telefone: userData.telefone,
+                cargo: userData.cargo,
+                igreja: userData.igreja,
+                regiao: userData.regiao,
+                observacoes: userData.observacoes,
+                userInfo: {
+                    name: currentUser.nome,
+                    email: currentUser.email
+                }
+            });
+
+            return result;
+
+        } catch (error) {
+            console.error('Create user error:', error);
+            return { success: false, error: error.message };
+        }
     }
 }
 

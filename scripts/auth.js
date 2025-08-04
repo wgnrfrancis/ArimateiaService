@@ -175,6 +175,44 @@ class AuthManager {
             this.saveSession();
         }
     }
+
+    // Substituir o método validateCredentials
+    async validateCredentials(email, password) {
+        try {
+            console.log('🔐 Validando credenciais via Google Apps Script...');
+            
+            // ✅ USAR flowManager REAL (sem simulação)
+            const result = await flowManager.validateUser(email, password);
+            
+            if (result.success && result.user) {
+                console.log('✅ Login bem-sucedido:', result.user);
+                return {
+                    success: true,
+                    user: {
+                        id: result.user.id,
+                        nome: result.user.name,
+                        email: result.user.email,
+                        cargo: result.user.role,
+                        igreja: result.user.igreja,
+                        regiao: result.user.regiao
+                    }
+                };
+            } else {
+                console.log('❌ Login falhou:', result.message || result.error);
+                return {
+                    success: false,
+                    error: result.message || result.error || 'Credenciais inválidas'
+                };
+            }
+
+        } catch (error) {
+            console.error('❌ Erro na validação:', error);
+            return {
+                success: false,
+                error: 'Erro de conexão com o servidor'
+            };
+        }
+    }
 }
 
 // Inicializar gerenciador de autenticação globalmente
