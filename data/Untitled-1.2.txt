@@ -1,0 +1,5 @@
+<!-- ❌ De: -->
+<img src="assets/images/default-avatar.png" alt="Avatar">
+
+<!-- ✅ Para: -->
+<img src="https://via.placeholder.com/40x40/007bff/ffffff?text=U" alt="Avatar">
