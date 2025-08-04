@@ -64,7 +64,6 @@ class AuthManager {
         try {
             console.log('🔍 Validando usuário no Google Apps Script...');
             
-            // ✅ CORRIGIDO: usar 'loginUser' em vez de 'validateUser'
             const result = await flowManager.sendToScript({
                 action: 'loginUser',
                 email: email,
@@ -196,11 +195,3 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ✅ FIM DO ARQUIVO - nada mais depois desta linha
-
-if (userAvatar) {
-    // ✅ Corrigir URL do placeholder
-    const inicial = (user.nome ? user.nome.charAt(0).toUpperCase() : 'U');
-    userAvatar.src = `https://via.placeholder.com/40x40/007bff/ffffff?text=${inicial}`;
-    userAvatar.alt = user.nome || user.name;
-}
