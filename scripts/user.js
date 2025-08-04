@@ -32,8 +32,9 @@ class UserManager {
         const userRegion = document.querySelector('.user-region');
 
         if (userAvatar) {
-            // ✅ Usar placeholder para evitar 404
-            userAvatar.src = user.avatar || 'https://via.placeholder.com/40x40/007bff/ffffff?text=' + (user.nome ? user.nome.charAt(0) : 'U');
+            // ✅ Corrigir URL do placeholder
+            const inicial = (user.nome ? user.nome.charAt(0).toUpperCase() : 'U');
+            userAvatar.src = `https://via.placeholder.com/40x40/007bff/ffffff?text=${inicial}`;
             userAvatar.alt = user.nome || user.name;
         }
 
@@ -345,3 +346,50 @@ const userManager = new UserManager();
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserManager;
 }
+
+// Configuração de papéis e permissões
+const CONFIG = {
+    roles: {
+        'COORDENADOR_GERAL': {
+            name: 'Coordenador Geral',  // ✅ ESTE É O NOME QUE DEVE APARECER
+            permissions: [
+                'balcao_view',
+                'balcao_create',
+                'balcao_edit',
+                'balcao_delete',
+                'secretaria_view',
+                'coordenador_view',
+                'add_voluntario',
+                'view_relatorios'
+            ]
+        },
+        'COORDENADOR_LOCAL': {
+            name: 'Coordenador Local',
+            permissions: [
+                'balcao_view',
+                'balcao_create',
+                'balcao_edit',
+                'balcao_delete',
+                'secretaria_view',
+                'coordenador_view'
+            ]
+        },
+        'VOLUNTARIO': {
+            name: 'Voluntário',
+            permissions: [
+                'balcao_view',
+                'balcao_create',
+                'balcao_edit',
+                'balcao_delete'
+            ]
+        },
+        'SECRETARIA': {
+            name: 'Secretaria',
+            permissions: [
+                'secretaria_view',
+                'balcao_edit',
+                'balcao_delete'
+            ]
+        }
+    }
+};
