@@ -135,6 +135,18 @@ class AuthManager {
         return roleConfig && roleConfig.permissions.includes(permission);
     }
 
+    // Check if user has specific role
+    hasRole(role) {
+        if (!this.currentUser) return false;
+        return this.currentUser.cargo === role;
+    }
+
+    // Validate email format
+    validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
     // Protect page (redirect to login if not authenticated)
     requireAuth() {
         if (!this.isLoggedIn()) {
@@ -185,3 +197,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ✅ FIM DO ARQUIVO - nada mais depois desta linha
+
+if (userAvatar) {
+    // ✅ Corrigir URL do placeholder
+    const inicial = (user.nome ? user.nome.charAt(0).toUpperCase() : 'U');
+    userAvatar.src = `https://via.placeholder.com/40x40/007bff/ffffff?text=${inicial}`;
+    userAvatar.alt = user.nome || user.name;
+}
