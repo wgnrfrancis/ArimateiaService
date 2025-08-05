@@ -20,7 +20,12 @@ window.CONFIG = {
 
     // URLs da API
     API: {
-        BASE_URL: 'http://localhost:3000/api',
+        // Google Apps Script Web App URL (PRODUÇÃO)
+        BASE_URL: 'https://script.google.com/macros/s/AKfycbzKdHQdnSDJnWjWkpSvNGBfKJAJpSLiw4vLF9PGHfHWJbODbj5v5LcxBLwLDfQStTJZ/exec',
+        
+        // URL Local para desenvolvimento (descomente para usar localmente)
+        // BASE_URL: 'http://localhost:3000/api',
+        
         ENDPOINTS: {
             auth: '/auth',
             login: '/auth/login',

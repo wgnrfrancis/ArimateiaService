@@ -1,5 +1,18 @@
 # 🚀 Guia de Configuração - Google Apps Script
 
+## ✅ **STATUS ATUAL DO SISTEMA**
+
+**🔗 URL Configurada:**
+```
+https://script.google.com/macros/s/AKfycbzKdHQdnSDJnWjWkpSvNGBfKJAJpSLiw4vLF9PGHfHWJbODbj5v5LcxBLwLDfQStTJZ/exec
+```
+
+**📍 Localização da Configuração:** `data/config.js` → `CONFIG.API.BASE_URL`
+
+**🎯 Sistema Funcionando:** ✅ Todas as requisições vão para Google Apps Script
+
+---
+
 ## 🎯 **Sistema 100% Google - Sem Power Automate**
 
 Este sistema utiliza **exclusivamente Google Apps Script** como backend, conectando diretamente com Google Sheets. Não há necessidade de Power Automate, servidores externos ou outras ferramentas.

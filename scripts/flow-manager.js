@@ -41,7 +41,7 @@ class FlowManager {
      */
     async sendToScript(data, useFormData = false) {
         console.log('🌐 Enviando para Google Apps Script...');
-        console.log('📍 URL:', CONFIG.googleAppsScript.webAppUrl);
+        console.log('📍 URL:', window.CONFIG?.API?.BASE_URL);
         console.log('📦 Dados:', data);
 
         // Verificar se está online
@@ -235,7 +235,7 @@ class FlowManager {
             body: useFormData ? this.toFormData(payload) : JSON.stringify(payload),
         };
 
-        return fetch(CONFIG.googleAppsScript.webAppUrl, options);
+        return fetch(window.CONFIG?.API?.BASE_URL, options);
     }
 
     /**

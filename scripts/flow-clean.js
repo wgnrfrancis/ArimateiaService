@@ -10,7 +10,7 @@
  */
 class FlowExtensions {
     constructor() {
-        this.scriptUrl = CONFIG?.googleAppsScript?.webAppUrl;
+        this.scriptUrl = window.CONFIG?.API?.BASE_URL;
         this.retryAttempts = CONFIG?.api?.retries || 3;
         this.retryDelay = CONFIG?.api?.retryDelay || 1000;
         this.regioesIgrejas = null; // Cache das regiões/igrejas

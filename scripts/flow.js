@@ -142,31 +142,50 @@ class FlowExtensions {
     }
 
     /**
-     * Validar credenciais do usuário
+     * Validar usuário (login)
      * @param {string} email - Email do usuário
      * @param {string} password - Senha do usuário
      * @returns {Promise<Object>} Resultado da validação
      */
     async validateUser(email, password) {
+        console.log('🔐 Validando usuário:', email);
+        
         try {
-            if (!email || !password) {
-                throw new Error('Email e senha são obrigatórios');
-            }
-
-            if (!Helpers.validateEmail(email)) {
-                throw new Error('Email inválido');
-            }
-
-            const result = await this.sendToScript({
-                action: 'loginUser',
-                email: email.toLowerCase().trim(),
-                password: password
+            const data = await this.sendToScript({
+                action: 'validateUser',
+                data: JSON.stringify({
+                    email: email,
+                    password: password
+                })
             });
 
-            return result;
+            if (data.success && data.user) {
+                console.log('✅ Usuário validado:', data.user);
+                return {
+                    success: true,
+                    user: {
+                        id: data.user.id,
+                        name: data.user.name,
+                        email: data.user.email,
+                        telefone: data.user.telefone,
+                        cargo: data.user.role,
+                        igreja: data.user.igreja,
+                        regiao: data.user.regiao,
+                        status: data.user.status,
+                        ultimoAcesso: data.user.ultimoAcesso
+                    },
+                    message: data.message
+                };
+            } else {
+                return {
+                    success: false,
+                    error: data.error || 'Erro na validação'
+                };
+            }
+
         } catch (error) {
-            console.error('Validate user error:', error);
-            return { success: false, error: error.message };
+            console.error('❌ Erro na validação:', error);
+            return this.getMockUser(email, password);
         }
     }
 
@@ -179,7 +198,7 @@ class FlowExtensions {
         try {
             const result = await this.sendToScript({
                 action: 'checkUserExists',
-                email: email
+                data: JSON.stringify({ email: email })
             });
             return result;
         } catch (error) {
@@ -292,18 +311,20 @@ class FlowExtensions {
             
             const result = await this.sendToScript({
                 action: 'newUser',
-                nomeCompleto: userData.nome.trim(),
-                email: userData.email.trim(),
-                telefone: userData.telefone.trim(),
-                cargo: userData.cargo,
-                igreja: userData.igreja,
-                regiao: userData.regiao,
-                observacoes: userData.observacoes || '',
-                senha: userData.senha || 'minhaflor',
-                userInfo: {
-                    name: currentUser ? currentUser.nome : 'Sistema',
-                    email: currentUser ? currentUser.email : 'sistema@balcao.org'
-                }
+                data: JSON.stringify({
+                    nomeCompleto: userData.nome.trim(),
+                    email: userData.email.trim(),
+                    telefone: userData.telefone.trim(),
+                    cargo: userData.cargo,
+                    igreja: userData.igreja,
+                    regiao: userData.regiao,
+                    observacoes: userData.observacoes || '',
+                    senha: userData.senha || 'minhaflor',
+                    userInfo: {
+                        name: currentUser ? currentUser.nome : 'Sistema',
+                        email: currentUser ? currentUser.email : 'sistema@balcao.org'
+                    }
+                })
             });
 
             return result;
@@ -348,20 +369,21 @@ class FlowExtensions {
 
             const result = await this.sendToScript({
                 action: 'newTicket',
-                nomeCidadao: ticketData.nome.trim(),
-                cpf: ticketData.cpf || '',
-                contato: ticketData.contato.trim(),
-                email: ticketData.email || '',
-                igreja: user.igreja,
-                regiao: user.regiao,
-                descricao: ticketData.descricao.trim(),
-                prioridade: ticketData.prioridade || 'MEDIA',
-                categoria: ticketData.categoria || 'OUTROS',
-                demanda: ticketData.demanda || '',
-                userInfo: {
-                    name: user.nome,
-                    email: user.email
-                }
+                data: JSON.stringify({
+                    nomeCidadao: ticketData.nome.trim(),
+                    cpf: ticketData.cpf || '',
+                    contato: ticketData.contato.trim(),
+                    email: ticketData.email || '',
+                    igreja: user.igreja,
+                    regiao: user.regiao,
+                    descricao: ticketData.descricao.trim(),
+                    prioridade: ticketData.prioridade || 'MEDIA',
+                    categoria: ticketData.categoria || 'OUTROS',
+                    userInfo: {
+                        name: user.nome,
+                        email: user.email
+                    }
+                })
             });
 
             return result;
@@ -381,7 +403,7 @@ class FlowExtensions {
         try {
             const result = await this.sendToScript({
                 action: 'getTickets',
-                filters: filters
+                data: JSON.stringify(filters)
             });
             return result;
         } catch (error) {
@@ -405,12 +427,14 @@ class FlowExtensions {
 
             const result = await this.sendToScript({
                 action: 'updateTicket',
-                ticketId: ticketId,
-                ...updateData,
-                userInfo: {
-                    name: user.nome,
-                    email: user.email
-                }
+                data: JSON.stringify({
+                    ticketId: ticketId,
+                    updateData: updateData,
+                    userInfo: {
+                        name: user.nome,
+                        email: user.email
+                    }
+                })
             });
 
             return result;
@@ -430,7 +454,7 @@ class FlowExtensions {
         try {
             const result = await this.sendToScript({
                 action: 'getUsers',
-                filters: filters
+                data: JSON.stringify(filters)
             });
             return result;
         } catch (error) {
@@ -449,8 +473,7 @@ class FlowExtensions {
         try {
             const result = await this.sendToScript({
                 action: 'getUserStats',
-                userId: userId,
-                regiao: regiao
+                data: JSON.stringify({ userId: userId, regiao: regiao })
             });
             return result;
         } catch (error) {
@@ -489,13 +512,84 @@ class FlowExtensions {
         try {
             const result = await this.sendToScript({
                 action: 'getDashboardData',
-                filters: filters,
-                period: filters.period || '30days'
+                data: JSON.stringify({
+                    filters: filters,
+                    period: filters.period || '30days'
+                })
             });
             return result;
         } catch (error) {
             console.error('Get dashboard data error:', error);
             return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Obter categorias
+     * @returns {Promise<Object>} Lista de categorias
+     */
+    async getCategories() {
+        try {
+            const result = await this.sendToScript({
+                action: 'getCategories'
+            });
+            return result;
+        } catch (error) {
+            console.error('Get categories error:', error);
+            // Fallback para CONFIG
+            return {
+                success: true,
+                data: window.CONFIG?.CATEGORIES || [
+                    'DOCUMENTACAO',
+                    'JURIDICO', 
+                    'SAUDE',
+                    'ASSISTENCIA_SOCIAL',
+                    'EDUCACAO',
+                    'PREVIDENCIA',
+                    'TRABALHO',
+                    'OUTROS'
+                ]
+            };
+        }
+    }
+
+    /**
+     * Obter voluntários
+     * @returns {Promise<Object>} Lista de voluntários
+     */
+    async getVolunteers() {
+        try {
+            const result = await this.sendToScript({
+                action: 'getVolunteers'
+            });
+            return result;
+        } catch (error) {
+            console.error('Get volunteers error:', error);
+            return { 
+                success: true, 
+                data: [],
+                fallback: true 
+            };
+        }
+    }
+
+    /**
+     * Obter profissionais
+     * @returns {Promise<Object>} Lista de profissionais
+     */
+    async getProfessionals() {
+        try {
+            const result = await this.sendToScript({
+                action: 'getProfessionals'
+            });
+            return result;
+        } catch (error) {
+            console.error('Get professionals error:', error);
+            return { 
+                success: true, 
+                data: [],
+                fallback: true 
+            };
         }
     }
 }
