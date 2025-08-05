@@ -5,6 +5,7 @@ class FlowManager {
         this.isOnline = navigator.onLine;
         this.retryAttempts = 3;
         this.retryDelay = 1000;
+        this.regioesIgrejas = null; // Cache das regiões/igrejas
     }
 
     async sendToScript(data) {
@@ -13,24 +14,21 @@ class FlowManager {
         console.log('📦 Dados:', data);
 
         try {
-            // ✅ USAR URLSearchParams para Google Apps Script
-            const formData = new URLSearchParams();
-            
-            // Adicionar action como parâmetro
-            formData.append('action', data.action);
-            
-            // Adicionar dados como JSON no body
-            formData.append('data', JSON.stringify({
+            // ✅ MÉTODO CORRETO para Google Apps Script
+            const payload = {
                 ...data,
                 timestamp: new Date().toISOString(),
                 clientOrigin: window.location.origin
-            }));
+            };
 
-            console.log('📤 FormData enviado:', Object.fromEntries(formData));
+            console.log('📤 Payload completo:', payload);
 
             const response = await fetch(this.scriptUrl, {
                 method: 'POST',
-                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(payload),
                 redirect: 'follow'
             });
 
@@ -78,21 +76,151 @@ class FlowManager {
         }
     }
 
+    // ✅ VERIFICAR SE USUÁRIO JÁ EXISTE
+    async checkUserExists(email) {
+        try {
+            const result = await this.sendToScript({
+                action: 'checkUserExists',
+                email: email
+            });
+
+            return result;
+
+        } catch (error) {
+            console.error('Check user exists error:', error);
+            return { success: false, exists: false, error: error.message };
+        }
+    }
+
+    // ✅ BUSCAR REGIÕES E IGREJAS DA PLANILHA
+    async getRegioesIgrejas() {
+        try {
+            // Se já temos no cache, retornar
+            if (this.regioesIgrejas) {
+                console.log('📋 Usando regiões/igrejas do cache');
+                return { success: true, data: this.regioesIgrejas };
+            }
+
+            console.log('🔍 Buscando regiões e igrejas da planilha...');
+            
+            const result = await this.sendToScript({
+                action: 'getIgrejasRegioes'
+            });
+
+            if (result.success && result.data) {
+                // Salvar no cache
+                this.regioesIgrejas = result.data;
+                console.log('✅ Regiões e igrejas carregadas:', this.regioesIgrejas);
+                return result;
+            } else {
+                throw new Error(result.error || 'Erro ao buscar regiões e igrejas');
+            }
+
+        } catch (error) {
+            console.error('❌ Erro ao buscar regiões/igrejas:', error);
+            
+            // ✅ FALLBACK: usar dados do CONFIG se a planilha falhar
+            console.log('⚠️ Usando regiões do CONFIG como fallback');
+            return {
+                success: true,
+                data: CONFIG.regions,
+                fallback: true
+            };
+        }
+    }
+
+    // ✅ CRIAR USUÁRIO REAL (com validações completas)
+    async createUser(userData) {
+        try {
+            console.log('👤 Criando usuário:', userData);
+
+            // Validar dados obrigatórios
+            if (!userData.nome || userData.nome.trim().length < 2) {
+                throw new Error('Nome deve ter pelo menos 2 caracteres');
+            }
+
+            if (!userData.email || !this.validateEmail(userData.email)) {
+                throw new Error('Email inválido');
+            }
+
+            if (!userData.telefone || userData.telefone.length < 10) {
+                throw new Error('Telefone deve ter pelo menos 10 dígitos');
+            }
+
+            if (!userData.cargo) {
+                throw new Error('Cargo é obrigatório');
+            }
+
+            if (!userData.igreja) {
+                throw new Error('Igreja é obrigatória');
+            }
+
+            if (!userData.regiao) {
+                throw new Error('Região é obrigatória');
+            }
+
+            // Verificar se email já existe
+            console.log('🔍 Verificando se email já existe...');
+            const existingUser = await this.checkUserExists(userData.email);
+            
+            if (existingUser.exists) {
+                throw new Error('Já existe um usuário cadastrado com este email');
+            }
+
+            // Obter usuário atual (quem está cadastrando)
+            const currentUser = authManager.getCurrentUser();
+            
+            // Criar usuário na planilha
+            const result = await this.sendToScript({
+                action: 'newUser',
+                nomeCompleto: userData.nome.trim(),
+                email: userData.email.trim(),
+                telefone: userData.telefone.trim(),
+                cargo: userData.cargo,
+                igreja: userData.igreja,
+                regiao: userData.regiao,
+                observacoes: userData.observacoes || '',
+                userInfo: {
+                    name: currentUser ? currentUser.nome : 'Sistema',
+                    email: currentUser ? currentUser.email : 'sistema@balcao.org'
+                }
+            });
+
+            console.log('📊 Resultado do cadastro:', result);
+            return result;
+
+        } catch (error) {
+            console.error('❌ Erro ao criar usuário:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    // ✅ VALIDAR EMAIL
+    validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
     // ✅ CRIAR CHAMADO REAL
     async createTicket(ticketData) {
         try {
             const user = authManager.getCurrentUser();
+            
+            if (!user) {
+                throw new Error('Usuário não autenticado');
+            }
+
             const result = await this.sendToScript({
                 action: 'newTicket',
                 nomeCidadao: ticketData.nome,
-                cpf: ticketData.cpf,
+                cpf: ticketData.cpf || '',
                 contato: ticketData.contato,
-                email: ticketData.email,
+                email: ticketData.email || '',
                 igreja: user.igreja,
                 regiao: user.regiao,
                 descricao: ticketData.descricao,
-                prioridade: ticketData.prioridade,
-                categoria: ticketData.categoria,
+                prioridade: ticketData.prioridade || 'MEDIA',
+                categoria: ticketData.categoria || 'OUTROS',
                 userInfo: {
                     name: user.nome,
                     email: user.email
@@ -127,6 +255,11 @@ class FlowManager {
     async updateTicket(ticketId, updateData) {
         try {
             const user = authManager.getCurrentUser();
+            
+            if (!user) {
+                throw new Error('Usuário não autenticado');
+            }
+
             const result = await this.sendToScript({
                 action: 'updateTicket',
                 ticketId: ticketId,
@@ -161,29 +294,19 @@ class FlowManager {
         }
     }
 
-    // ✅ CRIAR USUÁRIO REAL
-    async createUser(userData) {
+    // ✅ BUSCAR ESTATÍSTICAS
+    async getUserStats(userId, regiao) {
         try {
-            const currentUser = authManager.getCurrentUser();
             const result = await this.sendToScript({
-                action: 'newUser',
-                nomeCompleto: userData.nome,
-                email: userData.email,
-                telefone: userData.telefone,
-                cargo: userData.cargo,
-                igreja: userData.igreja,
-                regiao: userData.regiao,
-                observacoes: userData.observacoes,
-                userInfo: {
-                    name: currentUser.nome,
-                    email: currentUser.email
-                }
+                action: 'getUserStats',
+                userId: userId,
+                regiao: regiao
             });
 
             return result;
 
         } catch (error) {
-            console.error('Create user error:', error);
+            console.error('Get user stats error:', error);
             return { success: false, error: error.message };
         }
     }
