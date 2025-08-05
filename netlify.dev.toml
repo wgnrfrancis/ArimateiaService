@@ -1,0 +1,29 @@
+# Desenvolvimento Local - Netlify Dev
+# Para testar localmente: npx netlify dev
+
+[build]
+  command = ""
+  publish = "."
+
+[dev]
+  port = 8000
+  autoLaunch = true
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://script.google.com/macros/s/AKfycbylYVzywgtIn7JIcIrjaWab-QN4IRAynWL3T4q5dFvrAH_5A7_hmWkQHnJ-Q3yoAoYf/exec/:splat"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = """
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://script.google.com https://script.googleusercontent.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com;
+      img-src 'self' data: https:;
+      connect-src 'self' https://script.google.com https://script.googleusercontent.com;
+      frame-src 'none';
+      object-src 'none';
+    """
