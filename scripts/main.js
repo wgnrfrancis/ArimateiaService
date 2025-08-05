@@ -266,17 +266,20 @@ class App {
                 // Limpar e popular regiões
                 regiaoSelect.innerHTML = '<option value="">Selecione a região</option>';
                 
-                Object.keys(result.data).forEach(regiao => {
+                result.data.regioes.forEach(regiao => {
                     const option = document.createElement('option');
                     option.value = regiao;
-                    option.textContent = result.data[regiao].name || regiao;
+                    option.textContent = regiao;
                     regiaoSelect.appendChild(option);
                 });
                 
                 regiaoSelect.disabled = false;
                 
+                // Armazenar dados das igrejas para uso posterior
+                window.igrejasDataMain = result.data.igrejasPorRegiao;
+                
                 // Configurar listener para mudança de região
-                regiaoSelect.addEventListener('change', async (e) => {
+                regiaoSelect.addEventListener('change', (e) => {
                     const regiao = e.target.value;
                     
                     if (!regiao) {
@@ -286,18 +289,16 @@ class App {
                     }
 
                     // Carregar igrejas da região
-                    igrejaSelect.innerHTML = '<option value="">Carregando igrejas...</option>';
-                    igrejaSelect.disabled = true;
-
-                    const igrejasResult = await flowManager.getIgrejasByRegiao(regiao);
+                    igrejaSelect.innerHTML = '<option value="">Selecione a igreja</option>';
                     
-                    if (igrejasResult.success && igrejasResult.data.length > 0) {
-                        igrejaSelect.innerHTML = '<option value="">Selecione a igreja</option>';
-                        
-                        igrejasResult.data.forEach(igreja => {
+                    const igrejasRegiao = window.igrejasDataMain[regiao] || [];
+                    
+                    if (igrejasRegiao.length > 0) {
+                        igrejasRegiao.forEach(igreja => {
                             const option = document.createElement('option');
-                            option.value = igreja;
-                            option.textContent = igreja;
+                            const nomeIgreja = igreja.nome || igreja;
+                            option.value = nomeIgreja;
+                            option.textContent = nomeIgreja;
                             igrejaSelect.appendChild(option);
                         });
                         

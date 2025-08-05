@@ -555,6 +555,90 @@ class SecretariaManager {
      */
     async loadFilterOptions() {
         try {
+            console.log('🔍 Carregando opções de filtro...');
+            
+            // Tentar carregar da planilha primeiro
+            if (window.flowManager) {
+                const result = await window.flowManager.getRegioesIgrejas();
+                
+                if (result?.success && result.data) {
+                    const { regioes, igrejasPorRegiao } = result.data;
+                    
+                    // Load regions for filter
+                    if (this.elements.regionFilter && regioes) {
+                        const regionOptions = regioes.map(region => 
+                            `<option value="${region}">${region}</option>`
+                        ).join('');
+                        
+                        this.elements.regionFilter.innerHTML += regionOptions;
+                    }
+
+                    // Load regions for new ticket form
+                    if (this.elements.regiaoSelect && regioes) {
+                        const regionOptions = regioes.map(region => 
+                            `<option value="${region}">${region}</option>`
+                        ).join('');
+                        
+                        this.elements.regiaoSelect.innerHTML = `
+                            <option value="">Selecione a região</option>
+                            ${regionOptions}
+                        `;
+                    }
+
+                    // Load all churches for filter
+                    if (this.elements.churchFilter && igrejasPorRegiao) {
+                        const allIgrejas = [];
+                        Object.values(igrejasPorRegiao).forEach(igrejas => {
+                            igrejas.forEach(igreja => {
+                                const nomeIgreja = igreja.nome || igreja;
+                                allIgrejas.push(nomeIgreja);
+                            });
+                        });
+                        
+                        const churchOptions = allIgrejas.map(church => 
+                            `<option value="${church}">${church}</option>`
+                        ).join('');
+                        
+                        this.elements.churchFilter.innerHTML += churchOptions;
+                    }
+
+                    // Setup hierarchical selection for new ticket form
+                    if (this.elements.regiaoSelect && this.elements.igrejaSelect) {
+                        this.elements.regiaoSelect.addEventListener('change', (e) => {
+                            const regiao = e.target.value;
+                            const igrejaSelect = this.elements.igrejaSelect;
+                            
+                            if (!regiao) {
+                                igrejaSelect.innerHTML = '<option value="">Primeiro selecione uma região</option>';
+                                return;
+                            }
+                            
+                            const igrejasRegiao = igrejasPorRegiao[regiao] || [];
+                            const churchOptions = igrejasRegiao.map(igreja => {
+                                const nomeIgreja = igreja.nome || igreja;
+                                return `<option value="${nomeIgreja}">${nomeIgreja}</option>`;
+                            }).join('');
+                            
+                            igrejaSelect.innerHTML = `
+                                <option value="">Selecione a igreja</option>
+                                ${churchOptions}
+                            `;
+                        });
+                    }
+                    
+                    console.log('✅ Opções carregadas da planilha');
+                    
+                } else {
+                    throw new Error('Dados não disponíveis da planilha');
+                }
+            } else {
+                throw new Error('FlowManager não disponível');
+            }
+            
+        } catch (error) {
+            console.warn('⚠️ Erro ao carregar da planilha, usando fallback:', error);
+            
+            // Fallback para CONFIG
             // Load regions
             if (this.elements.regionFilter && window.CONFIG?.REGIONS) {
                 const regionOptions = window.CONFIG.REGIONS.map(region => 
@@ -592,12 +676,13 @@ class SecretariaManager {
                     ${regionOptions}
                 `;
             }
+        }
 
+        try {
             // Load volunteers
             await this.loadVolunteers();
-
         } catch (error) {
-            console.error('❌ Erro ao carregar opções de filtro:', error);
+            console.error('❌ Erro ao carregar voluntários:', error);
         }
     }
 

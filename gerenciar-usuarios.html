@@ -432,15 +432,44 @@
         // Carregar lista de igrejas no filtro
         async function carregarIgrejas() {
             try {
-                const config = await import('./data/config.js');
+                console.log('🔍 Carregando igrejas para filtro...');
                 const select = document.getElementById('filtroIgreja');
                 
-                config.igrejas.forEach(igreja => {
-                    const option = document.createElement('option');
-                    option.value = igreja.nome;
-                    option.textContent = igreja.nome;
-                    select.appendChild(option);
+                // Tentar carregar da planilha primeiro
+                if (window.flowManager) {
+                    const result = await window.flowManager.getRegioesIgrejas();
+                    
+                    if (result?.success && result.data?.igrejasPorRegiao) {
+                        const igrejasPorRegiao = result.data.igrejasPorRegiao;
+                        
+                        // Adicionar todas as igrejas de todas as regiões
+                        Object.keys(igrejasPorRegiao).forEach(regiao => {
+                            igrejasPorRegiao[regiao].forEach(igreja => {
+                                const option = document.createElement('option');
+                                const nomeIgreja = igreja.nome || igreja;
+                                option.value = nomeIgreja;
+                                option.textContent = `${nomeIgreja} (${regiao})`;
+                                select.appendChild(option);
+                            });
+                        });
+                        
+                        console.log('✅ Igrejas carregadas da planilha');
+                        return;
+                    }
+                }
+                
+                // Fallback para config.js
+                console.log('🔄 Usando fallback do config.js...');
+                Object.keys(CONFIG.igrejasPorRegiao).forEach(regiao => {
+                    CONFIG.igrejasPorRegiao[regiao].forEach(igreja => {
+                        const option = document.createElement('option');
+                        const nomeIgreja = igreja.nome || igreja;
+                        option.value = nomeIgreja;
+                        option.textContent = `${nomeIgreja} (${regiao})`;
+                        select.appendChild(option);
+                    });
                 });
+                
             } catch (error) {
                 console.error('Erro ao carregar igrejas:', error);
             }
