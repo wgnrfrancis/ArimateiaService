@@ -1,129 +1,214 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <!-- Meta Tags Essenciais -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Balcão da Cidadania - Atendimentos</title>
-    <link rel="stylesheet" href="assets/style.css">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- SEO e Descrição -->
+    <title>Balcão da Cidadania - Atendimentos | Arimateia</title>
+    <meta name="description" content="Interface do Balcão da Cidadania para registro e gestão de atendimentos aos cidadãos.">
+    <meta name="keywords" content="balcão cidadania, atendimento, chamados, arimateia">
+    <meta name="author" content="Arimateia">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- Favicon e Icons -->
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="assets/style.css" as="style">
+    <link rel="preload" href="data/config.js" as="script">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="assets/style.css">
+    
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
 </head>
 <body>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="sr-only">Pular para o conteúdo principal</a>
+
     <!-- Header -->
-    <header class="header">
+    <header class="header" role="banner">
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <img src="assets/logo.png" alt="Logo" width="32" height="32" onerror="this.style.display='none'">
+                    <img src="assets/logo.png" alt="Logo Arimateia" width="32" height="32" onerror="this.style.display='none'">
                     <span>Balcão da Cidadania</span>
                 </div>
                 
                 <div class="user-info">
-                    <img src="assets/default-avatar.png" alt="Avatar" class="user-avatar">
+                    <img src="assets/default-avatar.png" alt="Avatar do usuário" class="user-avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiMwMGM2ZmYiLz4KPC9zdmc+'">
                     <div class="user-details">
-                        <div class="user-name">Carregando...</div>
-                        <div class="user-role text-light">-</div>
+                        <div class="user-name" aria-live="polite">Carregando...</div>
+                        <div class="user-role text-secondary" aria-live="polite">-</div>
                     </div>
-                    <div class="user-actions">
-                        <button class="btn btn-outline back-to-dashboard">
-                            ⬅️ Dashboard
+                    <nav class="user-actions" role="navigation" aria-label="Ações do usuário">
+                        <button id="back-to-dashboard" class="btn btn-outline" aria-label="Voltar ao dashboard" title="Dashboard">
+                            <span class="icon">⬅️</span>
+                            <span class="btn-text">Dashboard</span>
                         </button>
-                        <button id="logout-btn" class="btn btn-secondary">
-                            🚪 Sair
+                        <button id="logout-btn" class="btn btn-secondary" aria-label="Sair do sistema" title="Logout">
+                            <span class="icon">🚪</span>
+                            <span class="btn-text">Sair</span>
                         </button>
-                    </div>
+                    </nav>
                 </div>
             </div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main id="main-content" class="main-content" role="main">
         <div class="container">
             <!-- Page Header -->
             <div class="page-header mb-4">
                 <h1>🏛️ Balcão da Cidadania</h1>
-                <p class="text-light">Gestão de atendimentos e chamados</p>
+                <p class="text-secondary">Gestão de atendimentos e chamados aos cidadãos</p>
             </div>
 
             <!-- Action Buttons -->
             <div class="actions-section mb-4">
-                <button id="new-ticket-btn" class="btn btn-primary btn-large" data-permission="balcao_create">
-                    ➕ Novo Chamado
+                <button id="new-ticket-btn" class="btn btn-primary btn-large" data-permission="balcao_create" aria-label="Criar novo chamado">
+                    <span class="icon">➕</span>
+                    <span class="btn-text">Novo Chamado</span>
                 </button>
-                <button id="refresh-tickets-btn" class="btn btn-outline">
-                    🔄 Atualizar Lista
+                <button id="refresh-tickets-btn" class="btn btn-outline" aria-label="Atualizar lista de chamados">
+                    <span class="icon">🔄</span>
+                    <span class="btn-text">Atualizar Lista</span>
+                </button>
+                <button id="export-tickets-btn" class="btn btn-outline" aria-label="Exportar chamados" style="display: none;">
+                    <span class="icon">📊</span>
+                    <span class="btn-text">Exportar</span>
                 </button>
             </div>
 
             <!-- Filters -->
-            <div class="filters">
+            <div class="filters" role="search" aria-label="Filtros de chamados">
                 <div class="filter-group">
                     <label for="region-filter" class="form-label">Região</label>
-                    <select id="region-filter" class="form-select">
+                    <select id="region-filter" class="form-select" aria-describedby="region-help">
                         <option value="">Todas as regiões</option>
                         <!-- Opções carregadas dinamicamente -->
                     </select>
+                    <small id="region-help" class="text-muted">Filtre por região específica</small>
                 </div>
 
                 <div class="filter-group">
                     <label for="status-filter" class="form-label">Status</label>
-                    <select id="status-filter" class="form-select">
+                    <select id="status-filter" class="form-select" aria-describedby="status-help">
                         <option value="">Todos os status</option>
-                        <option value="aberto">Aberto</option>
-                        <option value="em_andamento">Em Andamento</option>
-                        <option value="aguardando">Aguardando Retorno</option>
-                        <option value="resolvido">Resolvido</option>
-                        <option value="cancelado">Cancelado</option>
+                        <option value="aberto">🟢 Aberto</option>
+                        <option value="em_andamento">🟡 Em Andamento</option>
+                        <option value="aguardando">🟠 Aguardando Retorno</option>
+                        <option value="resolvido">✅ Resolvido</option>
+                        <option value="cancelado">❌ Cancelado</option>
                     </select>
+                    <small id="status-help" class="text-muted">Filtre por status do chamado</small>
                 </div>
 
                 <div class="filter-group">
                     <label for="church-filter" class="form-label">Igreja</label>
-                    <select id="church-filter" class="form-select">
+                    <select id="church-filter" class="form-select" aria-describedby="church-help">
                         <option value="">Todas as igrejas</option>
                         <!-- Opções carregadas dinamicamente -->
                     </select>
+                    <small id="church-help" class="text-muted">Filtre por igreja específica</small>
                 </div>
 
                 <div class="filter-group">
                     <label for="ticket-search" class="form-label">Buscar</label>
                     <input 
-                        type="text" 
+                        type="search" 
                         id="ticket-search" 
                         class="form-input" 
-                        placeholder="Nome ou descrição..."
+                        placeholder="Nome do cidadão, descrição..."
+                        aria-describedby="search-help"
                     >
+                    <small id="search-help" class="text-muted">Digite para buscar chamados</small>
+                </div>
+
+                <div class="filter-group">
+                    <label for="priority-filter" class="form-label">Prioridade</label>
+                    <select id="priority-filter" class="form-select">
+                        <option value="">Todas as prioridades</option>
+                        <option value="Baixa">🟢 Baixa</option>
+                        <option value="Média">🟡 Média</option>
+                        <option value="Alta">🟠 Alta</option>
+                        <option value="Urgente">🔴 Urgente</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="quick-stats mb-4" role="region" aria-label="Estatísticas rápidas">
+                <div class="grid grid-4">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-tickets">-</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="open-tickets">-</div>
+                        <div class="stat-label">Abertos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="progress-tickets">-</div>
+                        <div class="stat-label">Em Andamento</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="urgent-tickets">-</div>
+                        <div class="stat-label">Urgentes</div>
+                    </div>
                 </div>
             </div>
 
             <!-- Tickets List -->
             <div class="tickets-section">
                 <div class="section-header">
-                    <h3>Chamados</h3>
-                    <div class="tickets-count">
-                        <span id="tickets-count">Carregando...</span>
+                    <h3>Lista de Chamados</h3>
+                    <div class="section-actions">
+                        <div class="tickets-count">
+                            <span id="tickets-count" aria-live="polite">Carregando...</span>
+                        </div>
+                        <div class="view-controls">
+                            <button id="list-view-btn" class="btn btn-small" aria-label="Visualização em lista" title="Lista">
+                                📋
+                            </button>
+                            <button id="card-view-btn" class="btn btn-small active" aria-label="Visualização em cards" title="Cards">
+                                🔲
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
-                <div id="tickets-container" class="tickets-container">
+                <div id="tickets-container" class="tickets-container" role="region" aria-live="polite" aria-label="Lista de chamados">
                     <!-- Tickets will be loaded here dynamically -->
-                    <div class="text-center">
+                    <div class="loading-placeholder">
+                        <div class="spinner"></div>
                         <p>Carregando chamados...</p>
                     </div>
+                </div>
+
+                <!-- Pagination -->
+                <div id="pagination" class="pagination" style="display: none;" role="navigation" aria-label="Navegação de páginas">
+                    <!-- Pagination will be generated dynamically -->
                 </div>
             </div>
         </div>
     </main>
 
     <!-- New Ticket Modal -->
-    <div id="new-ticket-modal" class="modal">
+    <div id="new-ticket-modal" class="modal" role="dialog" aria-labelledby="new-ticket-title" aria-hidden="true">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>➕ Novo Chamado</h3>
-                <button class="modal-close">&times;</button>
-            </div>
+            <header class="modal-header">
+                <h3 id="new-ticket-title">➕ Novo Chamado</h3>
+                <button class="modal-close" aria-label="Fechar modal">&times;</button>
+            </header>
             
-            <form id="new-ticket-form">
+            <form id="new-ticket-form" role="form" aria-labelledby="new-ticket-title">
                 <div class="grid grid-2">
                     <div class="form-group">
                         <label for="nome" class="form-label">Nome do Cidadão *</label>
@@ -134,7 +219,9 @@
                             class="form-input" 
                             required
                             placeholder="Nome completo do cidadão"
+                            aria-describedby="nome-error"
                         >
+                        <span id="nome-error" class="field-error" role="alert" aria-live="polite"></span>
                     </div>
 
                     <div class="form-group">
@@ -147,7 +234,9 @@
                             data-format="phone"
                             required
                             placeholder="(11) 99999-9999"
+                            aria-describedby="contato-error"
                         >
+                        <span id="contato-error" class="field-error" role="alert" aria-live="polite"></span>
                     </div>
                 </div>
 
@@ -159,448 +248,41 @@
                         name="email" 
                         class="form-input" 
                         placeholder="email@exemplo.com"
+                        aria-describedby="email-error"
                     >
+                    <span id="email-error" class="field-error" role="alert" aria-live="polite"></span>
                 </div>
 
-                <div class="form-group">
-                    <label for="categoria" class="form-label">Categoria da Demanda *</label>
-                    <select id="categoria" name="categoria" class="form-select" required>
-                        <option value="">Selecione a categoria</option>
-                        <!-- Opções carregadas dinamicamente -->
-                    </select>
-                </div>
-
-                <div class="form-group" id="demanda-container" style="display: none;">
-                    <label for="demanda" class="form-label">Demanda Específica *</label>
-                    <select id="demanda" name="demanda" class="form-select">
-                        <option value="">Primeiro selecione uma categoria</option>
-                        <!-- Opções carregadas dinamicamente baseadas na categoria -->
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="prioridade" class="form-label">Prioridade *</label>
-                    <select id="prioridade" name="prioridade" class="form-select" required>
-                        <option value="">Selecione a prioridade</option>
-                        <option value="Baixa">🟢 Baixa - Pode aguardar alguns dias</option>
-                        <option value="Média">🟡 Média - Necessita atenção em breve</option>
-                        <option value="Alta">🟠 Alta - Precisa ser resolvido rapidamente</option>
-                        <option value="Urgente">🔴 Urgente - Requer ação imediata</option>
-                    </select>
-                    <small class="text-light" id="prioridade-info" style="display: none;"></small>
-                </div>
-
-                <div class="form-group">
-                    <label for="descricao" class="form-label">Descrição da Demanda *</label>
-                    <textarea 
-                        id="descricao" 
-                        name="descricao" 
-                        class="form-textarea" 
-                        required
-                        placeholder="Descreva detalhadamente a necessidade do cidadão..."
-                        rows="4"
-                    ></textarea>
-                </div>
-
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary">
-                        💾 Salvar Chamado
-                    </button>
-                    <button type="button" class="btn btn-outline modal-close">
-                        Cancelar
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="data/config.js"></script>
-    <script src="scripts/helpers.js"></script>
-    <script src="scripts/auth.js"></script>
-    <script src="scripts/user.js"></script>
-    <script src="scripts/flow.js"></script>
-    <script src="scripts/main.js"></script>
-
-    <script>
-        // Page-specific initialization
-        document.addEventListener('DOMContentLoaded', function() {
-            // Carregar dados para filtros
-            loadFiltersData();
-            
-            // Setup new ticket modal
-            const newTicketBtn = document.getElementById('new-ticket-btn');
-            if (newTicketBtn) {
-                newTicketBtn.addEventListener('click', function() {
-                    const modal = document.getElementById('new-ticket-modal');
-                    if (modal) {
-                        modal.classList.add('active');
-                        carregarCategorias();
-                    }
-                });
-            }
-
-            // Setup new ticket form
-            const newTicketForm = document.getElementById('new-ticket-form');
-            if (newTicketForm) {
-                Helpers.setupFormValidation(newTicketForm);
-                
-                newTicketForm.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    
-                    const formData = new FormData(e.target);
-                    const data = Object.fromEntries(formData.entries());
-                    
-                    try {
-                        Helpers.showLoading('Criando chamado...');
-                        
-                        const result = await flowManager.createTicket({
-                            nome: data.nome,
-                            contato: data.contato,
-                            email: data.email,
-                            categoria: data.categoria,
-                            demanda: data.demanda,
-                            prioridade: data.prioridade,
-                            descricao: data.descricao
-                        });
-                        
-                        Helpers.hideLoading();
-                        
-                        if (result.success) {
-                            Helpers.showToast('Chamado criado com sucesso!', 'success');
-                            e.target.reset();
-                            document.getElementById('new-ticket-modal').classList.remove('active');
-                            
-                            // Recarregar lista se existir
-                            if (typeof app !== 'undefined' && app.loadTickets) {
-                                app.loadTickets();
-                            }
-                        } else {
-                            throw new Error(result.error || 'Erro ao criar chamado');
-                        }
-                    } catch (error) {
-                        Helpers.hideLoading();
-                        console.error('Erro ao criar chamado:', error);
-                        Helpers.showToast('Erro ao criar chamado: ' + error.message, 'error');
-                    }
-                });
-            }
-        });
-
-        // Carregar dados para filtros
-        async function loadFiltersData() {
-            try {
-                const result = await flowManager.getIgrejasRegioes();
-                
-                if (result.success) {
-                    const data = result.data;
-                    
-                    // Carregar regiões
-                    const regiaoFilter = document.getElementById('region-filter');
-                    regiaoFilter.innerHTML = '<option value="">Todas as regiões</option>';
-                    
-                    data.regioes.forEach(regiao => {
-                        const option = document.createElement('option');
-                        option.value = regiao;
-                        option.textContent = regiao;
-                        regiaoFilter.appendChild(option);
-                    });
-                    
-                    // Carregar igrejas
-                    const igrejaFilter = document.getElementById('church-filter');
-                    igrejaFilter.innerHTML = '<option value="">Todas as igrejas</option>';
-                    
-                    Object.values(data.igrejasPorRegiao).forEach(igrejas => {
-                        igrejas.forEach(igreja => {
-                            const option = document.createElement('option');
-                            option.value = igreja.nome;
-                            option.textContent = igreja.nome;
-                            igrejaFilter.appendChild(option);
-                        });
-                    });
-                }
-            } catch (error) {
-                console.error('Erro ao carregar dados para filtros:', error);
-            }
-        }
-
-        // Carregar categorias
-        async function carregarCategorias() {
-            try {
-                const categoriaSelect = document.getElementById('categoria');
-                categoriaSelect.innerHTML = '<option value="">Selecione a categoria</option>';
-                
-                // Categorias básicas como fallback
-                const categorias = [
-                    'Documentação',
-                    'Benefícios Sociais', 
-                    'Jurídico',
-                    'Saúde',
-                    'Outros'
-                ];
-                
-                categorias.forEach(categoria => {
-                    const option = document.createElement('option');
-                    option.value = categoria;
-                    option.textContent = `📁 ${categoria}`;
-                    categoriaSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Erro ao carregar categorias:', error);
-            }
-        }
-    </script>
-
-    <style>
-        .page-header h1 {
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .actions-section {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .tickets-count {
-            color: var(--text-light);
-            font-size: 0.875rem;
-        }
-
-        .tickets-container {
-            display: grid;
-            gap: 1.5rem;
-        }
-
-        .modal-content {
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        @media (max-width: 768px) {
-            .actions-section {
-                flex-direction: column;
-            }
-
-            .actions-section .btn {
-                width: 100%;
-            }
-
-            .section-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-            }
-        }
-    </style>
-</body>
-</html>
-    <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <img src="assets/logo.png" alt="Logo" width="32" height="32" onerror="this.style.display='none'">
-                    <span>Balcão da Cidadania</span>
-                </div>
-                
-                <div class="user-info">
-                    <img src="assets/default-avatar.png" alt="Avatar" class="user-avatar">
-                    <div class="user-details">
-                        <div class="user-name">Carregando...</div>
-                        <div class="user-role text-light">-</div>
-                    </div>
-                    <div class="user-actions">
-                        <button class="btn btn-outline back-to-dashboard">
-                            ⬅️ Dashboard
-                        </button>
-                        <button id="logout-btn" class="btn btn-secondary">
-                            🚪 Sair
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            <!-- Page Header -->
-            <div class="page-header mb-4">
-                <h1>🏛️ Balcão da Cidadania</h1>
-                <p class="text-light">Gestão de atendimentos e chamados</p>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="actions-section mb-4">
-                <button id="new-ticket-btn" class="btn btn-primary btn-large" data-permission="balcao_create">
-                    ➕ Novo Chamado
-                </button>
-                <button id="refresh-tickets-btn" class="btn btn-outline">
-                    🔄 Atualizar Lista
-                </button>
-            </div>
-
-            <!-- Filters -->
-            <div class="filters">
-                <div class="filter-group">
-                    <label for="region-filter" class="form-label">Região</label>
-                    <select id="region-filter" class="form-select">
-                        <option value="">Todas as regiões</option>
-                        <option value="Norte">Norte</option>
-                        <option value="Sul">Sul</option>
-                        <option value="Leste">Leste</option>
-                        <option value="Oeste">Oeste</option>
-                        <option value="Centro">Centro</option>
-                        <option value="Grande ABC">Grande ABC</option>
-                        <option value="Interior">Interior</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="status-filter" class="form-label">Status</label>
-                    <select id="status-filter" class="form-select">
-                        <option value="">Todos os status</option>
-                        <option value="aberto">Aberto</option>
-                        <option value="em_andamento">Em Andamento</option>
-                        <option value="aguardando">Aguardando Retorno</option>
-                        <option value="resolvido">Resolvido</option>
-                        <option value="cancelado">Cancelado</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="church-filter" class="form-label">Igreja</label>
-                    <select id="church-filter" class="form-select">
-                        <option value="">Todas as igrejas</option>
-                        <option value="Igreja Central">Igreja Central</option>
-                        <option value="Igreja do Bairro Alto">Igreja do Bairro Alto</option>
-                        <option value="Igreja da Vila Nova">Igreja da Vila Nova</option>
-                        <option value="Igreja do Centro">Igreja do Centro</option>
-                        <option value="Igreja São João">Igreja São João</option>
-                        <option value="Igreja Santa Maria">Igreja Santa Maria</option>
-                        <option value="Igreja do Jardim">Igreja do Jardim</option>
-                        <option value="Igreja da Paz">Igreja da Paz</option>
-                        <option value="Igreja Esperança">Igreja Esperança</option>
-                        <option value="Igreja Vida Nova">Igreja Vida Nova</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="ticket-search" class="form-label">Buscar</label>
-                    <input 
-                        type="text" 
-                        id="ticket-search" 
-                        class="form-input" 
-                        placeholder="Nome ou descrição..."
-                    >
-                </div>
-            </div>
-
-            <!-- Tickets List -->
-            <div class="tickets-section">
-                <div class="section-header">
-                    <h3>Chamados</h3>
-                    <div class="tickets-count">
-                        <span id="tickets-count">Carregando...</span>
-                    </div>
-                </div>
-                
-                <div id="tickets-container" class="tickets-container">
-                    <!-- Tickets will be loaded here dynamically -->
-                    <div class="text-center">
-                        <p>Carregando chamados...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- New Ticket Modal -->
-    <div id="new-ticket-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>➕ Novo Chamado</h3>
-                <button class="modal-close">&times;</button>
-            </div>
-            
-            <form id="new-ticket-form">
                 <div class="grid grid-2">
                     <div class="form-group">
-                        <label for="nome" class="form-label">Nome do Cidadão *</label>
-                        <input 
-                            type="text" 
-                            id="nome" 
-                            name="nome" 
-                            class="form-input" 
-                            required
-                            placeholder="Nome completo do cidadão"
-                        >
+                        <label for="categoria" class="form-label">Categoria da Demanda *</label>
+                        <select id="categoria" name="categoria" class="form-select" required aria-describedby="categoria-error">
+                            <option value="">Selecione a categoria</option>
+                            <!-- Opções carregadas dinamicamente -->
+                        </select>
+                        <span id="categoria-error" class="field-error" role="alert" aria-live="polite"></span>
                     </div>
 
                     <div class="form-group">
-                        <label for="contato" class="form-label">Telefone/WhatsApp *</label>
-                        <input 
-                            type="tel" 
-                            id="contato" 
-                            name="contato" 
-                            class="form-input" 
-                            data-format="phone"
-                            required
-                            placeholder="(11) 99999-9999"
-                        >
+                        <label for="prioridade" class="form-label">Prioridade *</label>
+                        <select id="prioridade" name="prioridade" class="form-select" required aria-describedby="prioridade-error">
+                            <option value="">Selecione a prioridade</option>
+                            <option value="Baixa">🟢 Baixa - Pode aguardar alguns dias</option>
+                            <option value="Média">🟡 Média - Necessita atenção em breve</option>
+                            <option value="Alta">🟠 Alta - Precisa ser resolvido rapidamente</option>
+                            <option value="Urgente">🔴 Urgente - Requer ação imediata</option>
+                        </select>
+                        <span id="prioridade-error" class="field-error" role="alert" aria-live="polite"></span>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="email" class="form-label">Email (opcional)</label>
-                    <input 
-                        type="email" 
-                        id="email" 
-                        name="email" 
-                        class="form-input" 
-                        placeholder="email@exemplo.com"
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label for="categoria" class="form-label">Categoria da Demanda *</label>
-                    <select id="categoria" name="categoria" class="form-select" required>
-                        <option value="">Selecione a categoria</option>
-                        <!-- Opções carregadas dinamicamente -->
-                    </select>
                 </div>
 
                 <div class="form-group" id="demanda-container" style="display: none;">
                     <label for="demanda" class="form-label">Demanda Específica *</label>
-                    <select id="demanda" name="demanda" class="form-select" required>
+                    <select id="demanda" name="demanda" class="form-select" aria-describedby="demanda-error">
                         <option value="">Primeiro selecione uma categoria</option>
                         <!-- Opções carregadas dinamicamente baseadas na categoria -->
                     </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="prioridade" class="form-label">Prioridade *</label>
-                    <select id="prioridade" name="prioridade" class="form-select" required>
-                        <option value="">Selecione a prioridade</option>
-                        <option value="Baixa">🟢 Baixa - Pode aguardar alguns dias</option>
-                        <option value="Média">🟡 Média - Necessita atenção em breve</option>
-                        <option value="Alta">🟠 Alta - Precisa ser resolvido rapidamente</option>
-                        <option value="Urgente">🔴 Urgente - Requer ação imediata</option>
-                    </select>
-                    <small class="text-light" id="prioridade-info" style="display: none;"></small>
+                    <span id="demanda-error" class="field-error" role="alert" aria-live="polite"></span>
                 </div>
 
                 <div class="form-group">
@@ -612,12 +294,15 @@
                         required
                         placeholder="Descreva detalhadamente a necessidade do cidadão..."
                         rows="4"
+                        aria-describedby="descricao-error"
                     ></textarea>
+                    <span id="descricao-error" class="field-error" role="alert" aria-live="polite"></span>
                 </div>
 
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">
-                        💾 Salvar Chamado
+                        <span class="btn-text">💾 Salvar Chamado</span>
+                        <span class="loading-spinner hidden" aria-hidden="true"></span>
                     </button>
                     <button type="button" class="btn btn-outline modal-close">
                         Cancelar
@@ -628,16 +313,34 @@
     </div>
 
     <!-- View Ticket Modal -->
-    <div id="view-ticket-modal" class="modal">
+    <div id="view-ticket-modal" class="modal" role="dialog" aria-labelledby="view-ticket-title" aria-hidden="true">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>🔍 Detalhes do Chamado</h3>
-                <button class="modal-close">&times;</button>
-            </div>
+            <header class="modal-header">
+                <h3 id="view-ticket-title">🔍 Detalhes do Chamado</h3>
+                <button class="modal-close" aria-label="Fechar modal">&times;</button>
+            </header>
             
-            <div id="ticket-details">
+            <div id="ticket-details" role="region" aria-live="polite">
                 <!-- Ticket details will be loaded here -->
+                <div class="loading-placeholder">
+                    <div class="spinner"></div>
+                    <p>Carregando detalhes...</p>
+                </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Edit Ticket Modal -->
+    <div id="edit-ticket-modal" class="modal" role="dialog" aria-labelledby="edit-ticket-title" aria-hidden="true">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h3 id="edit-ticket-title">✏️ Editar Chamado</h3>
+                <button class="modal-close" aria-label="Fechar modal">&times;</button>
+            </header>
+            
+            <form id="edit-ticket-form" role="form" aria-labelledby="edit-ticket-title">
+                <!-- Form fields will be populated dynamically -->
+            </form>
         </div>
     </div>
 
@@ -645,116 +348,312 @@
     <script src="data/config.js"></script>
     <script src="scripts/helpers.js"></script>
     <script src="scripts/auth.js"></script>
-    <script src="scripts/user.js"></script>
     <script src="scripts/flow.js"></script>
-    <script src="scripts/main.js"></script>
+    <script src="scripts/balcao.js"></script>
 
-    <script>
-        // Page-specific initialization
-        document.addEventListener('DOMContentLoaded', function() {
-            // Setup new ticket button
-            const newTicketBtn = document.getElementById('new-ticket-btn');
-            if (newTicketBtn) {
-                newTicketBtn.addEventListener('click', function() {
-                    const modal = document.getElementById('new-ticket-modal');
-                    if (modal) {
-                        modal.classList.add('active');
-                    }
-                });
-            }
-
-            // Setup refresh button
-            const refreshBtn = document.getElementById('refresh-tickets-btn');
-            if (refreshBtn) {
-                refreshBtn.addEventListener('click', function() {
-                    if (typeof app !== 'undefined' && app.loadTickets) {
-                        app.loadTickets();
-                    }
-                });
-            }
-
-            // Update tickets count
-            function updateTicketsCount() {
-                const ticketCards = document.querySelectorAll('.ticket-card');
-                const countElement = document.getElementById('tickets-count');
-                if (countElement) {
-                    countElement.textContent = `${ticketCards.length} chamado(s) encontrado(s)`;
-                }
-            }
-
-            // Observe changes in tickets container
-            const ticketsContainer = document.getElementById('tickets-container');
-            if (ticketsContainer) {
-                const observer = new MutationObserver(updateTicketsCount);
-                observer.observe(ticketsContainer, { childList: true, subtree: true });
-            }
-        });
-    </script>
-
+    <!-- Balcao specific styles -->
     <style>
+        /* Screen reader only content */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        .sr-only:focus {
+            position: static;
+            width: auto;
+            height: auto;
+            padding: var(--spacing-sm);
+            margin: 0;
+            overflow: visible;
+            clip: auto;
+            white-space: normal;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--radius);
+            z-index: var(--z-tooltip);
+        }
+
+        /* Page header */
         .page-header h1 {
             color: var(--primary-color);
-            margin-bottom: 0.5rem;
+            margin-bottom: var(--spacing-sm);
+            font-size: var(--font-3xl);
         }
 
+        /* Actions section */
         .actions-section {
             display: flex;
-            gap: 1rem;
+            gap: var(--spacing-md);
             flex-wrap: wrap;
+            align-items: center;
         }
 
+        .actions-section .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .icon {
+            font-size: var(--font-base);
+        }
+
+        /* Quick stats */
+        .quick-stats {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: var(--spacing-md);
+            background: rgba(0, 198, 255, 0.05);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-light);
+        }
+
+        .stat-number {
+            font-size: var(--font-2xl);
+            font-weight: var(--font-bold);
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .stat-label {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+            font-weight: var(--font-medium);
+        }
+
+        /* Section header */
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .section-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
         }
 
         .tickets-count {
-            color: var(--text-light);
-            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-size: var(--font-sm);
+            font-weight: var(--font-medium);
         }
 
+        .view-controls {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+
+        .view-controls .btn {
+            min-width: 40px;
+            padding: var(--spacing-xs);
+        }
+
+        .view-controls .btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Tickets container */
         .tickets-container {
             display: grid;
-            gap: 1.5rem;
+            gap: var(--spacing-lg);
         }
 
-        .ticket-card {
-            border-left: 4px solid var(--primary-color);
+        .tickets-container.list-view {
+            gap: var(--spacing-sm);
         }
+
+        /* Loading placeholder */
+        .loading-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-2xl);
+            color: var(--text-secondary);
+        }
+
+        /* Ticket card */
+        .ticket-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--primary-color);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .ticket-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-left-color: var(--primary-dark);
+        }
+
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .ticket-title {
+            font-size: var(--font-lg);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .ticket-id {
+            font-size: var(--font-sm);
+            color: var(--text-muted);
+        }
+
+        .ticket-priority {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-full);
+            font-size: var(--font-xs);
+            font-weight: var(--font-semibold);
+        }
+
+        .priority-baixa { background: rgba(76, 175, 80, 0.2); color: var(--success-color); }
+        .priority-media { background: rgba(255, 152, 0, 0.2); color: var(--warning-color); }
+        .priority-alta { background: rgba(255, 87, 34, 0.2); color: #FF5722; }
+        .priority-urgente { background: rgba(244, 67, 54, 0.2); color: var(--danger-color); }
 
         .ticket-info {
-            margin: 1rem 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--spacing-md);
+            margin: var(--spacing-md) 0;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+
+        .info-label {
+            font-size: var(--font-xs);
+            color: var(--text-secondary);
+            font-weight: var(--font-medium);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-weight: var(--font-medium);
+        }
+
+        .ticket-description {
+            background: rgba(0, 198, 255, 0.05);
+            border-radius: var(--radius);
+            padding: var(--spacing-md);
+            margin: var(--spacing-md) 0;
+            border-left: 3px solid var(--primary-color);
         }
 
         .ticket-actions {
             display: flex;
-            gap: 0.5rem;
+            gap: var(--spacing-sm);
             flex-wrap: wrap;
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--border-light);
         }
 
+        /* Filter improvements */
+        .filters {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .form-label {
+            font-weight: var(--font-medium);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .text-muted {
+            color: var(--text-muted);
+            font-size: var(--font-xs);
+        }
+
+        /* Modal improvements */
         .modal-content {
-            max-width: 600px;
+            max-width: 700px;
             max-height: 90vh;
             overflow-y: auto;
         }
 
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-xl);
+            padding: var(--spacing-lg);
+        }
+
+        .pagination .btn {
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pagination .btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Responsive design */
         @media (max-width: 768px) {
             .actions-section {
                 flex-direction: column;
+                align-items: stretch;
             }
 
             .actions-section .btn {
                 width: 100%;
+                justify-content: center;
             }
 
             .section-header {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 0.5rem;
+                gap: var(--spacing-sm);
+            }
+
+            .section-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .ticket-info {
+                grid-template-columns: 1fr;
             }
 
             .ticket-actions {
@@ -763,6 +662,31 @@
 
             .ticket-actions .btn {
                 width: 100%;
+                justify-content: center;
+            }
+
+            .filters {
+                padding: var(--spacing-md);
+            }
+
+            .quick-stats .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .quick-stats .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .user-actions {
+                flex-direction: column;
+                gap: var(--spacing-xs);
+            }
+
+            .user-actions .btn {
+                width: 100%;
+                font-size: var(--font-sm);
             }
         }
     </style>

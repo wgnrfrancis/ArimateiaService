@@ -1,22 +1,54 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <!-- Meta Tags Essenciais -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arimateia Service - Login</title>
-    <link rel="stylesheet" href="assets/style.css">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- SEO e Descrição -->
+    <title>Balcão da Cidadania - Sistema de Atendimento | Arimateia</title>
+    <meta name="description" content="Sistema de gestão de atendimento ao cidadão da Arimateia. Acesse para gerenciar chamados e serviços públicos.">
+    <meta name="keywords" content="balcão cidadania, atendimento público, arimateia, gestão chamados">
+    <meta name="author" content="Arimateia">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Balcão da Cidadania - Arimateia">
+    <meta property="og:description" content="Sistema de gestão de atendimento ao cidadão">
+    <meta property="og:url" content="https://balcao.arimateia.org">
+    
+    <!-- Favicon e Icons -->
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="assets/style.css" as="style">
+    <link rel="preload" href="data/config.js" as="script">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="assets/style.css">
+    
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
 </head>
 <body>
-    <div class="login-container">
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="sr-only">Pular para o conteúdo principal</a>
+    
+    <main id="main-content" class="login-container" role="main">
         <div class="login-card">
-            <div class="login-header">
-                <div class="logo-square">A</div>
+            <header class="login-header">
+                <div class="logo-square" aria-label="Logo Arimateia">A</div>
                 <h1>ARIMATEIA<br><small>SERVICE</small></h1>
                 <p class="text-light">Sistema de Gestão de Atendimento ao Cidadão</p>
-            </div>
+            </header>
 
-            <form id="login-form" class="login-form">
+            <form id="login-form" class="login-form" role="form" aria-label="Formulário de login">
+                <div id="login-status" class="hidden" role="alert" aria-live="polite"></div>
+                
                 <div class="form-group">
                     <label for="email" class="form-label">Email</label>
                     <input 
@@ -27,7 +59,9 @@
                         placeholder="seu.email@arimateia.org"
                         required
                         autocomplete="email"
+                        aria-describedby="email-error"
                     >
+                    <span id="email-error" class="field-error" role="alert" aria-live="polite"></span>
                 </div>
 
                 <div class="form-group">
@@ -40,17 +74,24 @@
                         placeholder="Digite sua senha"
                         required
                         autocomplete="current-password"
+                        aria-describedby="password-error"
                     >
+                    <span id="password-error" class="field-error" role="alert" aria-live="polite"></span>
                 </div>
 
                 <div class="form-group">
-                    <button type="submit" class="btn btn-primary btn-large w-full">
-                        Entrar
+                    <button type="submit" class="btn btn-primary btn-large w-full" id="login-btn">
+                        <span class="btn-text">Entrar</span>
+                        <span class="loading-spinner hidden" aria-hidden="true"></span>
                     </button>
+                </div>
+
+                <div class="form-group text-center">
+                    <a href="#" class="text-secondary" id="forgot-password">Esqueceu sua senha?</a>
                 </div>
             </form>
 
-            <div class="login-footer">
+            <footer class="login-footer">
                 <div class="text-center">
                     <p class="text-light">
                         Não tem uma conta? 
@@ -60,39 +101,135 @@
 
                 <div class="login-info mt-4">
                     <p class="text-center text-light">
-                        <small>© 2024 Arimateia - Balcão da Cidadania v1.0</small>
+                        <small>© 2024 Arimateia - Balcão da Cidadania v2.0</small>
                     </p>
                 </div>
-            </div>
+            </footer>
         </div>
-    </div>
+    </main>
 
     <!-- Scripts -->
     <script src="data/config.js"></script>
     <script src="scripts/helpers.js"></script>
     <script src="scripts/auth.js"></script>
     <script src="scripts/flow.js"></script>
-    <script src="scripts/main.js"></script>
+    <script src="scripts/login.js"></script>
 
+    <!-- Accessibility and SEO improvements -->
     <style>
-        .text-primary {
-            color: var(--primary-color);
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        .sr-only:focus {
+            position: static;
+            width: auto;
+            height: auto;
+            padding: var(--spacing-sm);
+            margin: 0;
+            overflow: visible;
+            clip: auto;
+            white-space: normal;
+            background-color: var(--primary-color);
+            color: white;
             text-decoration: none;
+            border-radius: var(--radius);
+            z-index: var(--z-tooltip);
         }
 
-        .text-primary:hover {
-            text-decoration: underline;
+        .alert {
+            padding: var(--spacing-md);
+            border-radius: var(--radius);
+            margin-bottom: var(--spacing-md);
+            font-size: var(--font-sm);
+            font-weight: var(--font-medium);
         }
 
-        @media (max-width: 480px) {
+        .alert-error {
+            background-color: rgba(244, 67, 54, 0.1);
+            border: 1px solid var(--danger-color);
+            color: var(--danger-color);
+        }
+
+        .alert-success {
+            background-color: rgba(76, 175, 80, 0.1);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: var(--radius-full);
+            animation: spin 1s linear infinite;
+        }
+
+        .btn.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .btn.loading .loading-spinner {
+            margin-left: var(--spacing-sm);
+        }
+
+        .field-error {
+            display: block;
+            margin-top: var(--spacing-xs);
+            font-size: var(--font-xs);
+            color: var(--danger-color);
+            font-weight: var(--font-medium);
+        }
+
+        .form-input.error {
+            border-color: var(--danger-color);
+            box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Login specific styles */
+        .login-footer {
+            margin-top: var(--spacing-xl);
+            padding-top: var(--spacing-lg);
+            border-top: 1px solid var(--border-light);
+        }
+
+        .login-info {
+            opacity: 0.8;
+        }
+
+        /* Focus management */
+        .login-card *:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        /* Mobile improvements */
+        @media (max-width: 600px) {
             .login-card {
-                margin: 0.5rem;
-                padding: 1rem;
+                margin: var(--spacing-md);
+                padding: var(--spacing-lg);
             }
-
-            .login-logo {
-                width: 60px;
-                height: 60px;
+            
+            .logo-square {
+                width: 48px;
+                height: 48px;
+                font-size: 2rem;
             }
         }
     </style>

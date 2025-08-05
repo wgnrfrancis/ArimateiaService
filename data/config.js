@@ -1,496 +1,517 @@
-// Configuration file for Balcão da Cidadania
+/**
+ * Sistema de Configuração - Balcão da Cidadania
+ * Centraliza todas as configurações do sistema
+ * Version: 2.0.0
+ */
 
-const CONFIG = {
-    // Google Apps Script Web App configuration
-    googleAppsScript: {
-        // ✅ NOVA URL da implantação atualizada  
-        webAppUrl: 'https://script.google.com/macros/s/AKfycbwCBrg0zu3Uq09vTtAn8XTd5KwpZaU7Rsc-AqS9muA7zdpPTIGdBrIL4f9u1tm8qhJt/exec',
-        spreadsheetId: '1awSUcZPlvM0Ci5ecKWCG4uwDbR3ZT5ZeDOuVdOIGMuc'
-    },
+'use strict';
 
-    // Authentication settings
-    auth: {
-        sessionTimeout: 8 * 60 * 60 * 1000, // 8 hours in milliseconds
-        maxLoginAttempts: 5,
-        lockoutDuration: 15 * 60 * 1000 // 15 minutes
-    },
-
-    // User roles and permissions
-    roles: {
-        'COORDENADOR_GERAL': {
-            name: 'Coordenador Geral',
-            permissions: [
-                'coordenador_view',
-                'secretaria_view',
-                'balcao_view',
-                'dashboard_view',
-                'user_manage',
-                'reports_full',
-                'system_admin'
-            ]
-        },
-        'COORDENADOR_LOCAL': {
-            name: 'Coordenador Local',
-            permissions: [
-                'coordenador_view',
-                'secretaria_view',
-                'balcao_view',
-                'dashboard_view',
-                'reports_local'
-            ]
-        },
-        'SECRETARIA': {
-            name: 'Secretaria',
-            permissions: [
-                'secretaria_view',
-                'balcao_view',
-                'dashboard_view',
-                'reports_basic'
-            ]
-        },
-        'VOLUNTARIO': {
-            name: 'Voluntário',
-            permissions: [
-                'balcao_view',
-                'dashboard_view'
-            ]
-        }
-    },
-
-    // Application settings
-    app: {
+// Configurações principais do sistema
+window.CONFIG = {
+    // Informações do sistema
+    SYSTEM: {
         name: 'Balcão da Cidadania',
-        version: '1.0.0',
-        maxFileSize: 10 * 1024 * 1024, // 10MB
-        allowedFileTypes: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
-        defaultRegion: 'CATEDRAL'
+        version: '2.0.0',
+        organization: 'Igreja Evangélica Pentecostal Arimateia',
+        description: 'Sistema de gestão para atendimento social e cidadania',
+        supportEmail: 'suporte@arimateia.org.br',
+        supportPhone: '(11) 99999-0000'
     },
 
-    // Ticket priorities
-    priorities: {
-        'BAIXA': {
-            name: 'Baixa',
-            color: '#28a745',
-            order: 1
+    // URLs da API
+    API: {
+        BASE_URL: 'http://localhost:3000/api',
+        ENDPOINTS: {
+            auth: '/auth',
+            login: '/auth/login',
+            logout: '/auth/logout',
+            users: '/users',
+            tickets: '/tickets',
+            professionals: '/professionals',
+            volunteers: '/volunteers',
+            categories: '/categories',
+            reports: '/reports',
+            notifications: '/notifications'
         },
-        'MEDIA': {
-            name: 'Média',
-            color: '#ffc107',
-            order: 2
+        TIMEOUT: 30000, // 30 segundos
+        RETRY_ATTEMPTS: 3
+    },
+
+    // Regiões atendidas
+    REGIONS: [
+        'Norte',
+        'Sul', 
+        'Centro',
+        'Leste',
+        'Oeste',
+        'Grande São Paulo',
+        'ABC Paulista',
+        'Baixada Santista',
+        'Interior'
+    ],
+
+    // Igrejas parceiras
+    CHURCHES: [
+        'Igreja Central - Sede',
+        'Igreja do Bairro Alto',
+        'Igreja da Vila Nova',
+        'Igreja São José',
+        'Igreja Santa Maria',
+        'Igreja do Centro',
+        'Igreja da Penha',
+        'Igreja de Itaquera',
+        'Igreja de São Miguel',
+        'Igreja da Mooca',
+        'Igreja do Ipiranga',
+        'Igreja de Pinheiros',
+        'Igreja da Lapa',
+        'Igreja de Santana',
+        'Igreja da Vila Madalena'
+    ],
+
+    // Categorias de demandas
+    CATEGORIES: [
+        {
+            id: 'documentos',
+            nome: 'Documentos',
+            icone: '📄',
+            cor: '#007bff',
+            descricao: 'Emissão e regularização de documentos pessoais',
+            demandas: [
+                'CPF - Cadastro de Pessoa Física',
+                'RG - Registro Geral',
+                'Certidão de Nascimento',
+                'Certidão de Casamento',
+                'Certidão de Óbito',
+                'Título de Eleitor',
+                'Carteira de Trabalho',
+                'Passaporte',
+                'Carteira de Identidade',
+                'Certidão Negativa de Débitos'
+            ]
         },
-        'ALTA': {
-            name: 'Alta',
-            color: '#fd7e14',
-            order: 3
+        {
+            id: 'beneficios',
+            nome: 'Benefícios Sociais',
+            icone: '💰',
+            cor: '#28a745',
+            descricao: 'Auxílios e benefícios governamentais',
+            demandas: [
+                'Auxílio Brasil (antigo Bolsa Família)',
+                'BPC - Benefício de Prestação Continuada',
+                'LOAS - Lei Orgânica da Assistência Social',
+                'Auxílio Emergencial',
+                'Seguro Desemprego',
+                'Salário Família',
+                'Auxílio Maternidade',
+                'Pensão por Morte',
+                'Auxílio Doença',
+                'Vale Gás'
+            ]
         },
-        'URGENTE': {
-            name: 'Urgente',
-            color: '#dc3545',
-            order: 4
+        {
+            id: 'saude',
+            nome: 'Saúde',
+            icone: '🏥',
+            cor: '#dc3545',
+            descricao: 'Serviços de saúde e bem-estar',
+            demandas: [
+                'Consulta Médica Geral',
+                'Consulta Especializada',
+                'Exames Laboratoriais',
+                'Exames de Imagem',
+                'Medicamentos',
+                'Cirurgias',
+                'Fisioterapia',
+                'Psicologia',
+                'Nutrição',
+                'Odontologia'
+            ]
+        },
+        {
+            id: 'juridico',
+            nome: 'Jurídico',
+            icone: '⚖️',
+            cor: '#6f42c1',
+            descricao: 'Orientação e assistência jurídica',
+            demandas: [
+                'Orientação Legal Geral',
+                'Direito de Família',
+                'Direito Trabalhista',
+                'Direito Previdenciário',
+                'Direito Civil',
+                'Direito do Consumidor',
+                'Elaboração de Contratos',
+                'Divórcio',
+                'Pensão Alimentícia',
+                'Aposentadoria'
+            ]
+        },
+        {
+            id: 'trabalho',
+            nome: 'Trabalho e Renda',
+            icone: '💼',
+            cor: '#fd7e14',
+            descricao: 'Oportunidades de trabalho e geração de renda',
+            demandas: [
+                'Cadastro no Sistema Nacional de Emprego',
+                'Qualificação Profissional',
+                'Cursos Técnicos',
+                'Microempreendedor Individual (MEI)',
+                'Cooperativas',
+                'Economia Solidária',
+                'Orientação Profissional',
+                'Elaboração de Currículo',
+                'Preparação para Entrevistas',
+                'Encaminhamento para Vagas'
+            ]
+        },
+        {
+            id: 'educacao',
+            nome: 'Educação',
+            icone: '📚',
+            cor: '#20c997',
+            descricao: 'Acesso à educação e capacitação',
+            demandas: [
+                'Matrícula em Escola Pública',
+                'EJA - Educação de Jovens e Adultos',
+                'Cursos Técnicos',
+                'Cursos Superiores',
+                'Bolsas de Estudo',
+                'Material Escolar',
+                'Transporte Escolar',
+                'Alfabetização de Adultos',
+                'Cursos Profissionalizantes',
+                'Certificação de Competências'
+            ]
+        },
+        {
+            id: 'habitacao',
+            nome: 'Habitação',
+            icone: '🏠',
+            cor: '#6610f2',
+            descricao: 'Moradia e habitação social',
+            demandas: [
+                'Programa Minha Casa Minha Vida',
+                'Regularização Fundiária',
+                'Financiamento Habitacional',
+                'Reforma de Habitação',
+                'Auxílio Aluguel',
+                'Cadastro Habitacional',
+                'Documentação Imobiliária',
+                'Usucapião',
+                'IPTU Social',
+                'Melhorias Habitacionais'
+            ]
+        }
+    ],
+
+    // Status dos chamados
+    TICKET_STATUS: [
+        {
+            id: 'aberto',
+            nome: 'Aberto',
+            icone: '🟢',
+            cor: '#28a745',
+            descricao: 'Chamado recém-criado, aguardando atendimento'
+        },
+        {
+            id: 'em_andamento',
+            nome: 'Em Andamento',
+            icone: '🟡',
+            cor: '#ffc107',
+            descricao: 'Chamado sendo atendido'
+        },
+        {
+            id: 'aguardando',
+            nome: 'Aguardando Retorno',
+            icone: '🟠',
+            cor: '#fd7e14',
+            descricao: 'Aguardando retorno do cidadão ou documentação'
+        },
+        {
+            id: 'resolvido',
+            nome: 'Resolvido',
+            icone: '✅',
+            cor: '#28a745',
+            descricao: 'Chamado finalizado com sucesso'
+        },
+        {
+            id: 'cancelado',
+            nome: 'Cancelado',
+            icone: '❌',
+            cor: '#dc3545',
+            descricao: 'Chamado cancelado'
+        }
+    ],
+
+    // Níveis de prioridade
+    PRIORITIES: [
+        {
+            id: 'baixa',
+            nome: 'Baixa',
+            icone: '🟢',
+            cor: '#28a745',
+            descricao: 'Pode aguardar alguns dias',
+            sla: 7 // dias
+        },
+        {
+            id: 'media',
+            nome: 'Média',
+            icone: '🟡',
+            cor: '#ffc107',
+            descricao: 'Necessita atenção em breve',
+            sla: 3 // dias
+        },
+        {
+            id: 'alta',
+            nome: 'Alta',
+            icone: '🟠',
+            cor: '#fd7e14',
+            descricao: 'Precisa ser resolvido rapidamente',
+            sla: 1 // dia
+        },
+        {
+            id: 'urgente',
+            nome: 'Urgente',
+            icone: '🔴',
+            cor: '#dc3545',
+            descricao: 'Requer ação imediata',
+            sla: 0.5 // meio dia
+        }
+    ],
+
+    // Cargos/Perfis de usuário
+    USER_ROLES: [
+        {
+            id: 'COORDENADOR_GERAL',
+            nome: 'Coordenador Geral',
+            descricao: 'Acesso completo ao sistema',
+            permissions: ['*']
+        },
+        {
+            id: 'COORDENADOR_LOCAL',
+            nome: 'Coordenador Local',
+            descricao: 'Coordenação de região específica',
+            permissions: ['read', 'write', 'manage_local']
+        },
+        {
+            id: 'SECRETARIA',
+            nome: 'Secretaria',
+            descricao: 'Gestão administrativa e atendimento',
+            permissions: ['read', 'write', 'assign', 'export']
+        },
+        {
+            id: 'VOLUNTARIO',
+            nome: 'Voluntário',
+            descricao: 'Atendimento básico e criação de chamados',
+            permissions: ['read', 'create', 'update_own']
+        },
+        {
+            id: 'PROFISSIONAL',
+            nome: 'Profissional',
+            descricao: 'Especialista em área específica',
+            permissions: ['read', 'update_assigned']
+        }
+    ],
+
+    // Configurações de paginação
+    PAGINATION: {
+        DEFAULT_ITEMS_PER_PAGE: 20,
+        OPTIONS: [10, 20, 50, 100],
+        MAX_ITEMS_PER_PAGE: 100
+    },
+
+    // Configurações de upload
+    UPLOAD: {
+        MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
+        ALLOWED_TYPES: [
+            'image/jpeg',
+            'image/png', 
+            'image/gif',
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ],
+        MAX_FILES: 5
+    },
+
+    // Configurações de notificação
+    NOTIFICATIONS: {
+        AUTO_REFRESH_INTERVAL: 30000, // 30 segundos
+        SHOW_TOAST_DURATION: 5000, // 5 segundos
+        MAX_NOTIFICATIONS: 50
+    },
+
+    // Configurações de exportação
+    EXPORT: {
+        FORMATS: ['CSV', 'PDF', 'XLSX'],
+        MAX_RECORDS: 10000,
+        FILENAME_PREFIX: 'balcao_cidadania'
+    },
+
+    // Validações de campos
+    VALIDATION: {
+        CPF: {
+            pattern: /^\d{3}\.\d{3}\.\d{3}-\d{2}$/,
+            message: 'CPF deve estar no formato 000.000.000-00'
+        },
+        PHONE: {
+            pattern: /^\(\d{2}\)\s\d{4,5}-\d{4}$/,
+            message: 'Telefone deve estar no formato (11) 99999-9999'
+        },
+        EMAIL: {
+            pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+            message: 'Email deve ter um formato válido'
         }
     },
 
-    // Ticket statuses
-    statuses: {
-        'ABERTO': {
-            name: 'Aberto',
-            color: '#007bff',
-            canEdit: true
+    // Configurações de interface
+    UI: {
+        THEME: {
+            PRIMARY_COLOR: '#00c6ff',
+            SECONDARY_COLOR: '#6c757d',
+            SUCCESS_COLOR: '#28a745',
+            WARNING_COLOR: '#ffc107',
+            DANGER_COLOR: '#dc3545',
+            INFO_COLOR: '#17a2b8'
         },
-        'EM_ANDAMENTO': {
-            name: 'Em Andamento',
-            color: '#ffc107',
-            canEdit: true
+        ANIMATIONS: {
+            DURATION: 300,
+            EASING: 'ease-in-out'
         },
-        'AGUARDANDO': {
-            name: 'Aguardando',
-            color: '#6c757d',
-            canEdit: true
-        },
-        'RESOLVIDO': {
-            name: 'Resolvido',
-            color: '#28a745',
-            canEdit: false
-        },
-        'CANCELADO': {
-            name: 'Cancelado',
-            color: '#dc3545',
-            canEdit: false
+        BREAKPOINTS: {
+            MOBILE: 480,
+            TABLET: 768,
+            DESKTOP: 1024,
+            LARGE: 1200
         }
     },
 
-    // Service categories
-    categories: {
-        'DOCUMENTACAO': {
-            name: 'Documentação',
-            subcategories: ['CPF', 'RG', 'Certidões', 'Passaporte', 'Carteira de Trabalho']
-        },
-        'BENEFICIOS': {
-            name: 'Benefícios Sociais',
-            subcategories: ['Auxílio Brasil', 'BPC', 'Seguro Desemprego', 'FGTS', 'PIS/PASEP']
-        },
-        'PREVIDENCIA': {
-            name: 'Previdência',
-            subcategories: ['INSS', 'Aposentadoria', 'Pensão', 'Auxílio Doença', 'Salário Maternidade']
-        },
-        'TRABALHISTA': {
-            name: 'Direitos Trabalhistas',
-            subcategories: ['Reclamação Trabalhista', 'Acordo', 'Consultoria', 'Orientação']
-        },
-        'FAMILIA': {
-            name: 'Direito de Família',
-            subcategories: ['Divórcio', 'Pensão Alimentícia', 'Guarda', 'Reconhecimento de União']
-        },
-        'CONSUMIDOR': {
-            name: 'Direito do Consumidor',
-            subcategories: ['Reclamação', 'Negativação Indevida', 'Produtos Defeituosos', 'Serviços']
-        },
-        'OUTROS': {
-            name: 'Outros',
-            subcategories: ['Orientação Geral', 'Encaminhamentos', 'Diversos']
+    // Configurações de cache
+    CACHE: {
+        TTL: 300000, // 5 minutos
+        KEYS: {
+            USER_DATA: 'user_data',
+            CATEGORIES: 'categories',
+            PROFESSIONALS: 'professionals',
+            VOLUNTEERS: 'volunteers'
         }
     },
 
-    // Churches and regions (will be loaded from Google Sheets)
-    regions: {
-        'CATEDRAL': {
-            name: 'Catedral da Fé',
-            churches: ['CATEDRAL DA FÉ']
+    // Configurações de logging
+    LOGGING: {
+        LEVEL: 'info', // debug, info, warn, error
+        CONSOLE: true,
+        REMOTE: false,
+        MAX_LOGS: 1000
+    },
+
+    // URLs de redirecionamento
+    ROUTES: {
+        LOGIN: 'index.html',
+        DASHBOARD: 'dashboard.html',
+        SECRETARIA: 'secretaria.html',
+        PROFISSIONAIS: 'profissionais.html',
+        ASSESSORES: 'assessores.html',
+        RELATORIOS: 'relatorios.html',
+        PERFIL: 'perfil.html'
+    },
+
+    // Textos e mensagens do sistema
+    MESSAGES: {
+        SUCCESS: {
+            TICKET_CREATED: 'Chamado criado com sucesso!',
+            TICKET_UPDATED: 'Chamado atualizado com sucesso!',
+            PROFESSIONAL_ASSIGNED: 'Profissional atribuído com sucesso!',
+            DATA_EXPORTED: 'Dados exportados com sucesso!',
+            LOGIN_SUCCESS: 'Login realizado com sucesso!'
         },
-        'PRESIDENTE_PRUDENTE': {
-            name: 'Presidente Prudente',
-            churches: ['Cecap', 'Humberto Salvador', 'Santo Expedito']
+        ERROR: {
+            GENERIC: 'Ocorreu um erro inesperado. Tente novamente.',
+            NETWORK: 'Erro de conexão. Verifique sua internet.',
+            UNAUTHORIZED: 'Você não tem permissão para esta ação.',
+            VALIDATION: 'Por favor, verifique os dados informados.',
+            NOT_FOUND: 'Recurso não encontrado.'
         },
-        'PIRAPOZINHO': {
-            name: 'Pirapozinho',
-            churches: ['Pirapozinho']
-        },
-        'PRESIDENTE_VENCESLAU': {
-            name: 'Presidente Venceslau',
-            churches: ['Presidente Venceslau']
-        },
-        'RANCHARIA': {
-            name: 'Rancharia',
-            churches: ['RANCHARIA']
-        },
-        'ANDRADINA': {
-            name: 'Andradina',
-            churches: ['ANDRADINA']
-        },
-        'TUPA': {
-            name: 'Tupã',
-            churches: ['TUPÃ']
-        },
-        'ASSIS': {
-            name: 'Assis',
-            churches: ['ASSIS']
-        },
-        'DRACENA': {
-            name: 'Dracena',
-            churches: ['DRACENA']
+        LOADING: {
+            TICKETS: 'Carregando chamados...',
+            PROFESSIONALS: 'Carregando profissionais...',
+            CATEGORIES: 'Carregando categorias...',
+            SAVING: 'Salvando...',
+            EXPORTING: 'Exportando dados...'
         }
     },
 
-    // UI settings
-    ui: {
-        itemsPerPage: 20,
-        autoRefreshInterval: 30000, // 30 seconds
-        toastDuration: 5000, // 5 seconds
-        loadingTimeout: 30000 // 30 seconds
-    },
-
-    // API settings
-    api: {
-        timeout: 30000, // 30 seconds
-        retries: 3,
-        retryDelay: 1000 // 1 second
+    // Configurações de desenvolvimento
+    DEV: {
+        MOCK_DATA: true,
+        DEBUG_MODE: true,
+        SHOW_LOGS: true,
+        BYPASS_AUTH: false
     }
 };
 
-// Make CONFIG available globally
-window.CONFIG = CONFIG;
+// Funções utilitárias de configuração
+window.CONFIG.getCategory = function(id) {
+    return this.CATEGORIES.find(cat => cat.id === id);
+};
 
-// For Node.js compatibility
+window.CONFIG.getStatus = function(id) {
+    return this.TICKET_STATUS.find(status => status.id === id);
+};
+
+window.CONFIG.getPriority = function(id) {
+    return this.PRIORITIES.find(priority => priority.id === id);
+};
+
+window.CONFIG.getRole = function(id) {
+    return this.USER_ROLES.find(role => role.id === id);
+};
+
+window.CONFIG.hasPermission = function(userRole, permission) {
+    const role = this.getRole(userRole);
+    if (!role) return false;
+    return role.permissions.includes('*') || role.permissions.includes(permission);
+};
+
+window.CONFIG.formatCurrency = function(value) {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    }).format(value);
+};
+
+window.CONFIG.formatDate = function(date, options = {}) {
+    const defaultOptions = {
+        day: '2-digit',
+        month: '2-digit', 
+        year: 'numeric',
+        ...options
+    };
+    return new Intl.DateTimeFormat('pt-BR', defaultOptions).format(new Date(date));
+};
+
+window.CONFIG.formatDateTime = function(date) {
+    return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }).format(new Date(date));
+};
+
+// Inicialização e logging
+console.log('✅ Configuração do sistema carregada:', {
+    system: window.CONFIG.SYSTEM.name,
+    version: window.CONFIG.SYSTEM.version,
+    categories: window.CONFIG.CATEGORIES.length,
+    regions: window.CONFIG.REGIONS.length,
+    churches: window.CONFIG.CHURCHES.length
+});
+
+// Export para uso em módulos (se necessário)
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = CONFIG;
-}
-
-// Google Apps Script integration module for Balcão da Cidadania
-// Handles all communication with Google Sheets via Google Apps Script Web App
-class FlowManager {
-    constructor() {
-        this.isOnline = navigator.onLine;
-        this.retryAttempts = 3;
-        this.retryDelay = 1000;
-    }
-
-    async sendToScript(data, useFormData = false) {
-        console.log('🌐 Enviando para Google Apps Script...');
-        console.log('📍 URL:', CONFIG.googleAppsScript.webAppUrl);
-        console.log('📦 Dados:', data);
-
-        try {
-            // Adicionar timestamp e informações do cliente
-            const payload = {
-                ...data,
-                timestamp: new Date().toISOString(),
-                userInfo: this.getUserInfo(),
-                clientOrigin: window.location.origin
-            };
-
-            console.log('📤 Request body completo:', payload);
-
-            // ✅ NOVA ABORDAGEM: Tentar CORS primeiro, depois no-cors como fallback
-            let response;
-            let responseData;
-
-            try {
-                // Primeira tentativa: CORS
-                response = await fetch(CONFIG.googleAppsScript.webAppUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: new URLSearchParams(payload),
-                    mode: 'cors',
-                    cache: 'no-cache'
-                });
-
-                if (response.ok) {
-                    const responseText = await response.text();
-                    console.log('📄 Resposta CORS bem-sucedida:', responseText);
-                    
-                    try {
-                        responseData = JSON.parse(responseText);
-                    } catch (parseError) {
-                        console.error('❌ Erro ao fazer parse do JSON:', parseError);
-                        throw new Error(`Resposta inválida: ${responseText.substring(0, 100)}...`);
-                    }
-                } else {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
-            } catch (corsError) {
-                console.warn('⚠️ CORS falhou, tentando no-cors:', corsError.message);
-                
-                // Segunda tentativa: no-cors (fallback)
-                try {
-                    response = await fetch(CONFIG.googleAppsScript.webAppUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: new URLSearchParams(payload),
-                        mode: 'no-cors',
-                        cache: 'no-cache'
-                    });
-
-                    console.log('📄 Requisição no-cors enviada (não podemos ler a resposta)');
-                    
-                    // Com no-cors, assumimos sucesso se não houve erro de rede
-                    // Para login, vamos simular uma validação local temporária
-                    if (data.action === 'loginUser') {
-                        responseData = await this.simulateLogin(data.email, data.password);
-                    } else {
-                        responseData = {
-                            success: true,
-                            message: 'Requisição enviada com sucesso (modo no-cors)',
-                            data: null
-                        };
-                    }
-
-                } catch (noCorsError) {
-                    console.error('❌ Falha total na comunicação:', noCorsError);
-                    throw new Error('Não foi possível conectar com o servidor');
-                }
-            }
-
-            console.log('✅ Resposta final:', responseData);
-            return responseData;
-
-        } catch (error) {
-            console.error('❌ Erro na requisição:', error);
-            throw error;
-        }
-    }
-
-    // ✅ SIMULAÇÃO TEMPORÁRIA DE LOGIN para desenvolvimento
-    async simulateLogin(email, password) {
-        console.log('🔐 Simulando login para desenvolvimento...');
-        
-        // Lista de usuários para teste (baseada na planilha)
-        const testUsers = [
-            {
-                id: 1,
-                nome: 'Wagner Duarte',
-                email: 'wagduarte@universal.org',
-                senha: 'minhaflor',
-                cargo: 'COORDENADOR_GERAL',
-                igreja: 'CATEDRAL DA FÉ',
-                regiao: 'CATEDRAL',
-                telefone: '(18) 99999-9999'
-            },
-            {
-                id: 2,
-                nome: 'Francis Oliveira',
-                email: 'wgnrfrancis@gmail.com',
-                senha: 'minhaflor',
-                cargo: 'COORDENADOR_LOCAL',
-                igreja: 'CATEDRAL DA FÉ',
-                regiao: 'CATEDRAL',
-                telefone: '(18) 88888-8888'
-            }
-        ];
-
-        // Buscar usuário
-        const user = testUsers.find(u => u.email === email);
-        
-        if (!user) {
-            return {
-                success: false,
-                error: 'Usuário não encontrado'
-            };
-        }
-
-        if (user.senha !== password) {
-            return {
-                success: false,
-                error: 'Senha incorreta'
-            };
-        }
-
-        // Login bem-sucedido
-        return {
-            success: true,
-            data: {
-                id: user.id,
-                nome: user.nome,
-                email: user.email,
-                telefone: user.telefone,
-                cargo: user.cargo,
-                igreja: user.igreja,
-                regiao: user.regiao,
-                status: 'ATIVO',
-                ultimoAcesso: new Date().toLocaleString('pt-BR'),
-                totalChamados: 0,
-                chamadosResolvidos: 0,
-                taxaResolucao: '0%'
-            }
-        };
-    }
-
-    getUserInfo() {
-        return {
-            userAgent: navigator.userAgent,
-            timestamp: new Date().toISOString(),
-            url: window.location.href,
-            referrer: document.referrer || 'direct'
-        };
-    }
-
-    // Create new ticket
-    async createTicket(ticketData) {
-        try {
-            const payload = {
-                action: 'newTicket',
-                nomeCidadao: ticketData.nome,
-                contato: ticketData.contato,
-                email: ticketData.email,
-                descricao: ticketData.descricao,
-                prioridade: ticketData.prioridade,
-                categoria: ticketData.categoria,
-                demanda: ticketData.demanda,
-                userInfo: (typeof authManager !== 'undefined' && authManager.getCurrentUser) ? authManager.getCurrentUser() : null
-            };
-
-            const result = await this.sendToScript(payload);
-            return result;
-
-        } catch (error) {
-            console.error('Create ticket error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    // Update existing ticket
-    async updateTicket(ticketId, updateData) {
-        try {
-            const user = (typeof authManager !== 'undefined' && authManager.getCurrentUser) ? authManager.getCurrentUser() : null;
-            const payload = {
-                action: 'updateTicket',
-                ticketId: ticketId,
-                ...updateData,
-                userInfo: user || { name: 'Sistema', email: '' }
-            };
-
-            const result = await this.sendToScript(payload);
-            return result;
-
-        } catch (error) {
-            console.error('Update ticket error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    // Validate user credentials
-    async validateUser(email, password) {
-        try {
-            const payload = {
-                action: 'loginUser',
-                email: email,
-                password: password
-            };
-
-            const result = await this.sendToScript(payload);
-            return result;
-
-        } catch (error) {
-            console.error('Validate user error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    // Get tickets with filters
-    async getTickets(filters = {}) {
-        try {
-            const payload = {
-                action: 'getTickets',
-                filters: filters
-            };
-
-            const result = await this.sendToScript(payload);
-            return result;
-
-        } catch (error) {
-            console.error('Get tickets error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    // Buscar igrejas e regiões da planilha
-    async getIgrejasRegioes() {
-        try {
-            const result = await this.sendToScript({
-                action: 'getIgrejasRegioes'
-            });
-            
-            if (result.success && result.data) {
-                return { success: true, data: result.data };
-            } else {
-                throw new Error(result.error || 'Erro ao buscar igrejas e regiões');
-            }
-
-        } catch (error) {
-            console.error('Buscar igrejas e regiões error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-}
-
-// Inicializar o flowManager globalmente
-window.flowManager = new FlowManager();
-
-// Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = FlowManager;
+    module.exports = window.CONFIG;
 }

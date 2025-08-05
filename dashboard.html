@@ -1,39 +1,66 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <!-- Meta Tags Essenciais -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Balcão da Cidadania</title>
-    <link rel="stylesheet" href="assets/style.css">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- SEO e Descrição -->
+    <title>Dashboard - Balcão da Cidadania | Arimateia</title>
+    <meta name="description" content="Dashboard principal do sistema Balcão da Cidadania. Acesse estatísticas, relatórios e funcionalidades do sistema.">
+    <meta name="keywords" content="dashboard, balcão cidadania, arimateia, estatísticas, relatórios">
+    <meta name="author" content="Arimateia">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- Favicon e Icons -->
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="assets/style.css" as="style">
+    <link rel="preload" href="data/config.js" as="script">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="assets/style.css">
+    
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
 </head>
 <body>
     <!-- Header -->
-    <header class="header">
+    <header class="header" role="banner">
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <img src="assets/logo.png" alt="Logo" width="32" height="32" onerror="this.style.display='none'">
+                    <img src="assets/logo.png" alt="Logo Arimateia" width="32" height="32" onerror="this.style.display='none'">
                     <span>Balcão da Cidadania</span>
                 </div>
                 
                 <div class="user-info">
-                    <img src="assets/default-avatar.png" alt="Avatar" class="user-avatar">
+                    <img src="assets/default-avatar.png" alt="Avatar do usuário" class="user-avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiMwMGM2ZmYiLz4KPHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSI4IiB5PSI4Ij4KPHBhdGggZD0iTTEyIDEyQzE0LjIwOTEgMTIgMTYgMTAuMjA5MSAxNiA4QzE2IDUuNzkwODYgMTQuMjA5MSA0IDEyIDRDOS43OTA4NiA0IDggNS43OTA4NiA4IDhDOCAxMC4yMDkxIDkuNzkwODYgMTIgMTIgMTJaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTIgMTRDOC42ODYyOSAxNCA2IDE2LjY4NjMgNiAyMEg2VjIwSDZWMjBIMThWMjBIMThWMjBDMTggMTYuNjg2MyAxNS4zMTM3IDE0IDEyIDE0WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cjwvc3ZnPgo='">
                     <div class="user-details">
-                        <div class="user-name">Carregando...</div>
-                        <div class="user-role text-light">-</div>
+                        <div class="user-name" aria-live="polite">Carregando...</div>
+                        <div class="user-role text-secondary" aria-live="polite">-</div>
                     </div>
-                    <div class="user-actions">
-                        <button id="analytics-btn" class="btn btn-primary" onclick="window.location.href='analytics.html'">
-                            📊 Analytics
+                    <nav class="user-actions" role="navigation" aria-label="Ações do usuário">
+                        <button id="notifications-btn" class="btn btn-outline" aria-label="Notificações" title="Notificações">
+                            <span class="icon">🔔</span>
+                            <span class="notification-badge hidden">0</span>
                         </button>
-                        <button id="profile-btn" class="btn btn-outline">
-                            👤 Perfil
+                        <button id="analytics-btn" class="btn btn-primary" aria-label="Ir para Analytics" title="Analytics">
+                            <span class="icon">📊</span>
+                            <span class="btn-text">Analytics</span>
                         </button>
-                        <button id="logout-btn" class="btn btn-secondary">
-                            🚪 Sair
+                        <button id="profile-btn" class="btn btn-outline" aria-label="Abrir perfil" title="Meu Perfil">
+                            <span class="icon">👤</span>
+                            <span class="btn-text">Perfil</span>
                         </button>
-                    </div>
+                        <button id="logout-btn" class="btn btn-secondary" aria-label="Sair do sistema" title="Logout">
+                            <span class="icon">🚪</span>
+                            <span class="btn-text">Sair</span>
+                        </button>
+                    </nav>
                 </div>
             </div>
         </div>
@@ -43,11 +70,11 @@
     <main class="main-content">
         <div class="container">
             <!-- Welcome Section -->
-            <div class="welcome-section mb-4">
+            <section class="welcome-section mb-4" aria-labelledby="welcome-title">
                 <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Bem-vindo ao Sistema</h2>
-                    </div>
+                    <header class="card-header">
+                        <h2 id="welcome-title" class="card-title">Bem-vindo ao Sistema</h2>
+                    </header>
                     <div class="user-summary">
                         <div class="grid grid-3">
                             <div class="summary-item">
@@ -65,117 +92,163 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- Dashboard Cards -->
-            <div class="dashboard-section">
-                <h3 class="mb-3">Acesso Rápido</h3>
-                <div class="dashboard-grid" id="dashboard-grid">
+            <!-- Navigation Tabs -->
+            <nav class="nav-tabs mb-4" role="navigation" aria-label="Navegação principal">
+                <a href="dashboard.html" class="nav-tab active" aria-current="page">Dashboard</a>
+                <a href="balcao.html" class="nav-tab" data-permission="balcao_access">Balcão</a>
+                <a href="secretaria.html" class="nav-tab" data-permission="secretaria_view">Secretaria</a>
+                <a href="coordenador.html" class="nav-tab" data-permission="coordenador_view">Coordenador</a>
+                <a href="profissionais.html" class="nav-tab" data-permission="secretaria_view">Profissionais</a>
+                <a href="assessores.html" class="nav-tab" data-permission="secretaria_view">Assessores</a>
+                <a href="relatorios.html" class="nav-tab" data-permission="relatorios_view">Relatórios</a>
+                <a href="analytics.html" class="nav-tab" data-permission="analytics_view">Analytics</a>
+            </nav>
+            <!-- Quick Access Section -->
+            <section class="dashboard-section" aria-labelledby="quick-access-title">
+                <h3 id="quick-access-title" class="mb-3">Acesso Rápido</h3>
+                <div class="dashboard-grid" id="dashboard-grid" role="region" aria-label="Cartões de acesso rápido">
                     <!-- Cards will be dynamically generated based on user role -->
+                    <div class="loading-placeholder">
+                        <div class="spinner"></div>
+                        <p>Carregando funcionalidades...</p>
+                    </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Quick Stats (for Coordenador) -->
-            <div class="stats-section" data-role="COORDENADOR" style="display: none;">
-                <h3 class="mb-3">Estatísticas Rápidas</h3>
-                <div class="grid grid-4">
-                    <div class="card text-center">
-                        <div class="stat-number">150</div>
-                        <div class="stat-label">Total de Chamados</div>
+            <section class="stats-section" data-role="COORDENADOR" style="display: none;" aria-labelledby="stats-title">
+                <h3 id="stats-title" class="mb-3">Estatísticas Rápidas</h3>
+                <div class="kpi-grid" role="region" aria-label="Estatísticas do sistema">
+                    <div class="kpi-card">
+                        <div class="kpi-icon">📊</div>
+                        <div class="kpi-content">
+                            <div class="kpi-value" id="total-tickets" aria-label="Total de chamados">-</div>
+                            <div class="kpi-label">Total de Chamados</div>
+                            <div class="kpi-trend">+5% este mês</div>
+                        </div>
                     </div>
-                    <div class="card text-center">
-                        <div class="stat-number">45</div>
-                        <div class="stat-label">Chamados Abertos</div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">⏳</div>
+                        <div class="kpi-content">
+                            <div class="kpi-value" id="open-tickets" aria-label="Chamados abertos">-</div>
+                            <div class="kpi-label">Chamados Abertos</div>
+                            <div class="kpi-trend">-2% este mês</div>
+                        </div>
                     </div>
-                    <div class="card text-center">
-                        <div class="stat-number">32</div>
-                        <div class="stat-label">Em Andamento</div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">🔄</div>
+                        <div class="kpi-content">
+                            <div class="kpi-value" id="progress-tickets" aria-label="Em andamento">-</div>
+                            <div class="kpi-label">Em Andamento</div>
+                            <div class="kpi-trend">+12% este mês</div>
+                        </div>
                     </div>
-                    <div class="card text-center">
-                        <div class="stat-number">73</div>
-                        <div class="stat-label">Resolvidos</div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">✅</div>
+                        <div class="kpi-content">
+                            <div class="kpi-value" id="resolved-tickets" aria-label="Resolvidos">-</div>
+                            <div class="kpi-label">Resolvidos</div>
+                            <div class="kpi-trend">+8% este mês</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Recent Activity (for Secretaria and Coordenador) -->
-            <div class="activity-section" data-permission="secretaria_view" style="display: none;">
-                <h3 class="mb-3">Atividade Recente</h3>
-                <!-- Navigation -->
-                <nav class="nav-tabs">
-                    <a href="dashboard.html" class="nav-tab active">Dashboard</a>
-                    <a href="balcao.html" class="nav-tab">Balcão</a>
-                    <a href="secretaria.html" class="nav-tab">Secretaria</a>
-                    <a href="coordenador.html" class="nav-tab">Coordenador</a>
-                    <a href="profissionais.html" class="nav-tab" data-permission="secretaria_view">Profissionais</a>
-                    <a href="assessores.html" class="nav-tab" data-permission="secretaria_view">Assessores</a>
-                    <a href="relatorios.html" class="nav-tab">Relatórios</a>
-                    <a href="analytics.html" class="nav-tab">Analytics</a>
-                </nav>
+            <section class="activity-section" data-permission="secretaria_view" style="display: none;" aria-labelledby="recent-activity-title">
+                <h3 id="recent-activity-title" class="mb-3">Atividade Recente</h3>
                 <div class="card">
-                    <div class="activity-list" id="recent-activities">
+                    <div class="activity-list" id="recent-activities" role="region" aria-live="polite" aria-label="Lista de atividades recentes">
                         <!-- Atividades recentes serão carregadas dinamicamente -->
-                        <div class="text-center text-light">
+                        <div class="loading-placeholder">
+                            <div class="spinner"></div>
                             <p>Carregando atividades recentes...</p>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="quick-actions-section mb-4" aria-labelledby="quick-actions-title">
+                <h3 id="quick-actions-title" class="mb-3">Ações Rápidas</h3>
+                <div class="grid grid-2" id="quick-actions">
+                    <!-- Quick actions will be populated based on user role -->
+                </div>
+            </section>
+
+            <!-- System Status -->
+            <section class="system-status-section" data-permission="coordenador_view" style="display: none;" aria-labelledby="system-status-title">
+                <h3 id="system-status-title" class="mb-3">Status do Sistema</h3>
+                <div class="card">
+                    <div class="system-status" id="system-status">
+                        <div class="status-item">
+                            <span class="status-indicator online"></span>
+                            <span>Sistema Online</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-indicator online"></span>
+                            <span>Google Apps Script</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-indicator unknown"></span>
+                            <span>Backup Automático</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     </main>
 
     <!-- Profile Modal -->
-    <div id="profile-modal" class="modal">
+    <div id="profile-modal" class="modal" role="dialog" aria-labelledby="profile-modal-title" aria-hidden="true">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>Meu Perfil</h3>
-                <button class="modal-close">&times;</button>
-            </div>
-            <form id="profile-form">
+            <header class="modal-header">
+                <h3 id="profile-modal-title">Meu Perfil</h3>
+                <button class="modal-close" aria-label="Fechar modal">&times;</button>
+            </header>
+            <form id="profile-form" role="form" aria-labelledby="profile-modal-title">
                 <div class="form-group">
                     <label for="profile-name" class="form-label">Nome Completo</label>
-                    <input type="text" id="profile-name" name="name" class="form-input" required>
+                    <input type="text" id="profile-name" name="name" class="form-input" required aria-describedby="name-error">
+                    <span id="name-error" class="field-error" role="alert" aria-live="polite"></span>
                 </div>
                 
                 <div class="form-group">
                     <label for="profile-email" class="form-label">Email</label>
-                    <input type="email" id="profile-email" name="email" class="form-input" required>
+                    <input type="email" id="profile-email" name="email" class="form-input" required aria-describedby="email-error">
+                    <span id="email-error" class="field-error" role="alert" aria-live="polite"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="profile-phone" class="form-label">Telefone</label>
+                    <input type="tel" id="profile-phone" name="phone" class="form-input" aria-describedby="phone-error">
+                    <span id="phone-error" class="field-error" role="alert" aria-live="polite"></span>
                 </div>
                 
                 <div class="form-group">
                     <label for="profile-church" class="form-label">Igreja</label>
-                    <select id="profile-church" name="church" class="form-select" required>
+                    <select id="profile-church" name="church" class="form-select" required aria-describedby="church-error">
                         <option value="">Selecione uma igreja</option>
-                        <option value="Igreja Central">Igreja Central</option>
-                        <option value="Igreja do Bairro Alto">Igreja do Bairro Alto</option>
-                        <option value="Igreja da Vila Nova">Igreja da Vila Nova</option>
-                        <option value="Igreja do Centro">Igreja do Centro</option>
-                        <option value="Igreja São João">Igreja São João</option>
-                        <option value="Igreja Santa Maria">Igreja Santa Maria</option>
-                        <option value="Igreja do Jardim">Igreja do Jardim</option>
-                        <option value="Igreja da Paz">Igreja da Paz</option>
-                        <option value="Igreja Esperança">Igreja Esperança</option>
-                        <option value="Igreja Vida Nova">Igreja Vida Nova</option>
+                        <!-- Options will be populated dynamically -->
                     </select>
+                    <span id="church-error" class="field-error" role="alert" aria-live="polite"></span>
                 </div>
                 
                 <div class="form-group">
                     <label for="profile-region" class="form-label">Região</label>
-                    <select id="profile-region" name="region" class="form-select" required>
+                    <select id="profile-region" name="region" class="form-select" required aria-describedby="region-error">
                         <option value="">Selecione uma região</option>
-                        <option value="Norte">Norte</option>
-                        <option value="Sul">Sul</option>
-                        <option value="Leste">Leste</option>
-                        <option value="Oeste">Oeste</option>
-                        <option value="Centro">Centro</option>
-                        <option value="Grande ABC">Grande ABC</option>
-                        <option value="Interior">Interior</option>
+                        <!-- Options will be populated dynamically -->
                     </select>
+                    <span id="region-error" class="field-error" role="alert" aria-live="polite"></span>
                 </div>
                 
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">
-                        Salvar Alterações
+                        <span class="btn-text">Salvar Alterações</span>
+                        <span class="loading-spinner hidden" aria-hidden="true"></span>
                     </button>
                     <button type="button" class="btn btn-outline modal-close">
                         Cancelar
@@ -185,97 +258,209 @@
         </div>
     </div>
 
+    <!-- Notifications Modal -->
+    <div id="notifications-modal" class="modal" role="dialog" aria-labelledby="notifications-modal-title" aria-hidden="true">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h3 id="notifications-modal-title">Notificações</h3>
+                <button class="modal-close" aria-label="Fechar modal">&times;</button>
+            </header>
+            <div class="notifications-list" id="notifications-list">
+                <div class="loading-placeholder">
+                    <div class="spinner"></div>
+                    <p>Carregando notificações...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="data/config.js"></script>
     <script src="scripts/helpers.js"></script>
     <script src="scripts/auth.js"></script>
-    <script src="scripts/user.js"></script>
     <script src="scripts/flow.js"></script>
-    <script src="scripts/main.js"></script>
+    <script src="scripts/dashboard.js"></script>
 
+    <!-- Dashboard specific styles -->
     <style>
-        .welcome-section .user-summary {
-            padding: 1rem 0;
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md);
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .nav-tab {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: var(--font-sm);
+            font-weight: var(--font-medium);
+            transition: var(--transition);
+            border: 1px solid transparent;
+        }
+        
+        .nav-tab:hover {
+            background: rgba(0, 198, 255, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .nav-tab.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
         }
 
+        /* User Details */
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-right: var(--spacing-md);
+        }
+
+        .user-name {
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+        }
+
+        .user-role {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+        }
+
+        /* User Actions */
+        .user-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: center;
+        }
+
+        .user-actions .btn {
+            font-size: var(--font-sm);
+            padding: var(--spacing-xs) var(--spacing-sm);
+        }
+
+        .icon {
+            font-size: var(--font-base);
+            margin-right: var(--spacing-xs);
+        }
+
+        /* Notification Badge */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger-color);
+            color: white;
+            font-size: var(--font-xs);
+            padding: 2px 6px;
+            border-radius: var(--radius-full);
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .btn {
+            position: relative;
+        }
+
+        /* Loading Placeholder */
+        .loading-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-xl);
+            color: var(--text-secondary);
+        }
+
+        /* Status Indicators */
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: var(--radius-full);
+            margin-right: var(--spacing-sm);
+        }
+
+        .status-indicator.online {
+            background-color: var(--success-color);
+        }
+
+        .status-indicator.offline {
+            background-color: var(--danger-color);
+        }
+
+        .status-indicator.unknown {
+            background-color: var(--warning-color);
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Summary Items */
         .summary-item {
-            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
         }
 
         .summary-item strong {
-            display: block;
-            color: var(--text-light);
-            font-size: 0.875rem;
-            margin-bottom: 0.25rem;
+            color: var(--text-secondary);
+            font-size: var(--font-sm);
         }
 
         .summary-item span {
-            font-size: 1rem;
-            font-weight: 500;
+            color: var(--text-primary);
+            font-weight: var(--font-medium);
         }
 
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .dashboard-card {
-            background: var(--white);
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-            padding: 1.5rem;
-            text-align: center;
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-        }
-
-        .dashboard-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .dashboard-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .card-description {
-            color: var(--text-light);
-            margin: 0.5rem 0 1.5rem;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 600;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            color: var(--text-light);
-            font-size: 0.875rem;
-        }
-
+        /* Activity List */
         .activity-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
         }
 
         .activity-item {
             display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-            padding: 1rem;
-            border-radius: 6px;
-            background: var(--light-bg);
+            align-items: center;
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-light);
+            transition: var(--transition);
+        }
+
+        .activity-item:hover {
+            background: rgba(0, 198, 255, 0.05);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
         }
 
         .activity-icon {
-            font-size: 1.5rem;
-            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-full);
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: var(--spacing-md);
+            font-size: var(--font-lg);
         }
 
         .activity-content {
@@ -283,71 +468,48 @@
         }
 
         .activity-title {
-            font-weight: 500;
-            margin-bottom: 0.25rem;
+            font-weight: var(--font-medium);
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
         }
 
         .activity-description {
-            color: var(--text-light);
-            font-size: 0.875rem;
-            margin-bottom: 0.25rem;
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
         }
 
         .activity-time {
-            color: var(--text-light);
-            font-size: 0.75rem;
-        }
-
-        .user-details {
+            font-size: var(--font-xs);
+            color: var(--text-muted);
             text-align: right;
-            margin-right: 1rem;
         }
 
-        .user-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
+        /* Responsive Design */
         @media (max-width: 768px) {
-            .header-content {
+            .nav-tabs {
                 flex-direction: column;
-                gap: 1rem;
-            }
-
-            .user-info {
-                width: 100%;
-                justify-content: space-between;
+                gap: var(--spacing-xs);
             }
 
             .user-actions {
                 flex-direction: column;
-                gap: 0.5rem;
-            }
-
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .grid-3 {
-                grid-template-columns: 1fr;
-            }
-
-            .grid-4 {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 480px) {
-            .user-actions {
-                width: 100%;
+                gap: var(--spacing-xs);
             }
 
             .user-actions .btn {
-                flex: 1;
+                width: 100%;
+                justify-content: center;
             }
 
-            .grid-4 {
-                grid-template-columns: 1fr;
+            .user-details {
+                margin-right: 0;
+                margin-bottom: var(--spacing-sm);
+                text-align: center;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: var(--spacing-md);
             }
         }
     </style>
