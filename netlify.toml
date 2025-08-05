@@ -23,7 +23,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://script.google.com/macros/s/AKfycbylYVzywgtIn7JIcIrjaWab-QN4IRAynWL3T4q5dFvrAH_5A7_hmWkQHnJ-Q3yoAoYf/exec/:splat"
+  to = "https://script.google.com/macros/s/AKfycbyhWfNDw2fZtIe1rc2DlYZ-6wKK7dQXkY7ZFKC9YrA--b1ynmUosT-QQvLBwisql20/exec/:splat"
   status = 200
   force = true
   headers = {X-From = "Netlify"}

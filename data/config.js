@@ -24,7 +24,7 @@ window.CONFIG = {
         BASE_URL: '/api',
         
         // URL Direta (fallback - descomente se necessário)
-        // BASE_URL: 'https://script.google.com/macros/s/AKfycbylYVzywgtIn7JIcIrjaWab-QN4IRAynWL3T4q5dFvrAH_5A7_hmWkQHnJ-Q3yoAoYf/exec',
+        // BASE_URL: 'https://script.google.com/macros/s/AKfycbyhWfNDw2fZtIe1rc2DlYZ-6wKK7dQXkY7ZFKC9YrA--b1ynmUosT-QQvLBwisql20/exec',
         
         // URL Local para desenvolvimento (descomente para usar localmente)
         // BASE_URL: 'http://localhost:3000/api',
