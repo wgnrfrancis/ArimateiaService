@@ -310,6 +310,41 @@ class FlowManager {
             return { success: false, error: error.message };
         }
     }
+
+    // ✅ BUSCAR IGREJAS POR REGIÃO ESPECÍFICA
+    async getIgrejasByRegiao(regiao) {
+        try {
+            console.log('🔍 Buscando igrejas da região:', regiao);
+            
+            // Buscar dados completos se não temos no cache
+            const regioesData = await this.getRegioesIgrejas();
+            
+            if (regioesData.success && regioesData.data[regiao]) {
+                const igrejas = regioesData.data[regiao].churches || [];
+                console.log('⛪ Igrejas encontradas para', regiao, ':', igrejas);
+                
+                return {
+                    success: true,
+                    data: igrejas
+                };
+            } else {
+                console.log('⚠️ Região não encontrada:', regiao);
+                return {
+                    success: false,
+                    error: 'Região não encontrada',
+                    data: []
+                };
+            }
+
+        } catch (error) {
+            console.error('❌ Erro ao buscar igrejas por região:', error);
+            return {
+                success: false,
+                error: error.message,
+                data: []
+            };
+        }
+    }
 }
 
 // Inicializar globalmente
@@ -318,3 +353,4 @@ window.flowManager = new FlowManager();
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = FlowManager;
 }
+
