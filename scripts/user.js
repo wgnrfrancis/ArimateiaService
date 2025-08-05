@@ -1,355 +1,376 @@
 // User management module for Balcão da Cidadania
 class UserManager {
     constructor() {
-        this.init();
+        this.currentPage = 1;
+        this.itemsPerPage = CONFIG.ui.itemsPerPage;
+        this.users = [];
+        this.filteredUsers = [];
     }
 
-    init() {
-        // Load user data when page loads
-        this.loadUserData();
+    // Initialize user management
+    async init() {
+        console.log('👥 Inicializando gerenciamento de usuários...');
         
-        // Set up user interface based on role
-        this.setupUserInterface();
-    }
-
-    // Load and display user data in the interface
-    loadUserData() {
-        const user = authManager.getCurrentUser();
-        if (!user) return;
-
-        // Update user info in header
-        this.updateUserHeader(user);
-        
-        // Update dashboard based on user role
-        this.updateDashboard(user);
-    }
-
-    // Update user information in the header
-    updateUserHeader(user) {
-        const userAvatar = document.querySelector('.user-avatar');
-        const userName = document.querySelector('.user-name');
-        const userRole = document.querySelector('.user-role');
-        const userRegion = document.querySelector('.user-region');
-
-        if (userAvatar) {
-            // ✅ Corrigir URL do placeholder
-            const inicial = (user.nome ? user.nome.charAt(0).toUpperCase() : 'U');
-            userAvatar.src = `https://via.placeholder.com/40x40/007bff/ffffff?text=${inicial}`;
-            userAvatar.alt = user.nome || user.name;
-        }
-
-        if (userName) {
-            userName.textContent = user.nome || user.name;
-        }
-
-        if (userRole) {
-            // ✅ DEPURAÇÃO: vamos ver os dados
-            console.log('🔍 Dados do usuário:', user);
-            console.log('🔍 Cargo do usuário:', user.cargo);
-            console.log('🔍 CONFIG disponível:', CONFIG);
-            console.log('🔍 Role config:', CONFIG.roles[user.cargo]);
-            
-            const roleName = CONFIG.roles[user.cargo]?.name || user.cargo || 'Usuário';
-            userRole.textContent = roleName;
-            console.log('🔍 Nome da função:', roleName);
-        }
-
-        if (userRegion) {
-            userRegion.textContent = user.regiao || user.region || 'Não definida';
-        }
-    }
-
-    // Update dashboard based on user role and permissions
-    updateDashboard(user) {
-        const dashboardGrid = document.querySelector('.dashboard-grid');
-        if (!dashboardGrid) return;
-
-        // Clear existing content
-        dashboardGrid.innerHTML = '';
-
-        // Create dashboard cards based on user permissions
-        const cards = this.getDashboardCards(user);
-        
-        cards.forEach(card => {
-            const cardElement = this.createDashboardCard(card);
-            dashboardGrid.appendChild(cardElement);
-        });
-    }
-
-    // Get dashboard cards based on user role
-    getDashboardCards(user) {
-        const cards = [];
-
-        // Balcão da Cidadania - Available to all roles
-        if (authManager.hasPermission('balcao_view')) {
-            cards.push({
-                title: 'Balcão da Cidadania',
-                description: 'Gerenciar atendimentos e chamados',
-                icon: '🏛️',
-                url: 'balcao.html',
-                color: 'primary'
-            });
-        }
-
-        // Secretaria - Available to Secretaria and Coordenador
-        if (authManager.hasPermission('secretaria_view')) {
-            cards.push({
-                title: 'Secretaria',
-                description: 'Visualizar e editar chamados',
-                icon: '📋',
-                url: 'secretaria.html',
-                color: 'secondary'
-            });
-        }
-
-        // Coordenador - Available only to Coordenador
-        if (authManager.hasPermission('coordenador_view')) {
-            cards.push({
-                title: 'Coordenação',
-                description: 'Gestão completa do sistema',
-                icon: '⚙️',
-                url: 'coordenador.html',
-                color: 'success'
-            });
-        }
-
-        // Additional cards for Coordenador
-        if (authManager.hasRole('COORDENADOR_GERAL') || authManager.hasRole('COORDENADOR_LOCAL')) {
-            cards.push(
-                {
-                    title: 'Adicionar Voluntário',
-                    description: 'Cadastrar novos voluntários',
-                    icon: '👥',
-                    url: 'add-voluntario.html',
-                    color: 'warning'
-                },
-                {
-                    title: 'Relatórios',
-                    description: 'Visualizar relatórios e estatísticas',
-                    icon: '📊',
-                    url: 'relatorios.html',
-                    color: 'info'
-                }
-            );
-        }
-
-        return cards;
-    }
-
-    // Create dashboard card element
-    createDashboardCard(card) {
-        const cardElement = document.createElement('div');
-        cardElement.className = 'dashboard-card';
-        cardElement.innerHTML = `
-            <div class="dashboard-icon">${card.icon}</div>
-            <h3 class="card-title">${card.title}</h3>
-            <p class="card-description">${card.description}</p>
-            <a href="${card.url}" class="btn btn-${card.color} btn-large">
-                Acessar
-            </a>
-        `;
-
-        return cardElement;
-    }
-
-    // Setup user interface based on permissions
-    setupUserInterface() {
-        const user = authManager.getCurrentUser();
-        if (!user) return;
-
-        // Hide/show navigation items based on permissions
-        this.setupNavigation(user);
-        
-        // Setup page-specific functionality
-        this.setupPageFunctionality(user);
-    }
-
-    // Setup navigation based on user permissions
-    setupNavigation(user) {
-        const navItems = document.querySelectorAll('[data-permission]');
-        
-        navItems.forEach(item => {
-            const requiredPermission = item.getAttribute('data-permission');
-            if (!authManager.hasPermission(requiredPermission)) {
-                item.style.display = 'none';
-            }
-        });
-
-        // Setup role-specific navigation
-        const roleItems = document.querySelectorAll('[data-role]');
-        
-        roleItems.forEach(item => {
-            const requiredRole = item.getAttribute('data-role');
-            if (!authManager.hasRole(requiredRole)) {
-                item.style.display = 'none';
-            }
-        });
-    }
-
-    // Setup page-specific functionality
-    setupPageFunctionality(user) {
-        const currentPage = window.location.pathname.split('/').pop();
-
-        switch (currentPage) {
-            case 'balcao.html':
-                this.setupBalcaoPage(user);
-                break;
-            case 'secretaria.html':
-                this.setupSecretariaPage(user);
-                break;
-            case 'coordenador.html':
-                this.setupCoordenadorPage(user);
-                break;
-        }
-    }
-
-    // Setup Balcão page functionality
-    setupBalcaoPage(user) {
-        // Enable/disable buttons based on permissions
-        const newTicketBtn = document.querySelector('#new-ticket-btn');
-        if (newTicketBtn && !authManager.hasPermission('balcao_create')) {
-            newTicketBtn.style.display = 'none';
-        }
-
-        // Filter tickets by user region for Voluntários
-        if (authManager.hasRole('VOLUNTARIO')) {
-            this.filterTicketsByRegion(user.regiao || user.region);
-        }
-    }
-
-    // Setup Secretaria page functionality
-    setupSecretariaPage(user) {
-        // Pre-select user's region in filters
-        const regionFilter = document.querySelector('#region-filter');
-        if (regionFilter && (user.regiao || user.region)) {
-            regionFilter.value = user.regiao || user.region;
-        }
-
-        // Enable/disable edit buttons based on permissions
-        const editButtons = document.querySelectorAll('.edit-ticket-btn');
-        editButtons.forEach(btn => {
-            if (!authManager.hasPermission('balcao_edit')) {
-                btn.style.display = 'none';
-            }
-        });
-
-        // Enable/disable delete buttons based on permissions
-        const deleteButtons = document.querySelectorAll('.delete-ticket-btn');
-        deleteButtons.forEach(btn => {
-            if (!authManager.hasPermission('balcao_delete')) {
-                btn.style.display = 'none';
-            }
-        });
-    }
-
-    // Setup Coordenador page functionality
-    setupCoordenadorPage(user) {
-        // Show all management options for Coordenador
-        const managementSections = document.querySelectorAll('.management-section');
-        managementSections.forEach(section => {
-            section.style.display = 'block';
-        });
-    }
-
-    // Filter tickets by region
-    filterTicketsByRegion(region) {
-        const tickets = document.querySelectorAll('.ticket-card');
-        tickets.forEach(ticket => {
-            const ticketRegion = ticket.getAttribute('data-region');
-            if (ticketRegion && ticketRegion !== region) {
-                ticket.style.display = 'none';
-            }
-        });
-    }
-
-    // Get user profile data
-    getUserProfile() {
-        return authManager.getCurrentUser();
-    }
-
-    // Update user profile
-    async updateUserProfile(profileData) {
         try {
-            const user = authManager.getCurrentUser();
-            if (!user) {
-                throw new Error('Usuário não autenticado');
+            // Verificar autenticação
+            if (!authManager.requireAuth()) {
+                return;
             }
 
-            // Validate profile data
-            if (!profileData.name || profileData.name.trim().length < 2) {
-                throw new Error('Nome deve ter pelo menos 2 caracteres');
-            }
-
-            if (!profileData.email || !authManager.validateEmail(profileData.email)) {
-                throw new Error('Email inválido');
-            }
-
-            // Update user data
-            const updatedUser = {
-                ...user,
-                nome: profileData.name.trim(),
-                email: profileData.email.trim(),
-                igreja: profileData.church,
-                regiao: profileData.region
-            };
-
-            // Save updated session
-            authManager.currentUser = updatedUser;
-            authManager.saveSession();
-
-            // Update interface
-            this.updateUserHeader(updatedUser);
-
-            return { success: true, message: 'Perfil atualizado com sucesso!' };
+            // Configurar interface
+            this.setupUI();
+            
+            // Carregar dados
+            await this.loadUsers();
+            
+            console.log('✅ UserManager inicializado');
 
         } catch (error) {
-            console.error('Profile update error:', error);
-            return { success: false, error: error.message };
+            console.error('❌ Erro ao inicializar UserManager:', error);
+            this.showMessage('Erro ao carregar página de usuários', 'error');
         }
     }
 
-    // Logout user
-    logout() {
-        if (confirm('Tem certeza que deseja sair?')) {
-            authManager.logout();
+    // Setup user interface elements and event listeners
+    setupUI() {
+        // Botão de novo usuário
+        const newUserBtn = document.getElementById('new-user-btn');
+        if (newUserBtn) {
+            newUserBtn.addEventListener('click', () => {
+                window.location.href = 'cadastro.html';
+            });
+        }
+
+        // Filtros
+        const filterRegiao = document.getElementById('filter-regiao');
+        const filterCargo = document.getElementById('filter-cargo');
+        const filterStatus = document.getElementById('filter-status');
+
+        if (filterRegiao) {
+            filterRegiao.addEventListener('change', () => this.applyFilters());
+        }
+        if (filterCargo) {
+            filterCargo.addEventListener('change', () => this.applyFilters());
+        }
+        if (filterStatus) {
+            filterStatus.addEventListener('change', () => this.applyFilters());
+        }
+
+        // Busca
+        const searchInput = document.getElementById('search-users');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.searchUsers(e.target.value);
+            });
+        }
+
+        // Atualizar
+        const refreshBtn = document.getElementById('refresh-users');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => this.loadUsers());
         }
     }
 
-    // Show user profile modal
-    showProfileModal() {
-        const user = authManager.getCurrentUser();
-        if (!user) return;
+    // Load and display users from the server
+    async loadUsers() {
+        try {
+            console.log('🔍 Carregando usuários...');
+            
+            this.showLoading(true);
+            
+            const result = await flowManager.getUsers();
+            
+            if (result.success) {
+                this.users = result.data || [];
+                this.filteredUsers = [...this.users];
+                
+                console.log('✅ Usuários carregados:', this.users.length);
+                
+                this.renderUsers();
+                this.updateStats();
+                this.populateFilters();
+                
+            } else {
+                throw new Error(result.error || 'Erro ao carregar usuários');
+            }
 
-        const modal = document.querySelector('#profile-modal');
-        if (modal) {
-            // Populate modal with user data
-            const nameInput = modal.querySelector('#profile-name');
-            const emailInput = modal.querySelector('#profile-email');
-            const churchSelect = modal.querySelector('#profile-church');
-            const regionSelect = modal.querySelector('#profile-region');
-
-            if (nameInput) nameInput.value = user.nome || user.name;
-            if (emailInput) emailInput.value = user.email;
-            if (churchSelect) churchSelect.value = user.igreja || user.church;
-            if (regionSelect) regionSelect.value = user.regiao || user.region;
-
-            modal.classList.add('active');
+        } catch (error) {
+            console.error('❌ Erro ao carregar usuários:', error);
+            this.showMessage('Erro ao carregar usuários: ' + error.message, 'error');
+        } finally {
+            this.showLoading(false);
         }
     }
 
-    // Hide user profile modal
-    hideProfileModal() {
-        const modal = document.querySelector('#profile-modal');
-        if (modal) {
-            modal.classList.remove('active');
+    // Render user cards in the UI
+    renderUsers() {
+        const usersList = document.getElementById('users-list');
+        if (!usersList) return;
+
+        if (this.filteredUsers.length === 0) {
+            usersList.innerHTML = `
+                <div class="empty-state">
+                    <h3>👥 Nenhum usuário encontrado</h3>
+                    <p>Não há usuários que correspondam aos filtros aplicados.</p>
+                </div>
+            `;
+            return;
         }
+
+        // Paginação
+        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+        const endIndex = startIndex + this.itemsPerPage;
+        const usersToShow = this.filteredUsers.slice(startIndex, endIndex);
+
+        usersList.innerHTML = usersToShow.map(user => `
+            <div class="user-card" data-user-id="${user.id}">
+                <div class="user-header">
+                    <div class="user-info">
+                        <h4>${this.escapeHtml(user.nome)}</h4>
+                        <span class="user-email">${this.escapeHtml(user.email)}</span>
+                    </div>
+                    <div class="user-status">
+                        <span class="status-badge ${user.status?.toLowerCase() || 'ativo'}">${user.status || 'ATIVO'}</span>
+                    </div>
+                </div>
+                <div class="user-details">
+                    <div class="detail-item">
+                        <strong>Cargo:</strong> ${this.escapeHtml(user.cargo || 'N/A')}
+                    </div>
+                    <div class="detail-item">
+                        <strong>Igreja:</strong> ${this.escapeHtml(user.igreja || 'N/A')}
+                    </div>
+                    <div class="detail-item">
+                        <strong>Região:</strong> ${this.escapeHtml(user.regiao || 'N/A')}
+                    </div>
+                    <div class="detail-item">
+                        <strong>Telefone:</strong> ${this.escapeHtml(user.telefone || 'N/A')}
+                    </div>
+                    <div class="detail-item">
+                        <strong>Cadastrado em:</strong> ${this.formatDate(user.dataCadastro)}
+                    </div>
+                    <div class="detail-item">
+                        <strong>Último acesso:</strong> ${this.formatDate(user.ultimoAcesso) || 'Nunca'}
+                    </div>
+                </div>
+                <div class="user-stats">
+                    <div class="stat-item">
+                        <strong>${user.totalChamados || 0}</strong>
+                        <span>Chamados</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong>${user.chamadosResolvidos || 0}</strong>
+                        <span>Resolvidos</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong>${user.taxaResolucao || '0%'}</strong>
+                        <span>Taxa</span>
+                    </div>
+                </div>
+                <div class="user-actions">
+                    <button class="btn btn-sm btn-primary" onclick="userManager.viewUser('${user.id}')">
+                        👤 Ver Detalhes
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="userManager.editUser('${user.id}')">
+                        ✏️ Editar
+                    </button>
+                    ${user.status === 'ATIVO' ? 
+                        `<button class="btn btn-sm btn-warning" onclick="userManager.deactivateUser('${user.id}')">
+                            🚫 Desativar
+                        </button>` : 
+                        `<button class="btn btn-sm btn-success" onclick="userManager.activateUser('${user.id}')">
+                            ✅ Ativar
+                        </button>`
+                    }
+                </div>
+            </div>
+        `).join('');
+
+        this.renderPagination();
+    }
+
+    // Render pagination controls
+    renderPagination() {
+        const totalPages = Math.ceil(this.filteredUsers.length / this.itemsPerPage);
+        const paginationContainer = document.getElementById('users-pagination');
+        
+        if (!paginationContainer || totalPages <= 1) {
+            if (paginationContainer) paginationContainer.innerHTML = '';
+            return;
+        }
+
+        let paginationHTML = '';
+        
+        // Botão anterior
+        if (this.currentPage > 1) {
+            paginationHTML += `<button class="btn btn-sm btn-outline" onclick="userManager.goToPage(${this.currentPage - 1})">‹ Anterior</button>`;
+        }
+
+        // Números das páginas
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === this.currentPage) {
+                paginationHTML += `<button class="btn btn-sm btn-primary">${i}</button>`;
+            } else {
+                paginationHTML += `<button class="btn btn-sm btn-outline" onclick="userManager.goToPage(${i})">${i}</button>`;
+            }
+        }
+
+        // Botão próximo
+        if (this.currentPage < totalPages) {
+            paginationHTML += `<button class="btn btn-sm btn-outline" onclick="userManager.goToPage(${this.currentPage + 1})">Próximo ›</button>`;
+        }
+
+        paginationContainer.innerHTML = paginationHTML;
+    }
+
+    // Go to a specific page in the user list
+    goToPage(page) {
+        this.currentPage = page;
+        this.renderUsers();
+    }
+
+    // Apply filters to the user list
+    applyFilters() {
+        const filterRegiao = document.getElementById('filter-regiao')?.value || '';
+        const filterCargo = document.getElementById('filter-cargo')?.value || '';
+        const filterStatus = document.getElementById('filter-status')?.value || '';
+
+        this.filteredUsers = this.users.filter(user => {
+            const matchRegiao = !filterRegiao || user.regiao === filterRegiao;
+            const matchCargo = !filterCargo || user.cargo === filterCargo;
+            const matchStatus = !filterStatus || user.status === filterStatus;
+
+            return matchRegiao && matchCargo && matchStatus;
+        });
+
+        this.currentPage = 1;
+        this.renderUsers();
+        this.updateStats();
+    }
+
+    // Search users by query
+    searchUsers(query) {
+        if (!query.trim()) {
+            this.applyFilters();
+            return;
+        }
+
+        const searchTerm = query.toLowerCase();
+        this.filteredUsers = this.users.filter(user => {
+            return user.nome?.toLowerCase().includes(searchTerm) ||
+                   user.email?.toLowerCase().includes(searchTerm) ||
+                   user.igreja?.toLowerCase().includes(searchTerm) ||
+                   user.cargo?.toLowerCase().includes(searchTerm);
+        });
+
+        this.currentPage = 1;
+        this.renderUsers();
+        this.updateStats();
+    }
+
+    // Populate filter options based on available data
+    populateFilters() {
+        // Regiões
+        const filterRegiao = document.getElementById('filter-regiao');
+        if (filterRegiao) {
+            const regioes = [...new Set(this.users.map(u => u.regiao).filter(Boolean))];
+            filterRegiao.innerHTML = '<option value="">Todas as regiões</option>' +
+                regioes.map(regiao => `<option value="${regiao}">${regiao}</option>`).join('');
+        }
+
+        // Cargos
+        const filterCargo = document.getElementById('filter-cargo');
+        if (filterCargo) {
+            const cargos = [...new Set(this.users.map(u => u.cargo).filter(Boolean))];
+            filterCargo.innerHTML = '<option value="">Todos os cargos</option>' +
+                cargos.map(cargo => `<option value="${cargo}">${cargo}</option>`).join('');
+        }
+    }
+
+    // Update statistics displayed on the page
+    updateStats() {
+        const totalUsersEl = document.getElementById('total-users');
+        const activeUsersEl = document.getElementById('active-users');
+        const totalTicketsEl = document.getElementById('total-tickets-users');
+
+        if (totalUsersEl) {
+            totalUsersEl.textContent = this.filteredUsers.length;
+        }
+
+        if (activeUsersEl) {
+            const activeUsers = this.filteredUsers.filter(u => u.status === 'ATIVO').length;
+            activeUsersEl.textContent = activeUsers;
+        }
+
+        if (totalTicketsEl) {
+            const totalTickets = this.filteredUsers.reduce((sum, u) => sum + (parseInt(u.totalChamados) || 0), 0);
+            totalTicketsEl.textContent = totalTickets;
+        }
+    }
+
+    // User action handlers
+    viewUser(userId) {
+        console.log('👤 Visualizar usuário:', userId);
+        // Implementar modal ou página de detalhes
+    }
+
+    editUser(userId) {
+        console.log('✏️ Editar usuário:', userId);
+        // Implementar edição
+    }
+
+    async deactivateUser(userId) {
+        if (confirm('Deseja realmente desativar este usuário?')) {
+            console.log('🚫 Desativar usuário:', userId);
+            // Implementar desativação
+        }
+    }
+
+    async activateUser(userId) {
+        console.log('✅ Ativar usuário:', userId);
+        // Implementar ativação
+    }
+
+    // Utility functions
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    formatDate(dateString) {
+        if (!dateString) return '';
+        try {
+            return new Date(dateString).toLocaleString('pt-BR');
+        } catch {
+            return dateString;
+        }
+    }
+
+    showLoading(show) {
+        const loadingEl = document.getElementById('users-loading');
+        if (loadingEl) {
+            loadingEl.style.display = show ? 'block' : 'none';
+        }
+    }
+
+    showMessage(message, type = 'info') {
+        console.log(`📢 ${type.toUpperCase()}: ${message}`);
+        // Implementar sistema de notificações
     }
 }
 
 // Initialize user manager
-const userManager = new UserManager();
+window.userManager = new UserManager();
 
-// Export for use in other modules
+// Auto-inicializar na página de usuários
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.location.pathname.includes('usuarios.html')) {
+        userManager.init();
+    }
+});
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserManager;
 }
