@@ -1,430 +1,489 @@
-// Main application logic for Balcão da Cidadania
+// Main application controller
 class App {
     constructor() {
         this.currentPage = this.getCurrentPage();
-        this.isLoading = false;
+        this.isInitialized = false;
     }
 
-    init() {
-        document.addEventListener('DOMContentLoaded', () => this.onDOMReady());
-    }
-
-    onDOMReady() {
-        console.log('🚀 App inicializado na página:', this.currentPage);
-        
-        // Aguardar scripts carregarem completamente
-        setTimeout(() => {
-            this.initializePage();
-        }, 100);
-    }
-
-    initializePage() {
+    // ✅ INICIALIZAR APLICAÇÃO
+    async init() {
         try {
-            console.log('📱 Inicializando página:', this.currentPage);
+            console.log('🚀 Inicializando aplicação...');
+            
+            // Aguardar dependências
+            await this.waitForDependencies();
+            
+            // Inicializar página específica
+            await this.initializePage();
+            
+            this.isInitialized = true;
+            console.log('✅ Aplicação inicializada com sucesso');
 
-            // Roteamento por página
-            switch (this.currentPage) {
-                case 'index.html':
-                case '':
-                    this.initLoginPage();
-                    break;
-                case 'cadastro.html':
-                    this.initCadastroPage();
-                    break;
-                case 'dashboard.html':
-                    this.initDashboardPage();
-                    break;
-                case 'balcao.html':
-                    this.initBalcaoPage();
-                    break;
-                case 'secretaria.html':
-                    this.initSecretariaPage();
-                    break;
-                case 'coordenador.html':
-                    this.initCoordenadorPage();
-                    break;
-                default:
-                    console.log('Página não reconhecida:', this.currentPage);
-            }
         } catch (error) {
-            console.error('Erro ao inicializar página:', error);
+            console.error('❌ Erro ao inicializar aplicação:', error);
+            this.showError('Erro ao carregar aplicação: ' + error.message);
         }
     }
 
-    initLoginPage() {
-        console.log('🔑 Inicializando página de login...');
+    // ✅ AGUARDAR DEPENDÊNCIAS
+    async waitForDependencies() {
+        const maxAttempts = 50;
+        let attempts = 0;
+
+        while (attempts < maxAttempts) {
+            if (window.CONFIG && window.authManager && window.flowManager) {
+                console.log('✅ Dependências carregadas');
+                return;
+            }
+            
+            console.log(`⏳ Aguardando dependências... (${attempts + 1}/${maxAttempts})`);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+
+        throw new Error('Timeout: Dependências não carregaram');
+    }
+
+    // ✅ INICIALIZAR PÁGINA ESPECÍFICA
+    async initializePage() {
+        try {
+            console.log('📄 Inicializando página:', this.currentPage);
+
+            switch (this.currentPage) {
+                case 'index.html':
+                case '':
+                    await this.initIndexPage();
+                    break;
+                case 'login.html':
+                    await this.initLoginPage();
+                    break;
+                case 'cadastro.html':
+                    await this.initCadastroPage();
+                    break;
+                case 'dashboard.html':
+                    await this.initDashboardPage();
+                    break;
+                case 'chamados.html':
+                    await this.initChamadosPage();
+                    break;
+                case 'usuarios.html':
+                    await this.initUsuariosPage();
+                    break;
+                default:
+                    console.log('📄 Página não reconhecida:', this.currentPage);
+            }
+
+        } catch (error) {
+            console.error('❌ Erro ao inicializar página:', error);
+            throw error;
+        }
+    }
+
+    // ✅ PÁGINA INDEX
+    async initIndexPage() {
+        console.log('🏠 Inicializando página inicial...');
         
-        // Verificar se authManager existe e está carregado
-        if (typeof authManager !== 'undefined' && authManager.isLoggedIn()) {
-            console.log('✅ Usuário já logado, redirecionando para dashboard...');
+        // Se já está logado, redirecionar para dashboard
+        if (authManager.isAuthenticated()) {
+            console.log('✅ Usuário já autenticado, redirecionando...');
             window.location.href = 'dashboard.html';
             return;
         }
 
-        // Setup do formulário de login
-        const loginForm = document.getElementById('login-form');
-        if (loginForm) {
-            console.log('📝 Configurando formulário de login...');
-            
-            loginForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                console.log('📤 Formulário de login submetido');
-                
-                const email = document.getElementById('email')?.value?.trim();
-                const password = document.getElementById('password')?.value;
-                
-                console.log('📧 Email:', email);
-                
-                if (!email || !password) {
-                    this.showMessage('Preencha todos os campos', 'warning');
-                    return;
-                }
+        // Configurar botões da página inicial
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
 
-                try {
-                    this.showLoading(true);
-                    
-                    console.log('🔐 Tentando fazer login...');
-                    
-                    // Verificar se authManager existe antes de usar
-                    if (typeof authManager === 'undefined') {
-                        throw new Error('Sistema de autenticação não carregado. Recarregue a página.');
-                    }
-                    
-                    const result = await authManager.login(email, password);
-                    
-                    console.log('📋 Resultado do login:', result);
-                    
-                    if (result.success) {
-                        this.showMessage(`Bem-vindo, ${result.user.nome}!`, 'success');
-                        
-                        console.log('✅ Login bem-sucedido, redirecionando...');
-                        
-                        // Redirecionar após pequeno delay para mostrar a mensagem
-                        setTimeout(() => {
-                            window.location.href = 'dashboard.html';
-                        }, 1500);
-                    } else {
-                        throw new Error(result.error || 'Erro no login');
-                    }
-                    
-                } catch (error) {
-                    console.error('❌ Erro no login:', error);
-                    this.showMessage(error.message || 'Erro ao fazer login', 'error');
-                } finally {
-                    this.showLoading(false);
-                }
+        if (loginBtn) {
+            loginBtn.addEventListener('click', () => {
+                window.location.href = 'login.html';
             });
-        } else {
-            console.warn('⚠️ Formulário de login não encontrado');
         }
 
-        // Link para cadastro
-        const cadastroLink = document.getElementById('cadastro-link');
-        if (cadastroLink) {
-            cadastroLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                console.log('📝 Redirecionando para cadastro...');
+        if (registerBtn) {
+            registerBtn.addEventListener('click', () => {
                 window.location.href = 'cadastro.html';
             });
         }
 
-        // Focar no campo email
-        const emailInput = document.getElementById('email');
-        if (emailInput) {
-            emailInput.focus();
-        }
+        console.log('✅ Página inicial configurada');
     }
 
-    // Método próprio para mostrar mensagens (fallback se Helpers não existir)
-    showMessage(message, type = 'info') {
-        console.log(`📢 ${type.toUpperCase()}: ${message}`);
+    // ✅ PÁGINA LOGIN
+    async initLoginPage() {
+        console.log('🔐 Inicializando página de login...');
         
-        if (typeof Helpers !== 'undefined' && Helpers.showToast) {
-            Helpers.showToast(message, type);
-        } else {
-            // Fallback simples
-            alert(message);
+        // Se já está logado, redirecionar para dashboard
+        if (authManager.isAuthenticated()) {
+            console.log('✅ Usuário já autenticado, redirecionando...');
+            window.location.href = 'dashboard.html';
+            return;
         }
+
+        // Configurar formulário de login
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.handleLogin();
+            });
+        }
+
+        // Botão de cadastro
+        const registerBtn = document.getElementById('register-btn');
+        if (registerBtn) {
+            registerBtn.addEventListener('click', () => {
+                window.location.href = 'cadastro.html';
+            });
+        }
+
+        console.log('✅ Página de login configurada');
     }
 
-    // Método próprio para loading (fallback se Helpers não existir)
-    showLoading(show = true) {
-        console.log('⏳ Loading:', show);
-        
-        if (typeof Helpers !== 'undefined') {
-            if (show && Helpers.showLoading) {
-                Helpers.showLoading();
-            } else if (!show && Helpers.hideLoading) {
-                Helpers.hideLoading();
-            }
-        }
-        // Se não tiver Helpers, não faz nada (loading silencioso)
-    }
-
-    initCadastroPage() {
+    // ✅ PÁGINA CADASTRO
+    async initCadastroPage() {
         console.log('📝 Inicializando página de cadastro...');
-        // O cadastro já tem sua própria lógica no cadastro.html
+
+        // Carregar regiões e configurar selects
+        await this.setupCadastroForm();
+
+        console.log('✅ Página de cadastro configurada');
     }
 
-    initDashboardPage() {
+    // ✅ PÁGINA DASHBOARD
+    async initDashboardPage() {
         console.log('📊 Inicializando dashboard...');
         
-        // Verificar authManager
-        if (typeof authManager === 'undefined') {
-            console.error('❌ AuthManager não carregado');
-            window.location.href = 'index.html';
-            return;
-        }
-        
-        if (!authManager.requireAuth()) {
+        // Verificar autenticação
+        if (!authManager.isAuthenticated()) {
+            window.location.href = 'login.html';
             return;
         }
 
-        this.loadDashboardData();
-        this.setupDashboardEvents();
+        // Inicializar dashboard manager se existir
+        if (window.dashboardManager) {
+            await dashboardManager.init();
+        }
+
+        console.log('✅ Dashboard configurado');
     }
 
-    initBalcaoPage() {
-        console.log('🎫 Inicializando balcão...');
+    // ✅ PÁGINA CHAMADOS
+    async initChamadosPage() {
+        console.log('🎫 Inicializando página de chamados...');
         
-        // Verificar authManager
-        if (typeof authManager === 'undefined') {
-            console.error('❌ AuthManager não carregado');
-            window.location.href = 'index.html';
-            return;
-        }
-        
-        if (!authManager.requireAuth()) {
+        // Verificar autenticação
+        if (!authManager.isAuthenticated()) {
+            window.location.href = 'login.html';
             return;
         }
 
-        this.loadBalcaoData();
-        this.setupBalcaoEvents();
+        // Inicializar gerenciador de chamados se existir
+        if (window.ticketManager) {
+            await ticketManager.init();
+        }
+
+        console.log('✅ Página de chamados configurada');
     }
 
-    initSecretariaPage() {
-        console.log('📋 Inicializando secretaria...');
+    // ✅ PÁGINA USUÁRIOS
+    async initUsuariosPage() {
+        console.log('👥 Inicializando página de usuários...');
         
-        // Verificar authManager
-        if (typeof authManager === 'undefined') {
-            console.error('❌ AuthManager não carregado');
-            window.location.href = 'index.html';
-            return;
-        }
-        
-        if (!authManager.requireAuth()) {
+        // Verificar autenticação
+        if (!authManager.isAuthenticated()) {
+            window.location.href = 'login.html';
             return;
         }
 
-        // Verificar permissão de secretaria
-        if (!authManager.hasPermission('secretaria_view')) {
-            this.showMessage('Acesso negado. Você não tem permissão para acessar esta página.', 'error');
-            window.location.href = 'dashboard.html';
-            return;
+        // Inicializar gerenciador de usuários se existir
+        if (window.userManager) {
+            await userManager.init();
         }
 
-        this.loadSecretariaData();
-        this.setupSecretariaEvents();
+        console.log('✅ Página de usuários configurada');
     }
 
-    initCoordenadorPage() {
-        console.log('👑 Inicializando coordenador...');
-        
-        // Verificar authManager
-        if (typeof authManager === 'undefined') {
-            console.error('❌ AuthManager não carregado');
-            window.location.href = 'index.html';
-            return;
-        }
-        
-        if (!authManager.requireAuth()) {
-            return;
-        }
-
-        // Verificar permissão de coordenador
-        if (!authManager.hasPermission('coordenador_view')) {
-            this.showMessage('Acesso negado. Você não tem permissão para acessar esta página.', 'error');
-            window.location.href = 'dashboard.html';
-            return;
-        }
-
-        this.loadCoordenadorData();
-        this.setupCoordenadorEvents();
-    }
-
-    async loadDashboardData() {
+    // ✅ PROCESSAR LOGIN
+    async handleLogin() {
         try {
+            const email = document.getElementById('email')?.value;
+            const password = document.getElementById('password')?.value;
+
+            if (!email || !password) {
+                throw new Error('Email e senha são obrigatórios');
+            }
+
+            console.log('🔐 Tentando fazer login...');
+            
+            // Mostrar loading
             this.showLoading(true);
             
-            // Carregar dados do dashboard
-            const user = authManager.getCurrentUser();
+            // Fazer login
+            const result = await authManager.login(email, password);
             
-            if (user) {
-                console.log('👤 Usuário logado:', user.nome);
-                // Atualizar informações do usuário na tela
-                this.updateUserInfo(user);
+            if (result.success) {
+                console.log('✅ Login realizado com sucesso');
+                this.showMessage('Login realizado com sucesso!', 'success');
                 
-                // Carregar estatísticas
-                await this.loadDashboardStats(user);
+                // Redirecionar após 1 segundo
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+                
+            } else {
+                throw new Error(result.error || 'Erro ao fazer login');
             }
-            
+
         } catch (error) {
-            console.error('Erro ao carregar dashboard:', error);
-            this.showMessage('Erro ao carregar dados do dashboard', 'error');
+            console.error('❌ Erro no login:', error);
+            this.showMessage(error.message, 'error');
         } finally {
             this.showLoading(false);
         }
     }
 
-    updateUserInfo(user) {
-        const userNameElements = document.querySelectorAll('.user-name');
-        const userEmailElements = document.querySelectorAll('.user-email');
-        const userCargoElements = document.querySelectorAll('.user-cargo');
-        const userIgrejaElements = document.querySelectorAll('.user-igreja');
-
-        userNameElements.forEach(el => el.textContent = user.nome || '');
-        userEmailElements.forEach(el => el.textContent = user.email || '');
-        userCargoElements.forEach(el => el.textContent = user.cargo || '');
-        userIgrejaElements.forEach(el => el.textContent = user.igreja || '');
-    }
-
-    async loadDashboardStats(user) {
+    // ✅ CONFIGURAR FORMULÁRIO DE CADASTRO
+    async setupCadastroForm() {
         try {
-            // Verificar se flowManager existe
-            if (typeof flowManager === 'undefined') {
-                console.warn('⚠️ FlowManager não carregado, usando dados mock');
-                this.updateDashboardStats({
-                    totalChamados: 0,
-                    chamadosPendentes: 0,
-                    chamadosResolvidos: 0,
-                    taxaResolucao: 0
-                });
+            const regiaoSelect = document.getElementById('regiao');
+            const igrejaSelect = document.getElementById('igreja');
+            
+            if (!regiaoSelect || !igrejaSelect) {
+                console.log('⚠️ Selects de região/igreja não encontrados');
                 return;
             }
 
-            // Buscar estatísticas do usuário
-            const stats = await flowManager.sendToScript({
-                action: 'getUserStats',
-                userId: user.id,
-                regiao: user.regiao,
-                igreja: user.igreja
-            });
+            // Carregar regiões
+            console.log('🔍 Carregando regiões para cadastro...');
+            
+            regiaoSelect.innerHTML = '<option value="">Carregando regiões...</option>';
+            regiaoSelect.disabled = true;
 
-            if (stats.success && stats.data) {
-                this.updateDashboardStats(stats.data);
+            const result = await flowManager.getRegioesIgrejas();
+            
+            if (result.success && result.data) {
+                // Limpar e popular regiões
+                regiaoSelect.innerHTML = '<option value="">Selecione a região</option>';
+                
+                Object.keys(result.data).forEach(regiao => {
+                    const option = document.createElement('option');
+                    option.value = regiao;
+                    option.textContent = result.data[regiao].name || regiao;
+                    regiaoSelect.appendChild(option);
+                });
+                
+                regiaoSelect.disabled = false;
+                
+                // Configurar listener para mudança de região
+                regiaoSelect.addEventListener('change', async (e) => {
+                    const regiao = e.target.value;
+                    
+                    if (!regiao) {
+                        igrejaSelect.innerHTML = '<option value="">Primeiro selecione uma região</option>';
+                        igrejaSelect.disabled = true;
+                        return;
+                    }
+
+                    // Carregar igrejas da região
+                    igrejaSelect.innerHTML = '<option value="">Carregando igrejas...</option>';
+                    igrejaSelect.disabled = true;
+
+                    const igrejasResult = await flowManager.getIgrejasByRegiao(regiao);
+                    
+                    if (igrejasResult.success && igrejasResult.data.length > 0) {
+                        igrejaSelect.innerHTML = '<option value="">Selecione a igreja</option>';
+                        
+                        igrejasResult.data.forEach(igreja => {
+                            const option = document.createElement('option');
+                            option.value = igreja;
+                            option.textContent = igreja;
+                            igrejaSelect.appendChild(option);
+                        });
+                        
+                        igrejaSelect.disabled = false;
+                    } else {
+                        igrejaSelect.innerHTML = '<option value="">Nenhuma igreja disponível</option>';
+                        igrejaSelect.disabled = true;
+                    }
+                });
+
+                console.log('✅ Regiões carregadas para cadastro');
+                
             } else {
-                // Usar dados padrão se não conseguir carregar
-                this.updateDashboardStats({
-                    totalChamados: 0,
-                    chamadosPendentes: 0,
-                    chamadosResolvidos: 0,
-                    taxaResolucao: 0
+                throw new Error(result.error || 'Erro ao carregar regiões');
+            }
+
+            // Configurar formulário de cadastro
+            const cadastroForm = document.getElementById('cadastro-form');
+            if (cadastroForm) {
+                cadastroForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await this.handleCadastro();
                 });
             }
+
         } catch (error) {
-            console.error('Erro ao carregar estatísticas:', error);
-            // Usar dados padrão em caso de erro
-            this.updateDashboardStats({
-                totalChamados: 0,
-                chamadosPendentes: 0,
-                chamadosResolvidos: 0,
-                taxaResolucao: 0
-            });
-        }
-    }
-
-    updateDashboardStats(stats) {
-        // Atualizar cards de estatísticas
-        const elements = {
-            'total-chamados': stats.totalChamados || 0,
-            'chamados-pendentes': stats.chamadosPendentes || 0,
-            'chamados-resolvidos': stats.chamadosResolvidos || 0,
-            'taxa-resolucao': (stats.taxaResolucao || 0) + '%'
-        };
-
-        Object.entries(elements).forEach(([id, value]) => {
-            const element = document.getElementById(id);
-            if (element) element.textContent = value;
-        });
-    }
-
-    setupDashboardEvents() {
-        // Botão de logout
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.handleLogout();
-            });
-        }
-
-        // Links de navegação
-        this.setupNavigationLinks();
-    }
-
-    setupBalcaoEvents() {
-        this.setupNavigationLinks();
-    }
-
-    setupSecretariaEvents() {
-        this.setupNavigationLinks();
-    }
-
-    setupCoordenadorEvents() {
-        this.setupNavigationLinks();
-    }
-
-    setupNavigationLinks() {
-        const navLinks = document.querySelectorAll('.nav-link[data-page]');
-        navLinks.forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const page = link.getAttribute('data-page');
-                if (page) {
-                    window.location.href = page;
-                }
-            });
-        });
-    }
-
-    handleLogout() {
-        const confirmLogout = () => {
-            if (typeof authManager !== 'undefined') {
-                authManager.logout();
-            } else {
-                // Fallback manual
-                localStorage.removeItem('balcao_session');
-                window.location.href = 'index.html';
+            console.error('❌ Erro ao configurar cadastro:', error);
+            const regiaoSelect = document.getElementById('regiao');
+            if (regiaoSelect) {
+                regiaoSelect.innerHTML = '<option value="">Erro ao carregar regiões</option>';
+                regiaoSelect.disabled = false;
             }
-        };
-
-        if (confirm('Tem certeza que deseja sair?')) {
-            confirmLogout();
         }
     }
 
-    loadBalcaoData() {
-        console.log('📋 Carregando dados do balcão...');
+    // ✅ PROCESSAR CADASTRO
+    async handleCadastro() {
+        try {
+            // Coletar dados do formulário
+            const formData = {
+                nome: document.getElementById('nome')?.value?.trim(),
+                email: document.getElementById('email')?.value?.trim(),
+                telefone: document.getElementById('telefone')?.value?.trim(),
+                cargo: document.getElementById('cargo')?.value,
+                regiao: document.getElementById('regiao')?.value,
+                igreja: document.getElementById('igreja')?.value,
+                observacoes: document.getElementById('observacoes')?.value?.trim() || '',
+                senha: document.getElementById('senha')?.value
+            };
+
+            // Validar dados
+            const requiredFields = ['nome', 'email', 'telefone', 'cargo', 'regiao', 'igreja', 'senha'];
+            for (const field of requiredFields) {
+                if (!formData[field]) {
+                    throw new Error(`Campo ${field} é obrigatório`);
+                }
+            }
+
+            // Verificar confirmação de senha
+            const confirmarSenha = document.getElementById('confirmar-senha')?.value;
+            if (formData.senha !== confirmarSenha) {
+                throw new Error('Senhas não coincidem');
+            }
+
+            console.log('👤 Criando usuário...');
+            
+            // Mostrar loading
+            this.showLoading(true);
+            
+            // Criar usuário
+            const result = await flowManager.createUser(formData);
+            
+            if (result.success) {
+                console.log('✅ Usuário criado com sucesso');
+                this.showMessage('Usuário cadastrado com sucesso!', 'success');
+                
+                // Limpar formulário
+                document.getElementById('cadastro-form').reset();
+                
+                // Redirecionar após 2 segundos
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                
+            } else {
+                throw new Error(result.error || 'Erro ao cadastrar usuário');
+            }
+
+        } catch (error) {
+            console.error('❌ Erro no cadastro:', error);
+            this.showMessage(error.message, 'error');
+        } finally {
+            this.showLoading(false);
+        }
     }
 
-    loadSecretariaData() {
-        console.log('📋 Carregando dados da secretaria...');
-    }
-
-    loadCoordenadorData() {
-        console.log('📋 Carregando dados do coordenador...');
-    }
-
+    // ✅ UTILITÁRIOS
     getCurrentPage() {
-        const path = window.location.pathname;
-        const page = path.split('/').pop();
-        return page || 'index.html';
+        return window.location.pathname.split('/').pop() || 'index.html';
+    }
+
+    showLoading(show) {
+        const loadingElements = document.querySelectorAll('.loading, #loading');
+        loadingElements.forEach(el => {
+            el.style.display = show ? 'flex' : 'none';
+        });
+
+        // Desabilitar botões de submit
+        const submitButtons = document.querySelectorAll('button[type="submit"]');
+        submitButtons.forEach(btn => {
+            btn.disabled = show;
+            if (show) {
+                btn.textContent = '⏳ Processando...';
+            } else {
+                // Restaurar texto original (seria melhor salvar o texto original)
+                if (btn.id === 'login-btn') btn.textContent = 'Entrar';
+                if (btn.id === 'cadastro-btn') btn.textContent = 'Cadastrar';
+            }
+        });
+    }
+
+    showMessage(message, type = 'info') {
+        console.log(`📢 ${type.toUpperCase()}: ${message}`);
+        
+        // Remover mensagem anterior
+        const existingMessage = document.querySelector('.app-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+
+        // Criar nova mensagem
+        const messageEl = document.createElement('div');
+        messageEl.className = `app-message ${type}`;
+        messageEl.textContent = message;
+
+        // Estilos inline básicos
+        messageEl.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem;
+            border-radius: 4px;
+            z-index: 10000;
+            max-width: 300px;
+            font-weight: 500;
+            ${type === 'success' ? 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;' : ''}
+            ${type === 'error' ? 'background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;' : ''}
+            ${type === 'info' ? 'background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb;' : ''}
+        `;
+
+        document.body.appendChild(messageEl);
+
+        // Auto-remover após 5 segundos
+        setTimeout(() => {
+            if (messageEl.parentNode) {
+                messageEl.remove();
+            }
+        }, 5000);
+    }
+
+    showError(message) {
+        this.showMessage(message, 'error');
     }
 }
 
-// Inicializar aplicação
-const app = new App();
-app.init();
+// ✅ INICIALIZAR APLICAÇÃO
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        window.app = new App();
+        await app.init();
+    } catch (error) {
+        console.error('❌ Erro fatal na inicialização:', error);
+        
+        // Mostrar erro na tela
+        document.body.innerHTML = `
+            <div style="padding: 2rem; text-align: center; color: #721c24; background: #f8d7da;">
+                <h2>❌ Erro ao carregar aplicação</h2>
+                <p>${error.message}</p>
+                <button onclick="window.location.reload()" style="padding: 0.5rem 1rem; margin-top: 1rem;">
+                    🔄 Recarregar Página
+                </button>
+            </div>
+        `;
+    }
+});
 
-// Export para uso global
-window.app = app;
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = App;
+}

@@ -381,26 +381,46 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="data/config.js"></script>
-    <script src="scripts/helpers.js"></script>
+    <!-- Scripts na ORDEM CORRETA -->
+    <script src="scripts/config.js"></script>
     <script src="scripts/auth.js"></script>
     <script src="scripts/flow.js"></script>
+    <script src="scripts/helpers.js"></script>
+    <script src="scripts/main.js"></script>
 
     <script>
         let assessoresData = [];
         let assessorAtual = null; // Para edição
 
         document.addEventListener('DOMContentLoaded', function() {
+            // Aguardar dependências carregarem
+            const checkDependencies = setInterval(() => {
+                if (window.CONFIG && window.authManager && window.flowManager) {
+                    clearInterval(checkDependencies);
+                    initAssessoresPage();
+                }
+            }, 100);
+            
+            // Timeout de segurança
+            setTimeout(() => {
+                clearInterval(checkDependencies);
+                if (!window.authManager) {
+                    console.error('❌ Dependências não carregaram');
+                    document.body.innerHTML = '<div style="padding: 2rem; text-align: center; color: red;">Erro ao carregar dependências. Recarregue a página.</div>';
+                }
+            }, 5000);
+        });
+
+        function initAssessoresPage() {
             // Verificar autenticação e permissões
-            if (!auth.isAuthenticated()) {
-                window.location.href = 'index.html';
+            if (!authManager.isAuthenticated()) {
+                window.location.href = 'login.html';
                 return;
             }
 
-            const user = auth.getCurrentUser();
-            if (user.role !== 'COORDENADOR' && user.role !== 'SECRETARIA') {
-                Helpers.showToast('Acesso negado. Apenas coordenadores e secretários podem acessar esta página.', 'error');
+            const user = authManager.getCurrentUser();
+            if (user.role !== 'COORDENADOR' && user.role !== 'SECRETARIA' && user.cargo !== 'COORDENADOR' && user.cargo !== 'SECRETARIA') {
+                showMessage('Acesso negado. Apenas coordenadores e secretários podem acessar esta página.', 'error');
                 setTimeout(() => {
                     window.location.href = 'dashboard.html';
                 }, 2000);
@@ -420,7 +440,7 @@
                     adicionarAssessor();
                 }
             });
-        });
+        }
 
         async function carregarAssessores() {
             document.getElementById('loadingSpinner').style.display = 'block';
@@ -428,14 +448,14 @@
             try {
                 const result = await flowManager.buscarAssessores();
                 if (result.success) {
-                    assessoresData = result.assessores;
+                    assessoresData = result.assessores || result.data || [];
                     renderizarAssessores(assessoresData);
                 } else {
                     throw new Error(result.error || 'Erro ao carregar assessores');
                 }
             } catch (error) {
                 console.error('Erro ao carregar assessores:', error);
-                Helpers.showToast('Erro ao carregar assessores: ' + error.message, 'error');
+                showMessage('Erro ao carregar assessores: ' + error.message, 'error');
                 renderizarAssessores([]);
             } finally {
                 document.getElementById('loadingSpinner').style.display = 'none';
@@ -476,33 +496,33 @@
                 <div class="assessor-card">
                     <div class="assessor-header">
                         <div class="assessor-info">
-                            <div class="assessor-name">${assessor.acessor}</div>
-                            <div class="assessor-parlamentar">${assessor.parlamentar}</div>
+                            <div class="assessor-name">${escapeHtml(assessor.acessor)}</div>
+                            <div class="assessor-parlamentar">${escapeHtml(assessor.parlamentar)}</div>
                         </div>
                     </div>
 
                     <div class="assessor-details">
                         <div class="detail-item">
                             <span class="detail-icon">📱</span>
-                            <span>${assessor.telefone}</span>
+                            <span>${escapeHtml(assessor.telefone)}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-icon">🏛️</span>
-                            <span>${assessor.gabinete}</span>
+                            <span>${escapeHtml(assessor.gabinete)}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-icon">📅</span>
-                            <span>Cadastrado em ${new Date(assessor.dataCadastro).toLocaleDateString()}</span>
+                            <span>Cadastrado em ${formatDate(assessor.dataCadastro)}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-icon">👤</span>
-                            <span>Por ${assessor.cadastradoPor}</span>
+                            <span>Por ${escapeHtml(assessor.cadastradoPor)}</span>
                         </div>
                     </div>
 
                     ${assessor.observacoes ? `
                         <div style="margin: 1rem 0; padding: 0.75rem; background: #f0fdfa; border-radius: 6px; border-left: 4px solid #0f766e;">
-                            <strong>Observações:</strong> ${assessor.observacoes}
+                            <strong>Observações:</strong> ${escapeHtml(assessor.observacoes)}
                         </div>
                     ` : ''}
 
@@ -510,8 +530,8 @@
                         <button onclick="editarAssessor('${assessor.id}')" class="btn btn-sm btn-secondary">
                             ✏️ Editar
                         </button>
-                        ${auth.getCurrentUser().role === 'COORDENADOR' ? `
-                            <button onclick="removerAssessor('${assessor.id}', '${assessor.acessor}')" class="btn btn-sm btn-danger">
+                        ${(authManager.getCurrentUser().role === 'COORDENADOR' || authManager.getCurrentUser().cargo === 'COORDENADOR') ? `
+                            <button onclick="removerAssessor('${assessor.id}', '${escapeHtml(assessor.acessor)}')" class="btn btn-sm btn-danger">
                                 🗑️ Remover
                             </button>
                         ` : ''}
@@ -579,14 +599,14 @@
             const dados = Object.fromEntries(formData.entries());
 
             try {
-                Helpers.showLoading('Salvando assessor...');
+                showLoading('Salvando assessor...');
 
                 const result = assessorAtual ? 
                     await flowManager.atualizarAssessor(assessorAtual.id, dados) :
                     await flowManager.adicionarAssessor(dados);
 
                 if (result.success) {
-                    Helpers.showToast(result.message, 'success');
+                    showMessage(result.message || 'Assessor salvo com sucesso!', 'success');
                     fecharModal();
                     carregarAssessores();
                 } else {
@@ -594,9 +614,9 @@
                 }
             } catch (error) {
                 console.error('Erro ao salvar assessor:', error);
-                Helpers.showToast('Erro ao salvar: ' + error.message, 'error');
+                showMessage('Erro ao salvar: ' + error.message, 'error');
             } finally {
-                Helpers.hideLoading();
+                hideLoading();
             }
         }
 
@@ -604,20 +624,20 @@
             if (!confirm(`Tem certeza que deseja remover o assessor ${nome}?`)) return;
 
             try {
-                Helpers.showLoading('Removendo assessor...');
+                showLoading('Removendo assessor...');
 
                 const result = await flowManager.removerAssessor(assessorId);
                 if (result.success) {
-                    Helpers.showToast(result.message, 'success');
+                    showMessage(result.message || 'Assessor removido com sucesso!', 'success');
                     carregarAssessores();
                 } else {
                     throw new Error(result.error || 'Erro ao remover assessor');
                 }
             } catch (error) {
                 console.error('Erro ao remover assessor:', error);
-                Helpers.showToast('Erro ao remover: ' + error.message, 'error');
+                showMessage('Erro ao remover: ' + error.message, 'error');
             } finally {
-                Helpers.hideLoading();
+                hideLoading();
             }
         }
 
@@ -645,7 +665,7 @@
 
         function exportarAssessores() {
             if (assessoresData.length === 0) {
-                Helpers.showToast('Nenhum assessor para exportar!', 'warning');
+                showMessage('Nenhum assessor para exportar!', 'warning');
                 return;
             }
 
@@ -658,26 +678,118 @@
             link.download = `assessores_parlamentares_${new Date().toISOString().split('T')[0]}.json`;
             link.click();
             
-            Helpers.showToast('Lista exportada!', 'success');
+            showMessage('Lista exportada!', 'success');
         }
 
-        // Adicionar métodos ao flowManager
-        if (typeof flowManager !== 'undefined') {
-            flowManager.adicionarAssessor = async function(dados) {
-                return await this.makeRequest('adicionarAssessor', { dados });
-            };
+        // ✅ ADICIONAR MÉTODOS DE ASSESSORES AO FLOWMANAGER
+        function extendFlowManager() {
+            if (typeof flowManager !== 'undefined') {
+                flowManager.adicionarAssessor = async function(dados) {
+                    return await this.sendToScript({
+                        action: 'adicionarAssessor',
+                        dados: dados
+                    });
+                };
 
-            flowManager.buscarAssessores = async function(filtros = {}) {
-                return await this.makeRequest('buscarAssessores', { filtros });
-            };
+                flowManager.buscarAssessores = async function(filtros = {}) {
+                    return await this.sendToScript({
+                        action: 'buscarAssessores',
+                        filtros: filtros
+                    });
+                };
 
-            flowManager.atualizarAssessor = async function(assessorId, dados) {
-                return await this.makeRequest('atualizarAssessor', { assessorId, dados });
-            };
+                flowManager.atualizarAssessor = async function(assessorId, dados) {
+                    return await this.sendToScript({
+                        action: 'atualizarAssessor',
+                        assessorId: assessorId,
+                        dados: dados
+                    });
+                };
 
-            flowManager.removerAssessor = async function(assessorId) {
-                return await this.makeRequest('removerAssessor', { assessorId });
-            };
+                flowManager.removerAssessor = async function(assessorId) {
+                    return await this.sendToScript({
+                        action: 'removerAssessor',
+                        assessorId: assessorId
+                    });
+                };
+            }
+        }
+
+        // Executar quando flowManager estiver disponível
+        if (window.flowManager) {
+            extendFlowManager();
+        } else {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(extendFlowManager, 500);
+            });
+        }
+
+        // ✅ FUNÇÕES UTILITÁRIAS
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Data não informada';
+            try {
+                return new Date(dateString).toLocaleDateString('pt-BR');
+            } catch {
+                return dateString;
+            }
+        }
+
+        function showLoading(message = 'Carregando...') {
+            console.log('⏳ Loading:', message);
+            // Implementar loading visual se necessário
+        }
+
+        function hideLoading() {
+            console.log('✅ Loading hidden');
+            // Esconder loading visual
+        }
+
+        function showMessage(message, type = 'info') {
+            console.log(`📢 ${type.toUpperCase()}: ${message}`);
+            
+            // Remover mensagem anterior
+            const existingMessage = document.querySelector('.toast-message');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+
+            // Criar nova mensagem
+            const messageEl = document.createElement('div');
+            messageEl.className = `toast-message ${type}`;
+            messageEl.textContent = message;
+
+            // Estilos inline
+            messageEl.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem;
+                border-radius: 6px;
+                z-index: 10000;
+                max-width: 350px;
+                font-weight: 500;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                ${type === 'success' ? 'background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0;' : ''}
+                ${type === 'error' ? 'background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;' : ''}
+                ${type === 'warning' ? 'background: #fef3c7; color: #92400e; border: 1px solid #fde68a;' : ''}
+                ${type === 'info' ? 'background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe;' : ''}
+            `;
+
+            document.body.appendChild(messageEl);
+
+            // Auto-remover após 5 segundos
+            setTimeout(() => {
+                if (messageEl.parentNode) {
+                    messageEl.remove();
+                }
+            }, 5000);
         }
 
         // Fechar modal ao clicar fora
