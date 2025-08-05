@@ -513,5 +513,49 @@
             }
         }
     </style>
+
+    <!-- Scripts Dependencies -->
+    <script src="data/config.js"></script>
+    <script src="scripts/helpers.js"></script>
+    <script src="scripts/flow.js"></script>
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/dashboard.js"></script>
+
+    <!-- Initialize Dashboard -->
+    <script>
+        // Initialize dashboard when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🎛️ Inicializando dashboard...');
+            
+            // Verificar dependências
+            if (typeof window.CONFIG === 'undefined') {
+                console.error('❌ CONFIG não carregado');
+                return;
+            }
+            
+            if (typeof window.AuthManager === 'undefined') {
+                console.error('❌ AuthManager não carregado');
+                return;
+            }
+
+            // Initialize components
+            window.authManager = new AuthManager();
+            window.flowManager = new FlowExtensions();
+            
+            // Verificar autenticação
+            if (!window.authManager.isAuthenticated()) {
+                console.log('❌ Usuário não autenticado, redirecionando...');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Initialize dashboard manager
+            if (typeof DashboardManager !== 'undefined') {
+                window.dashboardManager = new DashboardManager();
+            }
+            
+            console.log('✅ Dashboard inicializado com sucesso');
+        });
+    </script>
 </body>
 </html>

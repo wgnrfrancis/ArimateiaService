@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Balcão da Cidadania</title>
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Teste do Sistema - Balcão da Cidadania</h1>
+        
+        <div class="card">
+            <h2>Status dos Componentes:</h2>
+            <div id="status-list">
+                <p>Carregando...</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Login de Teste:</h2>
+            <div class="form-group">
+                <button onclick="testLogin()" class="btn btn-primary">Testar Login</button>
+                <button onclick="fillCredentials()" class="btn btn-secondary">Preencher Credenciais</button>
+            </div>
+            
+            <form id="test-form">
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="test-email" class="form-input" value="">
+                </div>
+                <div class="form-group">
+                    <label>Senha:</label>
+                    <input type="password" id="test-password" class="form-input" value="">
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Navegação:</h2>
+            <div class="btn-group">
+                <a href="index.html" class="btn btn-outline">Login</a>
+                <a href="dashboard.html" class="btn btn-outline">Dashboard</a>
+                <a href="secretaria.html" class="btn btn-outline">Secretaria</a>
+                <a href="balcao.html" class="btn btn-outline">Balcão</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="data/config.js"></script>
+    <script src="scripts/helpers.js"></script>  
+    <script src="scripts/flow.js"></script>
+    <script src="scripts/auth.js"></script>
+
+    <script>
+        let statusResults = {};
+
+        // Aguardar carregamento do DOM
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🧪 Iniciando testes...');
+            await testComponents();
+            updateStatusDisplay();
+        });
+
+        async function testComponents() {
+            const statusList = document.getElementById('status-list');
+            statusList.innerHTML = '<p>Testando componentes...</p>';
+
+            // Teste CONFIG
+            try {
+                if (typeof window.CONFIG !== 'undefined') {
+                    statusResults.CONFIG = { status: '✅', message: 'CONFIG carregado corretamente' };
+                } else {
+                    statusResults.CONFIG = { status: '❌', message: 'CONFIG não encontrado' };
+                }
+            } catch (error) {
+                statusResults.CONFIG = { status: '❌', message: 'Erro no CONFIG: ' + error.message };
+            }
+
+            // Teste Helpers
+            try {
+                if (typeof window.Helpers !== 'undefined') {
+                    statusResults.Helpers = { status: '✅', message: 'Helpers carregado corretamente' };
+                } else {
+                    statusResults.Helpers = { status: '❌', message: 'Helpers não encontrado' };
+                }
+            } catch (error) {
+                statusResults.Helpers = { status: '❌', message: 'Erro no Helpers: ' + error.message };
+            }
+
+            // Teste AuthManager
+            try {
+                if (typeof AuthManager !== 'undefined') {
+                    window.authManager = new AuthManager();
+                    statusResults.AuthManager = { status: '✅', message: 'AuthManager inicializado' };
+                } else {
+                    statusResults.AuthManager = { status: '❌', message: 'AuthManager não encontrado' };
+                }
+            } catch (error) {
+                statusResults.AuthManager = { status: '❌', message: 'Erro no AuthManager: ' + error.message };
+            }
+
+            // Teste FlowManager
+            try {
+                if (typeof FlowExtensions !== 'undefined') {
+                    window.flowManager = new FlowExtensions();
+                    statusResults.FlowManager = { status: '✅', message: 'FlowManager inicializado' };
+                } else {
+                    statusResults.FlowManager = { status: '❌', message: 'FlowManager não encontrado' };
+                }
+            } catch (error) {
+                statusResults.FlowManager = { status: '❌', message: 'Erro no FlowManager: ' + error.message };
+            }
+        }
+
+        function updateStatusDisplay() {
+            const statusList = document.getElementById('status-list');
+            let html = '';
+            
+            for (const [component, result] of Object.entries(statusResults)) {
+                html += `<p>${result.status} <strong>${component}</strong>: ${result.message}</p>`;
+            }
+            
+            statusList.innerHTML = html;
+        }
+
+        function fillCredentials() {
+            document.getElementById('test-email').value = 'secretaria@arimateia.org.br';
+            document.getElementById('test-password').value = '123456';
+        }
+
+        async function testLogin() {
+            const email = document.getElementById('test-email').value;
+            const password = document.getElementById('test-password').value;
+
+            if (!email || !password) {
+                alert('Preencha email e senha');
+                return;
+            }
+
+            try {
+                console.log('🧪 Testando login...');
+                
+                if (!window.authManager) {
+                    throw new Error('AuthManager não inicializado');
+                }
+
+                const result = await window.authManager.login(email, password);
+                
+                if (result.success) {
+                    alert('✅ Login realizado com sucesso!\nRedirecionando...');
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert('❌ Erro no login: ' + (result.message || result.error));
+                }
+            } catch (error) {
+                console.error('❌ Erro no teste de login:', error);
+                alert('❌ Erro no teste: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

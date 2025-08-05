@@ -108,13 +108,6 @@
         </div>
     </main>
 
-    <!-- Scripts -->
-    <script src="data/config.js"></script>
-    <script src="scripts/helpers.js"></script>
-    <script src="scripts/auth.js"></script>
-    <script src="scripts/flow.js"></script>
-    <script src="scripts/login.js"></script>
-
     <!-- Accessibility and SEO improvements -->
     <style>
         .sr-only {
@@ -233,5 +226,54 @@
             }
         }
     </style>
+
+    <!-- Scripts Dependencies -->
+    <script src="data/config.js"></script>
+    <script src="scripts/helpers.js"></script>
+    <script src="scripts/flow.js"></script>
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/login.js"></script>
+
+    <!-- Initialize Login -->
+    <script>
+        // Initialize login system
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Inicializando Balcão da Cidadania...');
+            
+            // Verificar se dependências carregaram
+            if (typeof window.CONFIG === 'undefined' || 
+                typeof window.Helpers === 'undefined' || 
+                typeof AuthManager === 'undefined') {
+                console.error('❌ Dependências não carregaram corretamente');
+                document.body.innerHTML = '<div style="text-align:center;padding:50px;"><h2>Erro ao carregar sistema</h2><p>Verifique se todos os arquivos estão presentes.</p></div>';
+                return;
+            }
+
+            try {
+                // Initialize managers
+                window.authManager = new AuthManager();
+                window.flowManager = new FlowExtensions();
+                window.loginManager = new LoginManager();
+                
+                console.log('✅ Sistema inicializado com sucesso');
+                
+                // Verificar se já está logado
+                if (window.authManager.isAuthenticated()) {
+                    const user = window.authManager.getCurrentUser();
+                    console.log('👤 Usuário já logado, redirecionando...');
+                    
+                    // Redirecionar baseado no cargo
+                    if (user.cargo === 'secretaria' || user.cargo === 'coordenador') {
+                        window.location.href = 'secretaria.html';
+                    } else {
+                        window.location.href = 'dashboard.html';
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro na inicialização:', error);
+            }
+        });
+    </script>
 </body>
 </html>
