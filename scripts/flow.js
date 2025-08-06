@@ -221,7 +221,10 @@ class FlowExtensions {
 
         } catch (error) {
             console.error('❌ Erro na validação:', error);
-            return this.getMockUser(email, password);
+            return {
+                success: false,
+                error: error.message || 'Erro na validação do usuário'
+            };
         }
     }
 

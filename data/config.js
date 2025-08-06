@@ -451,11 +451,11 @@ window.CONFIG = {
         }
     },
 
-    // Configurações de desenvolvimento
+    // Configurações de desenvolvimento (removidas em produção)
     DEV: {
         MOCK_DATA: false,
-        DEBUG_MODE: true, // Temporariamente habilitado para debug
-        SHOW_LOGS: true,
+        DEBUG_MODE: false, // Desabilitado em produção
+        SHOW_LOGS: false,
         BYPASS_AUTH: false
     }
 };

@@ -28,12 +28,6 @@ class AuthManager {
         // Verificar se há sessão salva
         this.loadSession();
         
-        // Limpar tentativas de login para desenvolvimento
-        if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) {
-            this.resetLoginAttempts();
-            console.log('🔓 Tentativas de login resetadas (modo DEBUG)');
-        }
-        
         // Configurar interceptador para requests
         this.setupRequestInterceptor();
         
@@ -109,24 +103,11 @@ class AuthManager {
                     console.log('🌐 Validando via Google Apps Script...');
                     result = await window.flowManager.validateUser(email, password);
                 } catch (error) {
-                    console.log('⚠️ Erro no Google Apps Script:', error.message);
-                    
-                    // Fallback para mock apenas em desenvolvimento
-                    if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) {
-                        console.log('🧪 Usando fallback mock (modo DEBUG)');
-                        result = this.validateMockUser(email, password);
-                    } else {
-                        throw error; // Re-lançar erro em produção
-                    }
+                    console.error('❌ Erro no Google Apps Script:', error.message);
+                    throw error; // Re-lançar erro em produção
                 }
             } else {
-                // Fallback para desenvolvimento - usuários mock
-                if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) {
-                    console.log('🧪 Usando usuários mock (modo DEBUG)');
-                    result = this.validateMockUser(email, password);
-                } else {
-                    throw new Error('Sistema de autenticação não configurado');
-                }
+                throw new Error('Sistema de autenticação não configurado - flowManager não disponível');
             }
 
             if (result.success && result.data) {
@@ -151,33 +132,6 @@ class AuthManager {
 
         } catch (error) {
             console.error('❌ Erro no login:', error);
-            
-            // Em modo DEBUG, tentar fallback se ainda não foi tentado
-            if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE && 
-                !error.message.includes('mock') && 
-                (error.message.includes('fetch') || error.message.includes('conexão') || error.message.includes('Failed'))) {
-                console.log('🧪 Tentando fallback mock devido a erro de conexão...');
-                try {
-                    const mockResult = this.validateMockUser(email, password);
-                    if (mockResult.success && mockResult.data) {
-                        // Reset tentativas de login
-                        this.resetLoginAttempts();
-                        
-                        // Salvar usuário na sessão
-                        this.currentUser = mockResult.data;
-                        this.saveSession();
-
-                        console.log('✅ Login realizado via fallback mock:', this.currentUser.nome);
-                        return {
-                            success: true,
-                            user: this.currentUser,
-                            message: mockResult.message || 'Login realizado com sucesso (modo DEBUG)!'
-                        };
-                    }
-                } catch (mockError) {
-                    console.error('❌ Erro no fallback mock:', mockError);
-                }
-            }
             
             // Incrementar tentativas de login
             this.incrementLoginAttempts();
@@ -354,12 +308,6 @@ class AuthManager {
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
         const publicPages = ['index.html', 'cadastro.html'];
         
-        // Em modo DEBUG, não redirecionar automaticamente
-        if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) {
-            console.log('🧪 Modo DEBUG: Verificação de página desabilitada');
-            return;
-        }
-        
         if (!publicPages.includes(currentPage) && !this.isAuthenticated()) {
             console.log('🚫 Redirecionando para login...');
             window.location.href = 'index.html';
@@ -412,11 +360,6 @@ class AuthManager {
      * @returns {boolean} True se em lockout
      */
     isLockedOut() {
-        // Desabilitar lockout apenas em modo de desenvolvimento
-        if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) {
-            return false;
-        }
-        
         if (this.loginAttempts.count >= this.maxLoginAttempts) {
             const lastAttempt = new Date(this.loginAttempts.lastAttempt);
             const now = new Date();
@@ -495,100 +438,6 @@ class AuthManager {
             this.saveSession();
         }
     }
-
-    /**
-     * Validar usuário mock para desenvolvimento
-     * @param {string} email - Email do usuário
-     * @param {string} password - Senha do usuário
-     * @returns {Object} Resultado da validação
-     */
-    validateMockUser(email, password) {
-        console.log('🧪 Validando usuário mock:', email);
-        
-        // Usuários mock para desenvolvimento
-        const mockUsers = [
-            {
-                id: 1,
-                nome: 'Coordenador Geral',
-                email: 'coordenador@arimateia.org.br',
-                password: '123456',
-                cargo: 'COORDENADOR_GERAL',
-                igreja: 'Igreja Central - Sede',
-                regiao: 'Centro',
-                ativo: true
-            },
-            {
-                id: 2,
-                nome: 'Maria Silva',
-                email: 'secretaria@arimateia.org.br',
-                password: '123456',
-                cargo: 'SECRETARIA',
-                igreja: 'Igreja Central - Sede',
-                regiao: 'Centro',
-                ativo: true
-            },
-            {
-                id: 3,
-                nome: 'João Santos',
-                email: 'voluntario@arimateia.org.br',
-                password: '123456',
-                cargo: 'VOLUNTARIO',
-                igreja: 'Igreja do Bairro Alto',
-                regiao: 'Norte',
-                ativo: true
-            },
-            {
-                id: 4,
-                nome: 'Ana Costa',
-                email: 'coordenador.local@arimateia.org.br',
-                password: '123456',
-                cargo: 'COORDENADOR_LOCAL',
-                igreja: 'Igreja da Vila Nova',
-                regiao: 'Sul',
-                ativo: true
-            },
-            {
-                id: 5,
-                nome: 'Wagner Duarte',
-                email: 'wagduarte@universal.org',
-                password: '123456',
-                cargo: 'COORDENADOR_GERAL',
-                igreja: 'Igreja Universal - Sede',
-                regiao: 'Centro',
-                ativo: true
-            }
-        ];
-
-        // Buscar usuário (insensível a maiúsculas/minúsculas)
-        const user = mockUsers.find(u => 
-            u.email.toLowerCase() === email.toLowerCase() && 
-            u.ativo
-        );
-
-        if (user) {
-            // Em modo DEBUG, aceitar qualquer senha; em produção, verificar senha correta
-            const passwordMatch = (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) 
-                ? true 
-                : user.password === password;
-                
-            if (passwordMatch) {
-                // Remover senha do objeto retornado
-                const { password: _, ...userWithoutPassword } = user;
-                console.log('✅ Usuário mock validado:', user.nome);
-                return {
-                    success: true,
-                    data: userWithoutPassword,
-                    message: 'Login realizado com sucesso!'
-                };
-            }
-        }
-
-        console.log('❌ Usuário mock não encontrado ou senha incorreta');
-        return {
-            success: false,
-            error: 'Email ou senha incorretos'
-        };
-    }
 }
 
 // Inicializar globalmente
@@ -602,26 +451,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // Export para Node.js
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = AuthManager;
-}
-
-// Função de debug para limpar lockout (apenas em desenvolvimento)
-if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) {
-    window.clearLockout = function() {
-        if (window.authManager) {
-            window.authManager.resetLoginAttempts();
-            console.log('🔓 Lockout limpo! Você pode tentar fazer login novamente.');
-        }
-    };
-    
-    window.checkLockout = function() {
-        if (window.authManager) {
-            const locked = window.authManager.isLockedOut();
-            console.log('🔐 Status do lockout:', locked ? 'BLOQUEADO' : 'LIBERADO');
-            if (locked) {
-                console.log('💡 Use clearLockout() para desbloquear');
-            }
-        }
-    };
 }
 
 console.log('✅ Auth.js carregado com sucesso');
