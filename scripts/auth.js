@@ -101,23 +101,32 @@ class AuthManager {
                 throw new Error(window.CONFIG?.VALIDATION?.EMAIL?.message || 'Email inválido');
             }
 
-            // Chamar validação via flowManager ou fallback para desenvolvimento
+            // Chamar validação via flowManager com fallback para mock em desenvolvimento
             let result;
             
-            // FORÇAR uso de usuários mock em desenvolvimento
-            if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) {
-                console.log('🧪 Usando usuários mock (modo DEBUG)');
-                result = this.validateMockUser(email, password);
-            } else if (window.flowManager && typeof window.flowManager.validateUser === 'function') {
+            if (window.flowManager && typeof window.flowManager.validateUser === 'function') {
                 try {
+                    console.log('🌐 Validando via Google Apps Script...');
                     result = await window.flowManager.validateUser(email, password);
                 } catch (error) {
-                    console.log('⚠️ Erro no flowManager, usando fallback mock:', error.message);
-                    result = this.validateMockUser(email, password);
+                    console.log('⚠️ Erro no Google Apps Script:', error.message);
+                    
+                    // Fallback para mock apenas em desenvolvimento
+                    if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) {
+                        console.log('🧪 Usando fallback mock (modo DEBUG)');
+                        result = this.validateMockUser(email, password);
+                    } else {
+                        throw error; // Re-lançar erro em produção
+                    }
                 }
             } else {
                 // Fallback para desenvolvimento - usuários mock
-                result = this.validateMockUser(email, password);
+                if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) {
+                    console.log('🧪 Usando usuários mock (modo DEBUG)');
+                    result = this.validateMockUser(email, password);
+                } else {
+                    throw new Error('Sistema de autenticação não configurado');
+                }
             }
 
             if (result.success && result.data) {
@@ -135,19 +144,15 @@ class AuthManager {
                     message: result.message || 'Login realizado com sucesso!'
                 };
             } else {
-                // NÃO incrementar tentativas em modo DEBUG
-                if (!(window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE)) {
-                    this.incrementLoginAttempts();
-                }
+                // Incrementar tentativas de login
+                this.incrementLoginAttempts();
                 throw new Error(result.error || 'Credenciais inválidas');
             }
 
         } catch (error) {
             console.error('❌ Erro no login:', error);
-            // NÃO incrementar tentativas em modo DEBUG
-            if (!(window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE)) {
-                this.incrementLoginAttempts();
-            }
+            // Incrementar tentativas de login
+            this.incrementLoginAttempts();
             return {
                 success: false,
                 error: error.message
@@ -379,12 +384,7 @@ class AuthManager {
      * @returns {boolean} True se em lockout
      */
     isLockedOut() {
-        // LOCKOUT COMPLETAMENTE DESABILITADO PARA DESENVOLVIMENTO
-        return false;
-        
-        // Código original comentado:
-        /*
-        // Desabilitar lockout em modo de desenvolvimento
+        // Desabilitar lockout apenas em modo de desenvolvimento
         if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) {
             return false;
         }
@@ -402,7 +402,6 @@ class AuthManager {
             }
         }
         return false;
-        */
     }
 
     /**
@@ -539,7 +538,7 @@ class AuthManager {
         );
 
         if (user) {
-            // Em modo DEBUG, aceitar qualquer senha
+            // Em modo DEBUG, aceitar qualquer senha; em produção, verificar senha correta
             const passwordMatch = (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) 
                 ? true 
                 : user.password === password;

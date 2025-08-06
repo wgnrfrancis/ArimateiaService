@@ -21,10 +21,10 @@ window.CONFIG = {
     // URLs da API
     API: {
         // Google Apps Script Web App URL (PRODUÇÃO via Netlify Proxy)
-        // BASE_URL: '/api',
+        BASE_URL: '/api',
         
         // URL Direta (fallback - descomente se necessário)
-        BASE_URL: 'https://script.google.com/macros/s/AKfycbyhWfNDw2fZtIe1rc2DlYZ-6wKK7dQXkY7ZFKC9YrA--b1ynmUosT-QQvLBwisql20/exec',
+        // BASE_URL: 'https://script.google.com/macros/s/AKfycbyhWfNDw2fZtIe1rc2DlYZ-6wKK7dQXkY7ZFKC9YrA--b1ynmUosT-QQvLBwisql20/exec',
         
         // URL Local para desenvolvimento (descomente para usar localmente)
         // BASE_URL: 'http://localhost:3000/api',
@@ -453,9 +453,9 @@ window.CONFIG = {
 
     // Configurações de desenvolvimento
     DEV: {
-        MOCK_DATA: true,
-        DEBUG_MODE: true,
-        SHOW_LOGS: true,
+        MOCK_DATA: false,
+        DEBUG_MODE: false,
+        SHOW_LOGS: false,
         BYPASS_AUTH: false
     }
 };
