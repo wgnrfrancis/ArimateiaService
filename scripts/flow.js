@@ -192,7 +192,7 @@ class FlowExtensions {
             const data = await this.sendToScript({
                 action: 'validateUser',
                 email: email,
-                password: password
+                senha: password  // ✅ CORRIGIDO: Mudado de "password" para "senha"
             });
 
             if (data.success && data.user) {
