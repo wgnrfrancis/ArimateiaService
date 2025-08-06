@@ -2,10 +2,14 @@
  * Exemplo de código para Google Apps Script (Code.gs)
  * Este arquivo deve ser copiado para o Google Apps Script
  * URL: https://script.google.com/
+ * 
+ * IMPORTANTE: Configure o Google Apps Script para:
+ * 1. Acesso: "Qualquer pessoa (mesmo anônima)"
+ * 2. Executar como: "Eu (seu email)"
  */
 
 function doPost(e) {
-  console.log('📨 Requisição recebida:', e);
+  console.log('📨 Requisição POST recebida:', e);
   
   try {
     // Ler dados JSON do corpo da requisição
@@ -18,30 +22,42 @@ function doPost(e) {
     
     console.log('🔍 Ação:', action, 'Email:', email);
     
+    // Teste de conexão simples
+    if (action === 'testConnection') {
+      return createCorsResponse({
+        success: true,
+        message: 'Conexão estabelecida com sucesso!',
+        timestamp: new Date().toISOString(),
+        version: '2.0.0'
+      });
+    }
+    
+    // Validação de usuário
     if (action === 'validateUser') {
       return validarUsuario(email, password);
     }
     
+    // Teste básico da API
     if (action === 'test') {
-      return ContentService.createTextOutput(JSON.stringify({
+      return createCorsResponse({
         success: true,
         message: 'API do Balcão da Cidadania está funcionando!',
         timestamp: new Date().toISOString(),
         version: '2.0.0'
-      })).setMimeType(ContentService.MimeType.JSON);
+      });
     }
     
-    return ContentService.createTextOutput(JSON.stringify({
+    return createCorsResponse({
       success: false,
       error: 'Ação não reconhecida: ' + action
-    })).setMimeType(ContentService.MimeType.JSON);
+    });
     
   } catch (error) {
     console.error('❌ Erro no doPost:', error);
-    return ContentService.createTextOutput(JSON.stringify({
+    return createCorsResponse({
       success: false,
       error: 'Erro no servidor: ' + error.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
+    });
   }
 }
 
@@ -52,26 +68,50 @@ function doGet(e) {
     var action = e.parameter.action;
     
     if (action === 'test') {
-      return ContentService.createTextOutput(JSON.stringify({
+      return createCorsResponse({
         success: true,
         message: 'API do Balcão da Cidadania está funcionando!',
         timestamp: new Date().toISOString(),
         version: '2.0.0'
-      })).setMimeType(ContentService.MimeType.JSON);
+      });
     }
     
-    return ContentService.createTextOutput(JSON.stringify({
+    return createCorsResponse({
       success: false,
       error: 'Ação GET não reconhecida: ' + action
-    })).setMimeType(ContentService.MimeType.JSON);
+    });
     
   } catch (error) {
     console.error('❌ Erro no doGet:', error);
-    return ContentService.createTextOutput(JSON.stringify({
+    return createCorsResponse({
       success: false,
       error: 'Erro no servidor: ' + error.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
+    });
   }
+}
+
+/**
+ * ✅ Função que retorna resposta com headers CORS corretos
+ * Esta função é ESSENCIAL para resolver problemas de CORS
+ */
+function createCorsResponse(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON)
+    .setHeader("Access-Control-Allow-Origin", "*")  // Permite qualquer origem
+    .setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    .setHeader("Access-Control-Allow-Headers", "Content-Type, Accept")
+    .setHeader("Access-Control-Max-Age", "3600");
+}
+
+/**
+ * Função para lidar com requisições OPTIONS (preflight)
+ * Necessária para requisições CORS complexas
+ */
+function doOptions(e) {
+  return createCorsResponse({
+    message: 'CORS preflight OK'
+  });
 }
 
 function validarUsuario(email, senha) {
@@ -102,6 +142,16 @@ function validarUsuario(email, senha) {
         igreja: 'Igreja Central - Sede',
         regiao: 'Centro',
         status: 'ativo'
+      },
+      {
+        id: 3,
+        name: 'Maria Silva',
+        email: 'secretaria@arimateia.org.br',
+        password: '123456',
+        role: 'SECRETARIA',
+        igreja: 'Igreja Central - Sede',
+        regiao: 'Centro',
+        status: 'ativo'
       }
     ];
     
@@ -113,7 +163,7 @@ function validarUsuario(email, senha) {
     if (usuario && usuario.password === senha) {
       console.log('✅ Usuário encontrado:', usuario.name);
       
-      return ContentService.createTextOutput(JSON.stringify({
+      return createCorsResponse({
         success: true,
         user: {
           id: usuario.id,
@@ -126,22 +176,22 @@ function validarUsuario(email, senha) {
           ultimoAcesso: new Date().toISOString()
         },
         message: 'Login realizado com sucesso!'
-      })).setMimeType(ContentService.MimeType.JSON);
+      });
     } else {
       console.log('❌ Credenciais inválidas para:', email);
       
-      return ContentService.createTextOutput(JSON.stringify({
+      return createCorsResponse({
         success: false,
         error: 'Email ou senha incorretos'
-      })).setMimeType(ContentService.MimeType.JSON);
+      });
     }
     
   } catch (error) {
     console.error('❌ Erro na validação:', error);
-    return ContentService.createTextOutput(JSON.stringify({
+    return createCorsResponse({
       success: false,
       error: 'Erro na validação: ' + error.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
+    });
   }
 }
 
@@ -179,3 +229,23 @@ function conectarPlanilha() {
     throw error;
   }
 }
+
+/**
+ * INSTRUÇÕES DE CONFIGURAÇÃO:
+ * 
+ * 1. Cole este código no Google Apps Script (script.google.com)
+ * 
+ * 2. Clique em "Implantar" > "Nova implantação"
+ * 
+ * 3. Configurações da implantação:
+ *    - Tipo: Aplicativo da web
+ *    - Executar como: Eu (seu email)
+ *    - Quem tem acesso: Qualquer pessoa (mesmo anônima)
+ * 
+ * 4. Clique em "Implantar" e copie a URL fornecida
+ * 
+ * 5. Cole a URL no arquivo config.js do seu projeto
+ * 
+ * 6. Para atualizar: vá em "Implantar" > "Gerenciar implantações" 
+ *    e clique em "Editar" na versão ativa
+ */
