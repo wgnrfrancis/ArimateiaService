@@ -21,7 +21,7 @@ window.CONFIG = {
     // URLs da API
     API: {
         // Google Apps Script Web App URL (PRODUÇÃO via URL Direto)
-        BASE_URL: 'https://script.google.com/macros/s/AKfycbyhWfNDw2fZtIe1rc2DlYZ-6wKK7dQXkY7ZFKC9YrA--b1ynmUosT-QQvLBwisql20/exec',
+        BASE_URL: 'https://script.google.com/macros/s/AKfycbxsTSKVi7fdARhyGDWrIdKbpe2K-56OLa0g2LCpaiYd4m1V3ChDYl68J_s3V2eN-u82/exec',
         
         // Netlify Proxy (temporariamente desabilitado devido a erro 500)
         // BASE_URL: '/api',
