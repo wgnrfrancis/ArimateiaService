@@ -151,6 +151,34 @@ class AuthManager {
 
         } catch (error) {
             console.error('❌ Erro no login:', error);
+            
+            // Em modo DEBUG, tentar fallback se ainda não foi tentado
+            if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE && 
+                !error.message.includes('mock') && 
+                (error.message.includes('fetch') || error.message.includes('conexão') || error.message.includes('Failed'))) {
+                console.log('🧪 Tentando fallback mock devido a erro de conexão...');
+                try {
+                    const mockResult = this.validateMockUser(email, password);
+                    if (mockResult.success && mockResult.data) {
+                        // Reset tentativas de login
+                        this.resetLoginAttempts();
+                        
+                        // Salvar usuário na sessão
+                        this.currentUser = mockResult.data;
+                        this.saveSession();
+
+                        console.log('✅ Login realizado via fallback mock:', this.currentUser.nome);
+                        return {
+                            success: true,
+                            user: this.currentUser,
+                            message: mockResult.message || 'Login realizado com sucesso (modo DEBUG)!'
+                        };
+                    }
+                } catch (mockError) {
+                    console.error('❌ Erro no fallback mock:', mockError);
+                }
+            }
+            
             // Incrementar tentativas de login
             this.incrementLoginAttempts();
             return {
