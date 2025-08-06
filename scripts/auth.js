@@ -28,6 +28,12 @@ class AuthManager {
         // Verificar se há sessão salva
         this.loadSession();
         
+        // Limpar tentativas de login para desenvolvimento
+        if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) {
+            this.resetLoginAttempts();
+            console.log('🔓 Tentativas de login resetadas (modo DEBUG)');
+        }
+        
         // Configurar interceptador para requests
         this.setupRequestInterceptor();
         
@@ -353,6 +359,11 @@ class AuthManager {
      * @returns {boolean} True se em lockout
      */
     isLockedOut() {
+        // LOCKOUT COMPLETAMENTE DESABILITADO PARA DESENVOLVIMENTO
+        return false;
+        
+        // Código original comentado:
+        /*
         // Desabilitar lockout em modo de desenvolvimento
         if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) {
             return false;
@@ -371,6 +382,7 @@ class AuthManager {
             }
         }
         return false;
+        */
     }
 
     /**
