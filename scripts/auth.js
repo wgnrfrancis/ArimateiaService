@@ -113,15 +113,15 @@ class AuthManager {
                 throw new Error('Sistema de autenticação não configurado - flowManager não disponível');
             }
 
-            if (result.success && result.data) {
+            if (result.success && result.user) {
                 // Reset tentativas de login
                 this.resetLoginAttempts();
                 
                 // Salvar usuário na sessão
-                this.currentUser = result.data;
+                this.currentUser = result.user;
                 this.saveSession();
 
-                console.log('✅ Login realizado com sucesso:', this.currentUser.nome);
+                console.log('✅ Login realizado com sucesso:', this.currentUser.nome || this.currentUser.name);
                 return {
                     success: true,
                     user: this.currentUser,
