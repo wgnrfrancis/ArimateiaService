@@ -353,6 +353,11 @@ class AuthManager {
      * @returns {boolean} True se em lockout
      */
     isLockedOut() {
+        // Desabilitar lockout em modo de desenvolvimento
+        if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) {
+            return false;
+        }
+        
         if (this.loginAttempts.count >= this.maxLoginAttempts) {
             const lastAttempt = new Date(this.loginAttempts.lastAttempt);
             const now = new Date();
@@ -479,6 +484,16 @@ class AuthManager {
                 cargo: 'COORDENADOR_LOCAL',
                 igreja: 'Igreja da Vila Nova',
                 regiao: 'Sul',
+                ativo: true
+            },
+            {
+                id: 5,
+                nome: 'Wagner Duarte',
+                email: 'wagduarte@universal.org',
+                password: '123456',
+                cargo: 'COORDENADOR_GERAL',
+                igreja: 'Igreja Universal - Sede',
+                regiao: 'Centro',
                 ativo: true
             }
         ];
