@@ -66,12 +66,17 @@ class FlowExtensions {
             try {
                 console.log(`🔄 Tentativa ${attempt}/${this.retryAttempts}`);
                 
+                // Preparar dados para requisição
+                const formData = new URLSearchParams(payload);
+                const bodyData = formData.toString();
+                
                 const response = await fetch(this.scriptUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Length': bodyData.length.toString()
                     },
-                    body: new URLSearchParams(payload),
+                    body: bodyData,
                     redirect: 'follow'
                 });
 
