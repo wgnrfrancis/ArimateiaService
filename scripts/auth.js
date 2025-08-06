@@ -519,5 +519,25 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = AuthManager;
 }
 
+// Função de debug para limpar lockout (apenas em desenvolvimento)
+if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) {
+    window.clearLockout = function() {
+        if (window.authManager) {
+            window.authManager.resetLoginAttempts();
+            console.log('🔓 Lockout limpo! Você pode tentar fazer login novamente.');
+        }
+    };
+    
+    window.checkLockout = function() {
+        if (window.authManager) {
+            const locked = window.authManager.isLockedOut();
+            console.log('🔐 Status do lockout:', locked ? 'BLOQUEADO' : 'LIBERADO');
+            if (locked) {
+                console.log('💡 Use clearLockout() para desbloquear');
+            }
+        }
+    };
+}
+
 console.log('✅ Auth.js carregado com sucesso');
 
