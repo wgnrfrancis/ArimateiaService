@@ -1,15 +1,16 @@
 // ========================================
 // BALCÃO DA CIDADANIA - GOOGLE APPS SCRIPT
 // Sistema completo de gerenciamento
-// Versão: 2.1.0 - SOLUÇÃO DEFINITIVA PARA CORS
+// Versão: 2.1.0 - PRODUÇÃO
 // ========================================
 //
-// ✅ CORREÇÕES APLICADAS NESTA VERSÃO:
+// ✅ VERSÃO DE PRODUÇÃO - SEM FUNÇÕES DE TESTE
 // 1. Verificação robusta do objeto 'e' e seus dados
 // 2. Logger.log() em vez de console.log() para compatibilidade
 // 3. Tratamento específico para requisições OPTIONS (CORS preflight)
 // 4. Melhor parsing e validação de dados JSON
 // 5. Resposta padronizada com estrutura consistente
+// 6. Remoção completa de funções de teste (testConnection)
 //
 // ⚠️ IMPORTANTE:
 // - NÃO execute doPost() manualmente no editor
@@ -76,10 +77,6 @@ function doPost(e) {
     // Roteamento das ações com tratamento individual de erros
     let result;
     switch (data.action) {
-      case 'testConnection':
-        result = testConnection();
-        break;
-        
       case 'validateUser':
         result = validateUser(data);
         break;
@@ -138,7 +135,7 @@ function doPost(e) {
           success: false,
           error: 'Ação não reconhecida: ' + data.action,
           availableActions: [
-            'testConnection', 'validateUser', 'newUser', 'checkUserExists',
+            'validateUser', 'newUser', 'checkUserExists',
             'newTicket', 'getTickets', 'updateTicket', 'getUsers',
             'getUserStats', 'getDashboardData', 'getIgrejasRegioes',
             'getCategories', 'getVolunteers', 'getProfessionals'
@@ -189,11 +186,11 @@ function doGet(e) {
         success: true,
         message: 'API do Balcão da Cidadania está funcionando!',
         timestamp: new Date().toISOString(),
-        version: '2.1.0',
+        version: '2.1.0 - PRODUÇÃO',
         status: 'online',
         spreadsheetId: SPREADSHEET_ID,
         availableActions: {
-          GET: ['testConnection', 'getIgrejasRegioes', 'getCategories'],
+          GET: ['getIgrejasRegioes', 'getCategories'],
           POST: [
             'validateUser', 'newUser', 'checkUserExists', 'newTicket',
             'getTickets', 'updateTicket', 'getUsers', 'getUserStats',
@@ -209,10 +206,6 @@ function doGet(e) {
     // Roteamento para ações GET
     let result;
     switch (action) {
-      case 'testConnection':
-        result = testConnection();
-        break;
-        
       case 'getIgrejasRegioes':
         result = getIgrejasRegioes();
         break;
@@ -225,7 +218,7 @@ function doGet(e) {
         result = {
           success: false,
           error: 'Ação GET não reconhecida: ' + action,
-          availableGetActions: ['testConnection', 'getIgrejasRegioes', 'getCategories']
+          availableGetActions: ['getIgrejasRegioes', 'getCategories']
         };
     }
     
@@ -285,44 +278,6 @@ function createStandardResponse(data) {
     return ContentService
       .createTextOutput(JSON.stringify(fallbackResponse))
       .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-/**
- * ✅ Teste de conexão - FUNÇÃO BÁSICA PARA DEBUG
- */
-function testConnection() {
-  try {
-    Logger.log('🔍 Iniciando teste de conexão...');
-    
-    // Tentar acessar a planilha
-    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const sheets = spreadsheet.getSheets();
-    
-    Logger.log('✅ Conexão com planilha estabelecida');
-    
-    return {
-      success: true,
-      message: 'Conexão estabelecida com sucesso!',
-      timestamp: new Date().toISOString(),
-      spreadsheetId: SPREADSHEET_ID,
-      spreadsheetName: spreadsheet.getName(),
-      sheetsCount: sheets.length,
-      sheetsNames: sheets.map(sheet => sheet.getName()),
-      version: '2.1.0',
-      status: 'online'
-    };
-    
-  } catch (error) {
-    Logger.log('❌ Erro no teste de conexão: ' + error.toString());
-    
-    return {
-      success: false,
-      error: 'Erro na conexão com a planilha: ' + error.message,
-      spreadsheetId: SPREADSHEET_ID,
-      timestamp: new Date().toISOString(),
-      errorDetails: error.toString()
-    };
   }
 }
 
