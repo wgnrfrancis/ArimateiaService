@@ -104,8 +104,17 @@ class AuthManager {
             // Chamar validação via flowManager ou fallback para desenvolvimento
             let result;
             
-            if (window.flowManager && typeof window.flowManager.validateUser === 'function') {
-                result = await window.flowManager.validateUser(email, password);
+            // FORÇAR uso de usuários mock em desenvolvimento
+            if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) {
+                console.log('🧪 Usando usuários mock (modo DEBUG)');
+                result = this.validateMockUser(email, password);
+            } else if (window.flowManager && typeof window.flowManager.validateUser === 'function') {
+                try {
+                    result = await window.flowManager.validateUser(email, password);
+                } catch (error) {
+                    console.log('⚠️ Erro no flowManager, usando fallback mock:', error.message);
+                    result = this.validateMockUser(email, password);
+                }
             } else {
                 // Fallback para desenvolvimento - usuários mock
                 result = this.validateMockUser(email, password);
@@ -126,14 +135,19 @@ class AuthManager {
                     message: result.message || 'Login realizado com sucesso!'
                 };
             } else {
-                // Incrementar tentativas de login
-                this.incrementLoginAttempts();
+                // NÃO incrementar tentativas em modo DEBUG
+                if (!(window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE)) {
+                    this.incrementLoginAttempts();
+                }
                 throw new Error(result.error || 'Credenciais inválidas');
             }
 
         } catch (error) {
             console.error('❌ Erro no login:', error);
-            this.incrementLoginAttempts();
+            // NÃO incrementar tentativas em modo DEBUG
+            if (!(window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE)) {
+                this.incrementLoginAttempts();
+            }
             return {
                 success: false,
                 error: error.message
@@ -307,6 +321,12 @@ class AuthManager {
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
         const publicPages = ['index.html', 'cadastro.html'];
         
+        // Em modo DEBUG, não redirecionar automaticamente
+        if (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) {
+            console.log('🧪 Modo DEBUG: Verificação de página desabilitada');
+            return;
+        }
+        
         if (!publicPages.includes(currentPage) && !this.isAuthenticated()) {
             console.log('🚫 Redirecionando para login...');
             window.location.href = 'index.html';
@@ -456,6 +476,8 @@ class AuthManager {
      * @returns {Object} Resultado da validação
      */
     validateMockUser(email, password) {
+        console.log('🧪 Validando usuário mock:', email);
+        
         // Usuários mock para desenvolvimento
         const mockUsers = [
             {
@@ -510,26 +532,35 @@ class AuthManager {
             }
         ];
 
+        // Buscar usuário (insensível a maiúsculas/minúsculas)
         const user = mockUsers.find(u => 
             u.email.toLowerCase() === email.toLowerCase() && 
-            u.password === password && 
             u.ativo
         );
 
         if (user) {
-            // Remover senha do objeto retornado
-            const { password: _, ...userWithoutPassword } = user;
-            return {
-                success: true,
-                data: userWithoutPassword,
-                message: 'Login realizado com sucesso!'
-            };
-        } else {
-            return {
-                success: false,
-                error: 'Email ou senha incorretos'
-            };
+            // Em modo DEBUG, aceitar qualquer senha
+            const passwordMatch = (window.CONFIG && window.CONFIG.DEV && window.CONFIG.DEV.DEBUG_MODE) 
+                ? true 
+                : user.password === password;
+                
+            if (passwordMatch) {
+                // Remover senha do objeto retornado
+                const { password: _, ...userWithoutPassword } = user;
+                console.log('✅ Usuário mock validado:', user.nome);
+                return {
+                    success: true,
+                    data: userWithoutPassword,
+                    message: 'Login realizado com sucesso!'
+                };
+            }
         }
+
+        console.log('❌ Usuário mock não encontrado ou senha incorreta');
+        return {
+            success: false,
+            error: 'Email ou senha incorretos'
+        };
     }
 }
 
