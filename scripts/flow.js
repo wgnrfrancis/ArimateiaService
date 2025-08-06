@@ -66,17 +66,18 @@ class FlowExtensions {
             try {
                 console.log(`🔄 Tentativa ${attempt}/${this.retryAttempts}`);
                 
-                // Preparar dados para requisição
-                const formData = new URLSearchParams(payload);
-                const bodyData = formData.toString();
+                // Preparar dados como JSON para Google Apps Script
+                const jsonData = JSON.stringify(payload);
+                
+                console.log('📦 Enviando dados JSON:', jsonData);
                 
                 const response = await fetch(this.scriptUrl, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Content-Length': bodyData.length.toString()
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
-                    body: bodyData,
+                    body: jsonData,
                     redirect: 'follow'
                 });
 
@@ -158,10 +159,8 @@ class FlowExtensions {
         try {
             const data = await this.sendToScript({
                 action: 'validateUser',
-                data: JSON.stringify({
-                    email: email,
-                    password: password
-                })
+                email: email,
+                password: password
             });
 
             if (data.success && data.user) {
