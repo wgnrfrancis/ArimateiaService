@@ -73,15 +73,18 @@ class FlowExtensions {
                 
                 const response = await fetch(this.scriptUrl, {
                     method: 'POST',
+                    mode: 'cors', // ✅ CORREÇÃO: Usar CORS explicitamente
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
                     body: jsonData,
-                    redirect: 'follow'
+                    redirect: 'follow',
+                    cache: 'no-cache' // ✅ Evitar cache de requisições
                 });
 
-                if (response.ok || response.type === 'opaque') {
+                // ✅ CORREÇÃO: Aceitar response.ok OU status 200-299
+                if (response.ok || (response.status >= 200 && response.status < 300)) {
                     return response;
                 }
                 
@@ -107,24 +110,53 @@ class FlowExtensions {
      * @returns {Promise<Object>} Dados processados
      */
     async processResponse(response) {
+        // ✅ CORREÇÃO: Verificar se response é válido
+        if (!response) {
+            throw new Error('Resposta inválida ou nula');
+        }
+
         if (response.type === 'opaque') {
             console.log('📄 Resposta no-cors (assumindo sucesso)');
             return { success: true, message: 'Requisição enviada com sucesso' };
         }
 
         try {
+            // ✅ CORREÇÃO: Verificar se response tem conteúdo
+            if (!response.ok && response.status !== 200) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
             const responseText = await response.text();
-            console.log('📄 Resposta recebida:', responseText);
+            console.log('📄 Resposta recebida (texto):', responseText.substring(0, 200) + '...');
+
+            // ✅ CORREÇÃO: Verificar se há conteúdo para fazer parse
+            if (!responseText || responseText.trim() === '') {
+                console.warn('⚠️ Resposta vazia do servidor');
+                return {
+                    success: false,
+                    error: 'Resposta vazia do servidor'
+                };
+            }
 
             const result = JSON.parse(responseText);
-            console.log('✅ Resposta processada:', result);
+            console.log('✅ Resposta processada com sucesso:', result);
+            
+            // ✅ CORREÇÃO: Garantir que o resultado tenha estrutura mínima
+            if (typeof result !== 'object') {
+                throw new Error('Resposta não é um objeto JSON válido');
+            }
+
             return result;
 
         } catch (parseError) {
             console.error('❌ Erro ao processar resposta:', parseError);
+            console.error('📄 Resposta que causou erro:', response);
+            
             return {
                 success: false,
-                error: 'Resposta inválida do servidor'
+                error: 'Erro ao processar resposta do servidor: ' + parseError.message,
+                responseStatus: response.status,
+                responseStatusText: response.statusText
             };
         }
     }

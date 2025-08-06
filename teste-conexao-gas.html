@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Conexão - Google Apps Script</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .url-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Teste de Conexão - Google Apps Script</h1>
+        <p>Esta página permite testar a conexão com seu Google Apps Script do Balcão da Cidadania.</p>
+        
+        <div>
+            <label for="scriptUrl">URL do Google Apps Script:</label>
+            <input type="url" id="scriptUrl" class="url-input" 
+                   value="https://script.google.com/macros/s/AKfycbyhWfNDw2fZtIe1rc2DlYZ-6wKK7dQXkY7ZFKC9YrA--b1ynmUosT-QQvLBwisql20/exec"
+                   placeholder="Cole aqui a URL do seu Google Apps Script implantado">
+        </div>
+        
+        <div>
+            <button onclick="testConnection()">🔍 Testar Conexão</button>
+            <button onclick="testGET()">📥 Teste GET</button>
+            <button onclick="testPOST()">📤 Teste POST</button>
+            <button onclick="clearResults()">🧹 Limpar</button>
+        </div>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        async function testConnection() {
+            showLoading('Testando conexão...');
+            
+            try {
+                const url = document.getElementById('scriptUrl').value;
+                if (!url) {
+                    throw new Error('URL do Google Apps Script é obrigatória');
+                }
+                
+                console.log('🔍 Testando conexão com:', url);
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'testConnection',
+                        timestamp: new Date().toISOString(),
+                        test: true
+                    })
+                });
+                
+                console.log('📡 Resposta recebida:', response);
+                
+                const result = await response.text();
+                console.log('📄 Conteúdo da resposta:', result);
+                
+                let parsedResult;
+                try {
+                    parsedResult = JSON.parse(result);
+                } catch (parseError) {
+                    parsedResult = {
+                        success: false,
+                        error: 'Erro ao fazer parse da resposta JSON: ' + parseError.message,
+                        rawResponse: result
+                    };
+                }
+                
+                if (parsedResult.success) {
+                    showSuccess('✅ Conexão estabelecida com sucesso!', parsedResult);
+                } else {
+                    showError('❌ Falha na conexão', parsedResult);
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro no teste:', error);
+                showError('❌ Erro na requisição: ' + error.message, {
+                    error: error.message,
+                    stack: error.stack
+                });
+            }
+        }
+        
+        async function testGET() {
+            showLoading('Testando GET...');
+            
+            try {
+                const url = document.getElementById('scriptUrl').value;
+                if (!url) {
+                    throw new Error('URL do Google Apps Script é obrigatória');
+                }
+                
+                console.log('📥 Testando GET com:', url);
+                
+                const response = await fetch(url + '?action=testConnection', {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const result = await response.text();
+                console.log('📄 Resposta GET:', result);
+                
+                let parsedResult;
+                try {
+                    parsedResult = JSON.parse(result);
+                } catch (parseError) {
+                    parsedResult = {
+                        success: false,
+                        error: 'Erro ao fazer parse da resposta JSON: ' + parseError.message,
+                        rawResponse: result
+                    };
+                }
+                
+                if (parsedResult.success) {
+                    showSuccess('✅ GET funcionando!', parsedResult);
+                } else {
+                    showError('❌ Erro no GET', parsedResult);
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro no teste GET:', error);
+                showError('❌ Erro na requisição GET: ' + error.message, {
+                    error: error.message
+                });
+            }
+        }
+        
+        async function testPOST() {
+            showLoading('Testando POST com getDashboardData...');
+            
+            try {
+                const url = document.getElementById('scriptUrl').value;
+                if (!url) {
+                    throw new Error('URL do Google Apps Script é obrigatória');
+                }
+                
+                console.log('📤 Testando POST com:', url);
+                
+                const testData = {
+                    action: 'getDashboardData',
+                    data: JSON.stringify({
+                        filters: { period: '30days', region: 'Centro' },
+                        period: '30days'
+                    }),
+                    timestamp: new Date().toISOString(),
+                    clientOrigin: window.location.origin,
+                    version: '2.0.0'
+                };
+                
+                console.log('📦 Dados de teste:', testData);
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const result = await response.text();
+                console.log('📄 Resposta POST:', result);
+                
+                let parsedResult;
+                try {
+                    parsedResult = JSON.parse(result);
+                } catch (parseError) {
+                    parsedResult = {
+                        success: false,
+                        error: 'Erro ao fazer parse da resposta JSON: ' + parseError.message,
+                        rawResponse: result
+                    };
+                }
+                
+                if (parsedResult.success) {
+                    showSuccess('✅ POST funcionando!', parsedResult);
+                } else {
+                    showError('❌ Erro no POST', parsedResult);
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro no teste POST:', error);
+                showError('❌ Erro na requisição POST: ' + error.message, {
+                    error: error.message
+                });
+            }
+        }
+        
+        function showLoading(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result loading';
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '⏳ ' + message;
+        }
+        
+        function showSuccess(message, data) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result success';
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = message + '\n\n' + JSON.stringify(data, null, 2);
+        }
+        
+        function showError(message, data) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result error';
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = message + '\n\n' + JSON.stringify(data, null, 2);
+        }
+        
+        function clearResults() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'none';
+            resultDiv.textContent = '';
+        }
+        
+        // Carregar URL salva se existir
+        window.onload = function() {
+            const savedUrl = localStorage.getItem('gasTestUrl');
+            if (savedUrl) {
+                document.getElementById('scriptUrl').value = savedUrl;
+            }
+            
+            // Salvar URL quando mudada
+            document.getElementById('scriptUrl').addEventListener('change', function() {
+                localStorage.setItem('gasTestUrl', this.value);
+            });
+        };
+    </script>
+</body>
+</html>
