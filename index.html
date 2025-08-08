@@ -254,8 +254,13 @@
             // Verificar se dependências carregaram
             if (typeof window.CONFIG === 'undefined' || 
                 typeof window.Helpers === 'undefined' || 
-                typeof AuthManager === 'undefined') {
+                typeof AuthManager === 'undefined' ||
+                typeof FlowManager === 'undefined') {
                 console.error('❌ Dependências não carregaram corretamente');
+                console.log('CONFIG:', typeof window.CONFIG);
+                console.log('Helpers:', typeof window.Helpers);
+                console.log('AuthManager:', typeof AuthManager);
+                console.log('FlowManager:', typeof FlowManager);
                 document.body.innerHTML = '<div style="text-align:center;padding:50px;"><h2>Erro ao carregar sistema</h2><p>Verifique se todos os arquivos estão presentes.</p></div>';
                 return;
             }
@@ -263,7 +268,7 @@
             try {
                 // Initialize managers
                 window.authManager = new AuthManager();
-                window.flowManager = new FlowExtensions();
+                window.flowManager = window.flowManager || new FlowManager();
                 window.loginManager = new LoginManager();
                 
                 console.log('✅ Sistema inicializado com sucesso');

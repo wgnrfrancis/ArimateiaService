@@ -413,6 +413,10 @@ window.addEventListener('error', (event) => {
 
 // ===== EXPORTAÇÃO =====
 
+// Disponibilizar classes no escopo global
+window.PowerAutomateManager = PowerAutomateManager;
+window.FlowManager = FlowManager;
+
 // Para módulos ES6 (se necessário)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { PowerAutomateManager, FlowManager };
