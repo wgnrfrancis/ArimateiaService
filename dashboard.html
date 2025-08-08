@@ -288,8 +288,8 @@
     <!-- Scripts -->
     <script src="data/config.js"></script>
     <script src="scripts/helpers.js"></script>
-    <script src="scripts/auth.js"></script>
     <script src="scripts/flow.js"></script>
+    <script src="scripts/auth.js"></script>
     <script src="scripts/dashboard.js"></script>
 
     <!-- Dashboard specific styles -->
@@ -525,13 +525,6 @@
         }
     </style>
 
-    <!-- Scripts Dependencies -->
-    <script src="data/config.js"></script>
-    <script src="scripts/helpers.js"></script>
-    <script src="scripts/flow.js"></script>
-    <script src="scripts/auth.js"></script>
-    <script src="scripts/dashboard.js"></script>
-
     <!-- Initialize Dashboard -->
     <script>
         // Initialize dashboard when DOM is ready
@@ -551,7 +544,7 @@
 
             // Initialize components
             window.authManager = new AuthManager();
-            window.flowManager = new FlowExtensions();
+            window.flowManager = window.flowManager || new FlowManager();
             
             // Verificar autenticação
             if (!window.authManager.isAuthenticated()) {

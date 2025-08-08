@@ -359,6 +359,17 @@ class FlowManager extends PowerAutomateManager {
     }
 
     // Métodos de compatibilidade já implementados na classe pai
+    
+    /**
+     * Método de compatibilidade para validateUser (interface em inglês)
+     * @param {string} email - Email do usuário
+     * @param {string} password - Senha do usuário
+     * @returns {Promise<Object>} Resultado do login
+     */
+    async validateUser(email, password) {
+        console.log('🔄 [Compatibilidade] validateUser -> validarLogin');
+        return await this.validarLogin(email, password);
+    }
 }
 
 // ===== INICIALIZAÇÃO =====
