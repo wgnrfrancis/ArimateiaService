@@ -26,59 +26,383 @@ Este projeto foi migrado do Google Apps Script para **Microsoft Power Automate**
    - ELEICOES_VEREADORES
    - ELEICOES_CONSELHO
 
-### 2. **Configurar Power Automate Flows**
+### 2. **Configurar Power Automate Flows - PASSO A PASSO COMPLETO**
 
-#### Flow 1: **Criar Chamado**
-```
-Trigger: HTTP Request (Manual)
-Actions:
-1. Parse JSON (dados do chamado)
-2. Add row to table (aba CHAMADOS)
-3. Add row to table (aba OBSERVACOES_CHAMADOS)
-4. Respond to PowerApp or flow
-```
+## 🔧 **CONFIGURAÇÃO DETALHADA DOS FLOWS**
 
-#### Flow 2: **Atualizar Chamado**
-```
-Trigger: HTTP Request (Manual)
-Actions:
-1. Parse JSON (ID do chamado + novos dados)
-2. List rows present in a table (filtrar por ID)
-3. Update a row (aba CHAMADOS)
-4. Add row to table (aba OBSERVACOES_CHAMADOS)
-5. Respond to PowerApp or flow
-```
+### **📋 Pré-requisitos:**
+1. Conta Microsoft 365 Business ou superior
+2. Acesso ao Power Automate Premium
+3. Planilha Excel criada no OneDrive/SharePoint
+4. Permissões de administrador no tenant
 
-#### Flow 3: **Listar Chamados**
+---
+
+### **🏗️ PASSO 1: Preparar a Planilha Excel**
+
+#### 1.1 Criar Planilha Base
 ```
-Trigger: HTTP Request (Manual)
-Actions:
-1. Parse JSON (filtros opcionais)
-2. List rows present in a table (aba CHAMADOS)
-3. Apply to each (filtrar dados se necessário)
-4. Respond to PowerApp or flow (retornar JSON)
+1. Vá para OneDrive Business ou SharePoint
+2. Clique em "Novo" > "Pasta de trabalho do Excel"
+3. Nomeie como "BalcaoCidadania.xlsx"
+4. Crie uma nova aba chamada "CHAMADOS"
+5. Adicione os cabeçalhos na linha 1:
 ```
 
-#### Flow 4: **Validar Login**
+**Cabeçalhos da aba CHAMADOS (linha 1):**
 ```
-Trigger: HTTP Request (Manual)
-Actions:
-1. Parse JSON (email + senha)
-2. List rows present in a table (aba USUARIOS)
-3. Filter array (email matching)
-4. Condition (verificar senha hash)
-5. Respond to PowerApp or flow (user data ou erro)
+A1: ID
+B1: DATA_ABERTURA  
+C1: NOME_CIDADAO
+D1: CONTATO
+E1: EMAIL
+F1: IGREJA
+G1: REGIAO
+H1: DESCRICAO_DEMANDA
+I1: STATUS
+J1: PRIORIDADE
+K1: CATEGORIA
+L1: CRIADO_POR
+M1: CRIADO_POR_EMAIL
+N1: RESPONSAVEL_ATUAL
+O1: DATA_ULTIMA_ATUALIZACAO
+P1: OBSERVACOES
+Q1: ANEXOS
+R1: TEMPO_RESOLUCAO
+S1: SATISFACAO_CIDADAO
 ```
 
-#### Flow 5: **Criar Usuário**
+#### 1.2 Converter em Tabela
 ```
-Trigger: HTTP Request (Manual)
-Actions:
-1. Parse JSON (dados do usuário)
-2. List rows present in a table (verificar email único)
-3. Condition (email já existe?)
-4. Add row to table (aba USUARIOS)
-5. Respond to PowerApp or flow
+1. Selecione toda a linha 1 (A1:S1)
+2. Vá em "Inserir" > "Tabela"
+3. Marque "Minha tabela tem cabeçalhos"
+4. Nomeie a tabela como "TabelaChamados"
+```
+
+#### 1.3 Repetir para Outras Abas Essenciais
+
+**Aba USUARIOS:**
+```
+A1: ID
+B1: NOME_COMPLETO
+C1: EMAIL
+D1: SENHA
+E1: TELEFONE
+F1: CARGO
+G1: IGREJA
+H1: REGIAO
+I1: DATA_CADASTRO
+J1: STATUS
+K1: ULTIMO_ACESSO
+L1: TOTAL_CHAMADOS
+M1: CHAMADOS_RESOLVIDOS
+N1: TAXA_RESOLUCAO
+O1: CRIADO_POR
+P1: OBSERVACOES
+```
+
+---
+
+### **🚀 PASSO 2: Criar Flow "Validar Login"**
+
+#### 2.1 Criar Novo Flow
+```
+1. Acesse flow.microsoft.com
+2. Clique em "Criar" > "Flow de nuvem instantâneo"
+3. Nome: "BalcaoCidadania - Validar Login"
+4. Trigger: "Quando uma solicitação HTTP é recebida"
+```
+
+#### 2.2 Configurar Trigger HTTP
+
+**Esquema JSON do Request:**
+```json
+{
+    "type": "object",
+    "properties": {
+        "action": {
+            "type": "string"
+        },
+        "email": {
+            "type": "string"
+        },
+        "senha": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "action",
+        "email", 
+        "senha"
+    ]
+}
+```
+
+#### 2.3 Adicionar Ações
+
+**Ação 1: Listar Linhas da Tabela**
+```
+Conector: Excel Online (Business)
+Ação: List rows present in a table
+Localização: OneDrive for Business
+Biblioteca de Documentos: OneDrive
+Arquivo: BalcaoCidadania.xlsx
+Tabela: TabelaUsuarios
+```
+
+**Ação 2: Filtrar Array**
+```
+Conector: Controle de Dados
+Ação: Filter array
+De: value (do passo anterior)
+Condição avançada:
+item()?['EMAIL'] is equal to triggerBody()?['email']
+```
+
+**Ação 3: Condição - Verificar se usuário existe**
+```
+Conector: Controle
+Ação: Condition
+Expressão: empty(body('Filter_array'))
+Se for igual a: false
+```
+
+**Ação 4: (SE SIM) Verificar Senha**
+```
+Conector: Controle de Dados  
+Ação: Compose
+Entradas: 
+first(body('Filter_array'))?['SENHA']
+```
+
+**Ação 5: (SE SIM) Condição da Senha**
+```
+Conector: Controle
+Ação: Condition
+Esquerda: outputs('Compose')
+é igual a: triggerBody()?['senha']
+```
+
+**Ação 6: (SE LOGIN VÁLIDO) Responder Sucesso**
+```
+Conector: Solicitação
+Ação: Response
+Código de Status: 200
+Cabeçalhos: 
+{
+  "Content-Type": "application/json"
+}
+Corpo:
+{
+  "success": true,
+  "message": "Login realizado com sucesso",
+  "user": {
+    "id": "@{first(body('Filter_array'))?['ID']}",
+    "nome": "@{first(body('Filter_array'))?['NOME_COMPLETO']}",
+    "email": "@{first(body('Filter_array'))?['EMAIL']}",
+    "cargo": "@{first(body('Filter_array'))?['CARGO']}",
+    "igreja": "@{first(body('Filter_array'))?['IGREJA']}",
+    "regiao": "@{first(body('Filter_array'))?['REGIAO']}"
+  }
+}
+```
+
+**Ação 7: (SE SENHA INVÁLIDA) Responder Erro**
+```
+Conector: Solicitação
+Ação: Response  
+Código de Status: 401
+Corpo:
+{
+  "success": false,
+  "message": "Senha incorreta"
+}
+```
+
+**Ação 8: (SE USUÁRIO NÃO EXISTE) Responder Erro**
+```
+Conector: Solicitação
+Ação: Response
+Código de Status: 404  
+Corpo:
+{
+  "success": false,
+  "message": "Usuário não encontrado"
+}
+```
+
+---
+
+### **📝 PASSO 3: Criar Flow "Criar Chamado"**
+
+#### 3.1 Criar Novo Flow
+```
+Nome: "BalcaoCidadania - Criar Chamado"
+Trigger: "Quando uma solicitação HTTP é recebida"
+```
+
+#### 3.2 Esquema JSON do Request
+```json
+{
+    "type": "object",
+    "properties": {
+        "action": {
+            "type": "string"
+        },
+        "chamado": {
+            "type": "object",
+            "properties": {
+                "nome_cidadao": {"type": "string"},
+                "contato": {"type": "string"},
+                "email": {"type": "string"},
+                "igreja": {"type": "string"},
+                "regiao": {"type": "string"},
+                "descricao_demanda": {"type": "string"},
+                "categoria": {"type": "string"},
+                "prioridade": {"type": "string"},
+                "criado_por": {"type": "string"},
+                "criado_por_email": {"type": "string"}
+            }
+        }
+    }
+}
+```
+
+#### 3.3 Ações do Flow
+
+**Ação 1: Gerar ID Único**
+```
+Conector: Controle de Dados
+Ação: Compose
+Entradas: 
+concat('CH', formatDateTime(utcnow(), 'yyyyMMddHHmmss'))
+```
+
+**Ação 2: Adicionar Linha na Tabela CHAMADOS**
+```
+Conector: Excel Online (Business)
+Ação: Add a row into a table
+Arquivo: BalcaoCidadania.xlsx
+Tabela: TabelaChamados
+
+Valores:
+ID: @{outputs('Compose')}
+DATA_ABERTURA: @{formatDateTime(utcnow(), 'dd/MM/yyyy HH:mm')}
+NOME_CIDADAO: @{triggerBody()?['chamado']?['nome_cidadao']}
+CONTATO: @{triggerBody()?['chamado']?['contato']}
+EMAIL: @{triggerBody()?['chamado']?['email']}
+IGREJA: @{triggerBody()?['chamado']?['igreja']}
+REGIAO: @{triggerBody()?['chamado']?['regiao']}
+DESCRICAO_DEMANDA: @{triggerBody()?['chamado']?['descricao_demanda']}
+STATUS: Aberto
+PRIORIDADE: @{triggerBody()?['chamado']?['prioridade']}
+CATEGORIA: @{triggerBody()?['chamado']?['categoria']}
+CRIADO_POR: @{triggerBody()?['chamado']?['criado_por']}
+CRIADO_POR_EMAIL: @{triggerBody()?['chamado']?['criado_por_email']}
+RESPONSAVEL_ATUAL: @{triggerBody()?['chamado']?['criado_por']}
+DATA_ULTIMA_ATUALIZACAO: @{formatDateTime(utcnow(), 'dd/MM/yyyy HH:mm')}
+OBSERVACOES: Chamado criado pelo sistema
+ANEXOS: 
+TEMPO_RESOLUCAO: 
+SATISFACAO_CIDADAO: 
+```
+
+**Ação 3: Responder Sucesso**
+```
+Conector: Solicitação
+Ação: Response
+Código de Status: 201
+Corpo:
+{
+  "success": true,
+  "message": "Chamado criado com sucesso",
+  "chamado_id": "@{outputs('Compose')}",
+  "data_criacao": "@{formatDateTime(utcnow(), 'dd/MM/yyyy HH:mm')}"
+}
+```
+
+---
+
+### **📋 PASSO 4: Criar Flow "Listar Chamados"**
+
+#### 4.1 Esquema JSON do Request
+```json
+{
+    "type": "object",
+    "properties": {
+        "action": {"type": "string"},
+        "filtros": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "regiao": {"type": "string"},
+                "igreja": {"type": "string"},
+                "categoria": {"type": "string"},
+                "criado_por_email": {"type": "string"},
+                "data_inicio": {"type": "string"},
+                "data_fim": {"type": "string"}
+            }
+        }
+    }
+}
+```
+
+#### 4.2 Ações do Flow
+
+**Ação 1: Listar Todas as Linhas**
+```
+Conector: Excel Online (Business)
+Ação: List rows present in a table
+Arquivo: BalcaoCidadania.xlsx
+Tabela: TabelaChamados
+```
+
+**Ação 2: Aplicar Filtros (Se Necessário)**
+```
+Conector: Controle de Dados
+Ação: Filter array
+De: value (do passo anterior)
+Condição: 
+if(empty(triggerBody()?['filtros']?['status']), true, equals(item()?['STATUS'], triggerBody()?['filtros']?['status']))
+```
+
+**Ação 3: Responder com Dados**
+```
+Conector: Solicitação  
+Ação: Response
+Código de Status: 200
+Corpo:
+{
+  "success": true,
+  "chamados": "@{body('Filter_array')}",
+  "total": "@{length(body('Filter_array'))}"
+}
+```
+
+---
+
+### **⚙️ PASSO 5: Configurar URLs no Sistema**
+
+#### 5.1 Obter URLs dos Flows
+```
+1. Em cada flow criado, vá em "Quando uma solicitação HTTP é recebida"
+2. Copie a "URL de POST HTTP"
+3. A URL será algo como:
+https://prod-XX.westus.logic.azure.com/workflows/abc123.../triggers/manual/paths/invoke?api-version=2016-06-01&sp=...
+```
+
+#### 5.2 Atualizar config.js
+```javascript
+// Substituir no arquivo data/config.js
+POWER_AUTOMATE: {
+    BASE_URL: 'https://prod-XX.westus.logic.azure.com/workflows/',
+    ENDPOINTS: {
+        VALIDAR_LOGIN: 'https://prod-XX.westus.logic.azure.com/workflows/ID_FLOW_LOGIN/triggers/manual/paths/invoke?api-version=2016-06-01&sp=...',
+        CRIAR_CHAMADO: 'https://prod-XX.westus.logic.azure.com/workflows/ID_FLOW_CHAMADO/triggers/manual/paths/invoke?api-version=2016-06-01&sp=...',
+        LISTAR_CHAMADOS: 'https://prod-XX.westus.logic.azure.com/workflows/ID_FLOW_LISTAR/triggers/manual/paths/invoke?api-version=2016-06-01&sp=...'
+    }
+}
 ```
 
 ### 3. **Atualizar Configurações do Sistema**
