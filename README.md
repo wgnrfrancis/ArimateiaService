@@ -1,12 +1,14 @@
 # Balcão da Cidadania - Sistema de Atendimento
 
-Sistema de gestão para atendimento ao cidadão desenvolvido para a Igreja Evangélica Pentecostal Arimateia, integrado com Power Automate e OneDrive.
+Sistema de gestão para atendimento ao cidadão desenvolvido para a Igreja Evangélica Pentecostal Arimateia, **100% integrado com Microsoft Power Automate e OneDrive**.
 
 ## 🚀 Como Executar
 
 ### Pré-requisitos
 - Navegador web moderno (Chrome, Firefox, Safari, Edge)
 - Servidor web local (opcional, mas recomendado)
+- **Microsoft Power Automate configurado**
+- **Planilha OneDrive/SharePoint com estrutura específica**
 
 ### Execução Local
 
@@ -25,6 +27,30 @@ Sistema de gestão para atendimento ao cidadão desenvolvido para a Igreja Evang
    php -S localhost:8000
    ```
    Depois acesse: `http://localhost:8000`
+
+## 🔗 Configuração Power Automate
+
+### URLs dos Flows Necessários:
+Configure as seguintes URLs no arquivo `data/config.js`:
+
+```javascript
+POWER_AUTOMATE: {
+    ENDPOINTS: {
+        VALIDAR_LOGIN: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_LOGIN/triggers/manual/paths/invoke',
+        CRIAR_CHAMADO: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_CHAMADO/triggers/manual/paths/invoke',
+        LISTAR_CHAMADOS: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_LISTAR/triggers/manual/paths/invoke',
+        ATUALIZAR_CHAMADO: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_UPDATE/triggers/manual/paths/invoke',
+        CRIAR_USUARIO: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_USER/triggers/manual/paths/invoke',
+        OBTER_IGREJAS: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_IGREJAS/triggers/manual/paths/invoke'
+    }
+}
+```
+
+### Planilha OneDrive:
+- **URL da Planilha**: https://igrejauniversaldorei-my.sharepoint.com/:x:/g/personal/wagduarte_universal_org/EWjS3RVFYzZMiwuVhdxYoeYBOKTYSFe3P7a29TS9zn5qgw
+- **Aba IGREJAS_REGIOES**: Contém as colunas `ID`, `NOME_IGREJA`, `REGIAO`
+
+Ver documentação completa: `MIGRACAO_POWER_AUTOMATE.md` e `CONFIGURACAO_URLS_POWER_AUTOMATE.md`
 
 ## 🔐 Credenciais de Acesso
 

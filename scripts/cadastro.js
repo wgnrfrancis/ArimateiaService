@@ -59,7 +59,7 @@ async function handleCadastro(e) {
     try {
         Helpers.showLoading('Criando cadastro...');
         
-        console.log('📤 Enviando dados para cadastro:', {
+        console.log('📤 Enviando dados para cadastro via Power Automate:', {
             nomeCompleto: data.nomeCompleto,
             email: data.email,
             telefone: data.telefone,
@@ -68,15 +68,19 @@ async function handleCadastro(e) {
             cargo: 'VOLUNTARIO'
         });
         
-        const result = await flowManager.sendToScript({
-            action: 'newUser',
-            nomeCompleto: data.nomeCompleto,
-            email: data.email,
-            senha: data.senha,
-            telefone: data.telefone,
-            cargo: 'VOLUNTARIO',
-            igreja: data.igreja,
-            regiao: data.regiao
+        // Usar Power Automate para criar usuário
+        const result = await window.flowManager.sendToFlow('CRIAR_USUARIO', {
+            usuario: {
+                nomeCompleto: data.nomeCompleto,
+                email: data.email,
+                senha: data.senha,
+                telefone: data.telefone,
+                cargo: 'VOLUNTARIO',
+                igreja: data.igreja,
+                regiao: data.regiao,
+                dataCadastro: new Date().toISOString(),
+                status: 'ATIVO'
+            }
         });
 
         Helpers.hideLoading();
@@ -139,14 +143,14 @@ async function testarConexao() {
     try {
         console.log('🧪 Testando conexão com Power Automate...');
         
-        const result = await flowManager.sendToScript({
-            action: 'test'
+        const result = await window.flowManager.sendToFlow('OBTER_CONFIGURACOES', {
+            tipo: 'test'
         });
         
-        console.log('✅ Teste de conexão:', result);
+        console.log('✅ Teste de conexão Power Automate:', result);
         return result.success;
     } catch (error) {
-        console.error('❌ Erro no teste de conexão:', error);
+        console.error('❌ Erro no teste de conexão Power Automate:', error);
         return false;
     }
 }
@@ -155,14 +159,15 @@ async function loadRegioesFromSheet() {
     try {
         Helpers.showLoading('Carregando regiões...');
         
-        console.log('🔍 Testando conexão com Google Apps Script...');
-        console.log('📍 URL:', CONFIG.googleAppsScript.webAppUrl);
+        console.log('🔍 Buscando regiões e igrejas via Power Automate...');
         
-        const result = await flowManager.sendToScriptSilent({
-            action: 'getIgrejasRegioes'
+        // Usar o flowManager para buscar dados da aba IGREJAS_REGIOES
+        const result = await window.flowManager.sendToFlow('OBTER_IGREJAS', {
+            aba: 'IGREJAS_REGIOES',
+            colunas: ['ID', 'NOME_IGREJA', 'REGIAO']
         });
         
-        console.log('📋 Resultado obtido:', result);
+        console.log('📋 Resultado obtido do Power Automate:', result);
         
         if (result.success && result.data) {
             const data = result.data;
@@ -171,29 +176,43 @@ async function loadRegioesFromSheet() {
             // Limpar opções existentes (exceto a primeira)
             regiaoSelect.innerHTML = '<option value="">Selecione a região</option>';
             
-            // Adicionar regiões da planilha
-            if (data.regioes && data.regioes.length > 0) {
-                data.regioes.forEach(regiao => {
-                    const option = document.createElement('option');
-                    option.value = regiao;
-                    option.textContent = regiao;
-                    regiaoSelect.appendChild(option);
-                });
-                
-                // Armazenar dados para uso na seleção hierárquica
-                window.igrejasData = data.igrejasPorRegiao;
-                
-                console.log(`✅ Carregadas ${data.regioes.length} regiões e ${data.total?.igrejas || 0} igrejas`);
-                Helpers.showToast('Regiões carregadas da planilha!', 'success');
-            } else {
-                throw new Error('Nenhuma região encontrada na planilha');
-            }
+            // Processar dados da planilha
+            const regioesUnicas = [...new Set(data.map(item => item.REGIAO))].filter(r => r);
+            const igrejasPorRegiao = {};
+            
+            // Agrupar igrejas por região
+            data.forEach(item => {
+                if (item.REGIAO && item.NOME_IGREJA) {
+                    if (!igrejasPorRegiao[item.REGIAO]) {
+                        igrejasPorRegiao[item.REGIAO] = [];
+                    }
+                    igrejasPorRegiao[item.REGIAO].push({
+                        id: item.ID,
+                        nome: item.NOME_IGREJA
+                    });
+                }
+            });
+            
+            // Adicionar regiões ao select
+            regioesUnicas.forEach(regiao => {
+                const option = document.createElement('option');
+                option.value = regiao;
+                option.textContent = regiao;
+                regiaoSelect.appendChild(option);
+            });
+            
+            // Armazenar dados para uso na seleção hierárquica
+            window.igrejasData = igrejasPorRegiao;
+            
+            console.log(`✅ Carregadas ${regioesUnicas.length} regiões e ${data.length} igrejas do OneDrive`);
+            Helpers.showToast('Regiões carregadas do OneDrive!', 'success');
+            
         } else {
-            throw new Error(result.error || 'Erro na resposta do servidor');
+            throw new Error(result.error || 'Erro na resposta do Power Automate');
         }
         
     } catch (error) {
-        console.error('⚠️ Erro ao carregar da planilha:', error);
+        console.error('⚠️ Erro ao carregar da planilha OneDrive:', error);
         console.log('🔄 Usando fallback do config.js...');
         
         // Fallback para regiões do config.js

@@ -91,20 +91,21 @@ window.CONFIG = {
 
     // Power Automate Configuration
     POWER_AUTOMATE: {
-        BASE_URL: 'https://prod-XX.westus.logic.azure.com/workflows/SEU_WORKFLOW_ID/triggers/manual/paths/invoke',
-        SHAREPOINT_URL: 'https://seudominio.sharepoint.com/sites/BalcaoCidadania',
-        ONEDRIVE_URL: 'https://seudominio-my.sharepoint.com/personal/usuario_dominio_com/_layouts/15/Doc.aspx?sourcedoc={PLANILHA_ID}',
+        // URLs dos Power Automate Flows (substitua pelas suas URLs reais)
+        BASE_URL: 'https://prod-xx.westus.logic.azure.com/workflows',
+        SHAREPOINT_URL: 'https://igrejauniversaldorei-my.sharepoint.com/sites/BalcaoCidadania',
+        ONEDRIVE_URL: 'https://igrejauniversaldorei-my.sharepoint.com/:x:/g/personal/wagduarte_universal_org/EWjS3RVFYzZMiwuVhdxYoeYBOKTYSFe3P7a29TS9zn5qgw',
+        
+        // URLs dos Flows específicos - CONFIGURAR COM SUAS URLs REAIS
         ENDPOINTS: {
-            CRIAR_CHAMADO: '/api/criar-chamado',
-            ATUALIZAR_CHAMADO: '/api/atualizar-chamado',
-            LISTAR_CHAMADOS: '/api/listar-chamados',
-            EXCLUIR_CHAMADO: '/api/excluir-chamado',
-            CRIAR_USUARIO: '/api/criar-usuario',
-            VALIDAR_LOGIN: '/api/validar-login',
-            LISTAR_USUARIOS: '/api/listar-usuarios',
-            OBTER_CATEGORIAS: '/api/obter-categorias',
-            OBTER_IGREJAS: '/api/obter-igrejas',
-            GERAR_RELATORIO: '/api/gerar-relatorio'
+            VALIDAR_LOGIN: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_LOGIN/triggers/manual/paths/invoke',
+            CRIAR_CHAMADO: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_CHAMADO/triggers/manual/paths/invoke',
+            LISTAR_CHAMADOS: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_LISTAR/triggers/manual/paths/invoke',
+            ATUALIZAR_CHAMADO: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_UPDATE/triggers/manual/paths/invoke',
+            EXCLUIR_CHAMADO: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_DELETE/triggers/manual/paths/invoke',
+            CRIAR_USUARIO: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_USER/triggers/manual/paths/invoke',
+            OBTER_CONFIGURACOES: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_CONFIG/triggers/manual/paths/invoke',
+            OBTER_IGREJAS: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_IGREJAS/triggers/manual/paths/invoke'
         },
         ABAS: {
             CHAMADOS: 'CHAMADOS',
