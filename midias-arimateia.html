@@ -637,7 +637,7 @@
                 <div class="loading-container">
                     <div class="loading-spinner"></div>
                     <h3>Carregando mídias...</h3>
-                    <p>Acessando pasta do Google Drive</p>
+                    <p>Acessando arquivos do OneDrive</p>
                 </div>
             </div>
         </div>
@@ -1021,11 +1021,11 @@
             let content = '';
             
             if (preview.isImage) {
-                content = `<img src="${preview.embedUrl}" alt="${preview.name}" class="preview-image" onerror="this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'><div style=\\'font-size: 4em; margin-bottom: 20px;\\'>🖼️</div><h3>${preview.name}</h3><p>Erro ao carregar preview da imagem.</p><button class=\\'btn-action btn-download\\' onclick=\\'window.open(\\'${preview.viewUrl}\\', \\'_blank\\')\\'>🔗 Abrir no Google Drive</button></div>'">`;
+                content = `<img src="${preview.embedUrl}" alt="${preview.name}" class="preview-image" onerror="this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'><div style=\\'font-size: 4em; margin-bottom: 20px;\\'>🖼️</div><h3>${preview.name}</h3><p>Erro ao carregar preview da imagem.</p><button class=\\'btn-action btn-download\\' onclick=\\'window.open(\\'${preview.viewUrl}\\', \\'_blank\\')\\'>🔗 Abrir no OneDrive</button></div>'">`;
             } else if (preview.isVideo) {
-                content = `<video controls class="preview-video" onerror="this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'><div style=\\'font-size: 4em; margin-bottom: 20px;\\'>🎥</div><h3>${preview.name}</h3><p>Erro ao carregar preview do vídeo.</p><button class=\\'btn-action btn-download\\' onclick=\\'window.open(\\'${preview.viewUrl}\\', \\'_blank\\')\\'>🔗 Abrir no Google Drive</button></div>'"><source src="${preview.embedUrl}" type="${preview.mimeType}"></video>`;
+                content = `<video controls class="preview-video" onerror="this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'><div style=\\'font-size: 4em; margin-bottom: 20px;\\'>🎥</div><h3>${preview.name}</h3><p>Erro ao carregar preview do vídeo.</p><button class=\\'btn-action btn-download\\' onclick=\\'window.open(\\'${preview.viewUrl}\\', \\'_blank\\')\\'>🔗 Abrir no OneDrive</button></div>'"><source src="${preview.embedUrl}" type="${preview.mimeType}"></video>`;
             } else if (preview.isPDF) {
-                content = `<iframe src="${preview.embedUrl}" width="100%" height="600px" frameborder="0" onerror="this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'><div style=\\'font-size: 4em; margin-bottom: 20px;\\'>📄</div><h3>${preview.name}</h3><p>Erro ao carregar preview do PDF.</p><button class=\\'btn-action btn-download\\' onclick=\\'window.open(\\'${preview.viewUrl}\\', \\'_blank\\')\\'>🔗 Abrir no Google Drive</button></div>'"></iframe>`;
+                content = `<iframe src="${preview.embedUrl}" width="100%" height="600px" frameborder="0" onerror="this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'><div style=\\'font-size: 4em; margin-bottom: 20px;\\'>📄</div><h3>${preview.name}</h3><p>Erro ao carregar preview do PDF.</p><button class=\\'btn-action btn-download\\' onclick=\\'window.open(\\'${preview.viewUrl}\\', \\'_blank\\')\\'>🔗 Abrir no OneDrive</button></div>'"></iframe>`;
             } else {
                 content = `
                     <div style="text-align: center; padding: 40px;">
@@ -1033,7 +1033,7 @@
                         <h3>${preview.name}</h3>
                         <p>Preview não disponível para este tipo de arquivo.</p>
                         <button class="btn-action btn-download" onclick="window.open('${preview.viewUrl}', '_blank')">
-                            🔗 Abrir no Google Drive
+                            🔗 Abrir no OneDrive
                         </button>
                     </div>
                 `;
