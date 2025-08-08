@@ -1,33 +1,43 @@
 /**
  * Sistema de Configuração - Balcão da Cidadania
- * Centraliza todas as configurações do sistema
- * Version: 2.0.0
+ * Configuração exclusiva para Power Automate
+ * Version: 3.0.0 - Power Automate Edition
  */
 
 'use strict';
 
-// Configurações principais do sistema
+// Configurações principais do sistema para Power Automate
 window.CONFIG = {
     // Informações do sistema
     SYSTEM: {
         name: 'Balcão da Cidadania',
-        version: '2.0.0',
+        version: '3.0.0-PowerAutomate',
         organization: 'Igreja Evangélica Pentecostal Arimateia',
-        description: 'Sistema de gestão para atendimento social e cidadania',
+        description: 'Sistema de gestão para atendimento social e cidadania - Power Automate Edition',
         supportEmail: 'suporte@arimateia.org.br',
         supportPhone: '(11) 99999-0000'
     },
 
-    // URLs da API
+    // URLs da API Power Automate
     API: {
-        // Google Apps Script Web App URL (PRODUÇÃO via URL Direto)
-        BASE_URL: 'https://script.google.com/macros/s/AKfycbxsTSKVi7fdARhyGDWrIdKbpe2K-56OLa0g2LCpaiYd4m1V3ChDYl68J_s3V2eN-u82/exec',
+        // Power Automate Flow URLs - CONFIGURAÇÃO ATIVA
+        BASE_URL: 'https://prod-xx.westus2.logic.azure.com:443/workflows/arimateia-api-gateway/triggers/manual/paths/invoke',
         
-        // Netlify Proxy (temporariamente desabilitado devido a erro 500)
-        // BASE_URL: '/api',
+        // Flows específicos (use se não usar gateway)
+        FLOWS: {
+            AUTH: 'https://prod-xx.westus2.logic.azure.com:443/workflows/arimateia-auth/triggers/manual/paths/invoke',
+            USERS: 'https://prod-xx.westus2.logic.azure.com:443/workflows/arimateia-users/triggers/manual/paths/invoke',
+            TICKETS: 'https://prod-xx.westus2.logic.azure.com:443/workflows/arimateia-tickets/triggers/manual/paths/invoke',
+            CONFIG: 'https://prod-xx.westus2.logic.azure.com:443/workflows/arimateia-config/triggers/manual/paths/invoke',
+            REPORTS: 'https://prod-xx.westus2.logic.azure.com:443/workflows/arimateia-reports/triggers/manual/paths/invoke'
+        },
         
-        // URL Local para desenvolvimento (descomente para usar localmente)
-        // BASE_URL: 'http://localhost:3000/api',
+        // Headers específicos para Power Automate
+        HEADERS: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'ArimateiaService/3.0.0-PA'
+        },
         
         ENDPOINTS: {
             auth: '/auth',
@@ -41,8 +51,75 @@ window.CONFIG = {
             reports: '/reports',
             notifications: '/notifications'
         },
-        TIMEOUT: 30000, // 30 segundos
-        RETRY_ATTEMPTS: 3
+        
+        TIMEOUT: 45000, // 45 segundos (Power Automate pode ser mais lento)
+        RETRY_ATTEMPTS: 3,
+        RETRY_DELAY: 2000 // 2 segundos entre tentativas
+    },
+
+    // Mapeamento de ações para Power Automate
+    ACTION_MAPPING: {
+        // Autenticação
+        'validateUser': { flow: 'AUTH', method: 'POST', endpoint: '/validate' },
+        
+        // Usuários
+        'newUser': { flow: 'USERS', method: 'POST', endpoint: '/create' },
+        'getUsers': { flow: 'USERS', method: 'GET', endpoint: '/list' },
+        'checkUserExists': { flow: 'USERS', method: 'GET', endpoint: '/check' },
+        'updateUser': { flow: 'USERS', method: 'PUT', endpoint: '/update' },
+        
+        // Chamados
+        'newTicket': { flow: 'TICKETS', method: 'POST', endpoint: '/create' },
+        'updateTicket': { flow: 'TICKETS', method: 'PUT', endpoint: '/update' },
+        'getTickets': { flow: 'TICKETS', method: 'GET', endpoint: '/list' },
+        'deleteTicket': { flow: 'TICKETS', method: 'DELETE', endpoint: '/delete' },
+        
+        // Configurações
+        'getIgrejasRegioes': { flow: 'CONFIG', method: 'GET', endpoint: '/churches-regions' },
+        'getCategories': { flow: 'CONFIG', method: 'GET', endpoint: '/categories' },
+        'getProfessionals': { flow: 'CONFIG', method: 'GET', endpoint: '/professionals' },
+        'getVolunteers': { flow: 'CONFIG', method: 'GET', endpoint: '/volunteers' },
+        
+        // Relatórios
+        'getDashboardData': { flow: 'REPORTS', method: 'GET', endpoint: '/dashboard' },
+        'getUserStats': { flow: 'REPORTS', method: 'GET', endpoint: '/user-stats' },
+        'generateReport': { flow: 'REPORTS', method: 'POST', endpoint: '/generate' },
+        
+        // Teste
+        'testConnection': { flow: 'CONFIG', method: 'GET', endpoint: '/test' }
+    },
+
+    // Power Automate Configuration
+    POWER_AUTOMATE: {
+        BASE_URL: 'https://prod-XX.westus.logic.azure.com/workflows/SEU_WORKFLOW_ID/triggers/manual/paths/invoke',
+        SHAREPOINT_URL: 'https://seudominio.sharepoint.com/sites/BalcaoCidadania',
+        ONEDRIVE_URL: 'https://seudominio-my.sharepoint.com/personal/usuario_dominio_com/_layouts/15/Doc.aspx?sourcedoc={PLANILHA_ID}',
+        ENDPOINTS: {
+            CRIAR_CHAMADO: '/api/criar-chamado',
+            ATUALIZAR_CHAMADO: '/api/atualizar-chamado',
+            LISTAR_CHAMADOS: '/api/listar-chamados',
+            EXCLUIR_CHAMADO: '/api/excluir-chamado',
+            CRIAR_USUARIO: '/api/criar-usuario',
+            VALIDAR_LOGIN: '/api/validar-login',
+            LISTAR_USUARIOS: '/api/listar-usuarios',
+            OBTER_CATEGORIAS: '/api/obter-categorias',
+            OBTER_IGREJAS: '/api/obter-igrejas',
+            GERAR_RELATORIO: '/api/gerar-relatorio'
+        },
+        ABAS: {
+            CHAMADOS: 'CHAMADOS',
+            OBSERVACOES_CHAMADOS: 'OBSERVACOES_CHAMADOS',
+            CHAMADOS_EXCLUIDOS: 'CHAMADOS_EXCLUIDOS',
+            USUARIOS: 'USUARIOS',
+            CATEGORIAS_SERVICOS: 'CATEGORIAS_SERVICOS',
+            IGREJAS_REGIOES: 'IGREJAS_REGIOES',
+            RELATORIOS_MENSAIS: 'RELATORIOS_MENSAIS',
+            PROFISSIONAIS_LIBERAIS: 'PROFISSIONAIS_LIBERAIS',
+            ACESSORES: 'ACESSORES',
+            ELEICOES_DEPUTADOS: 'ELEICOES_DEPUTADOS',
+            ELEICOES_VEREADORES: 'ELEICOES_VEREADORES',
+            ELEICOES_CONSELHO: 'ELEICOES_CONSELHO'
+        }
     },
 
     // Regiões atendidas
@@ -458,6 +535,97 @@ window.CONFIG = {
         SHOW_LOGS: false,
         BYPASS_AUTH: false
     }
+};
+
+// ===== FUNÇÕES ESPECÍFICAS PARA POWER AUTOMATE =====
+
+// Função para obter URL do flow específico
+window.CONFIG.getFlowUrl = function(action) {
+    const mapping = this.ACTION_MAPPING[action];
+    if (!mapping) {
+        console.warn(`Ação '${action}' não encontrada no mapeamento`);
+        return this.API.BASE_URL; // Fallback para gateway
+    }
+    
+    // Se usar gateway, sempre retorna BASE_URL
+    if (this.API.BASE_URL.includes('api-gateway')) {
+        return this.API.BASE_URL;
+    }
+    
+    // Senão, retorna URL do flow específico
+    return this.API.FLOWS[mapping.flow] || this.API.BASE_URL;
+};
+
+// Função para obter configuração completa da ação
+window.CONFIG.getActionConfig = function(action) {
+    const mapping = this.ACTION_MAPPING[action];
+    if (!mapping) {
+        return null;
+    }
+    
+    return {
+        url: this.getFlowUrl(action),
+        method: mapping.method,
+        endpoint: mapping.endpoint,
+        timeout: this.getTimeoutForAction(action)
+    };
+};
+
+// Função para determinar timeout baseado no tipo de operação
+window.CONFIG.getTimeoutForAction = function(action) {
+    if (action.includes('validate') || action.includes('auth')) return 30000; // 30s
+    if (action.includes('get') || action.includes('list')) return 45000; // 45s
+    if (action.includes('generate') || action.includes('report')) return 120000; // 2min
+    return 60000; // 60s padrão
+};
+
+// Configurações específicas do Power Automate
+window.CONFIG.POWER_AUTOMATE = {
+    // Configuração de retry específica
+    RETRY_CONFIG: {
+        attempts: 3,
+        delay: 2000,
+        backoff: 'exponential',
+        maxDelay: 10000
+    },
+    
+    // Timeout específico por tipo de operação
+    TIMEOUTS: {
+        auth: 30000,
+        read: 45000,
+        write: 60000,
+        report: 120000
+    },
+    
+    // Configuração de cache
+    CACHE: {
+        enabled: true,
+        duration: 5 * 60 * 1000, // 5 minutos
+        keys: {
+            regions: 'pa_regions',
+            churches: 'pa_churches',
+            categories: 'pa_categories',
+            professionals: 'pa_professionals',
+            volunteers: 'pa_volunteers'
+        }
+    },
+    
+    // Monitoramento e logging
+    MONITORING: {
+        enabled: true,
+        logLevel: 'INFO', // DEBUG, INFO, WARN, ERROR
+        trackPerformance: true,
+        trackErrors: true
+    }
+};
+
+// Configurações de autenticação específicas para Power Automate
+window.CONFIG.AUTH = {
+    SESSION_TIMEOUT: 8 * 60 * 60 * 1000, // 8 horas em ms
+    MAX_LOGIN_ATTEMPTS: 3,
+    LOCKOUT_DURATION: 15 * 60 * 1000, // 15 minutos em ms
+    PASSWORD_MIN_LENGTH: 6,
+    STORAGE_KEY: 'arimateia_session_pa'
 };
 
 // Funções utilitárias de configuração

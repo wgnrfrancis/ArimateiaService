@@ -602,13 +602,13 @@ class DashboardManager {
      */
     async testSystemConnections() {
         try {
-            // Test Google Apps Script connection
-            const gasStatus = await this.testGoogleAppsScript();
+            // Test Power Automate connection
+            const powerAutomateStatus = await this.testPowerAutomate();
             
             // Update status indicators
-            const gasIndicator = this.elements.systemStatus.querySelector('.status-indicator:nth-child(2)');
-            if (gasIndicator) {
-                gasIndicator.className = `status-indicator ${gasStatus ? 'online' : 'offline'}`;
+            const powerAutomateIndicator = this.elements.systemStatus.querySelector('.status-indicator:nth-child(2)');
+            if (powerAutomateIndicator) {
+                powerAutomateIndicator.className = `status-indicator ${powerAutomateStatus ? 'online' : 'offline'}`;
             }
         } catch (error) {
             console.error('❌ Erro ao testar conexões:', error);
@@ -616,9 +616,9 @@ class DashboardManager {
     }
 
     /**
-     * Test Google Apps Script connection
+     * Test Power Automate connection
      */
-    async testGoogleAppsScript() {
+    async testPowerAutomate() {
         try {
             const result = await window.flowManager?.testConnection();
             return result?.success || false;

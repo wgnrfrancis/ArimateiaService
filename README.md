@@ -1,6 +1,6 @@
 # Balcão da Cidadania - Sistema de Atendimento
 
-Sistema de gestão para atendimento ao cidadão desenvolvido para a Igreja Evangélica Pentecostal Arimateia.
+Sistema de gestão para atendimento ao cidadão desenvolvido para a Igreja Evangélica Pentecostal Arimateia, integrado com Power Automate e OneDrive.
 
 ## 🚀 Como Executar
 
@@ -98,12 +98,33 @@ BalcaoCidadania/
 
 ## 🔧 Configuração
 
-O sistema funciona offline com dados mock. Para produção:
+### Estrutura de Dados - Power Automate
 
-1. Configure as URLs da API no arquivo `data/config.js`
-2. Integre com Google Apps Script (opcional)
-3. Configure SSL/HTTPS
-4. Implemente backup de dados
+O sistema utiliza uma planilha no OneDrive com 12 abas específicas para integração via Power Automate:
+
+1. **CHAMADOS** - Armazena todos os atendimentos
+2. **OBSERVACOES_CHAMADOS** - Histórico detalhado de cada chamado
+3. **CHAMADOS_EXCLUIDOS** - Exclusão lógica de registros
+4. **USUARIOS** - Gerenciamento de voluntários e administradores
+5. **CATEGORIAS_SERVICOS** - Categorias de atendimento
+6. **IGREJAS_REGIOES** - Dados das 56 igrejas e regiões
+7. **RELATORIOS_MENSAIS** - Consolidação mensal automática
+8. **PROFISSIONAIS_LIBERAIS** - Profissionais voluntários
+9. **ACESSORES** - Assessores parlamentares
+10. **ELEICOES_DEPUTADOS** - Dados eleitorais para deputados
+11. **ELEICOES_VEREADORES** - Dados eleitorais para vereadores
+12. **ELEICOES_CONSELHO** - Dados para conselho regional
+
+Ver arquivo `MODELO_PLANILHAS_POWER_AUTOMATE.md` para estrutura detalhada.
+
+### Configuração em Produção:
+
+1. **Crie a planilha** no OneDrive/SharePoint com a estrutura definida
+2. **Configure Power Automate Flows** para cada endpoint de API
+3. **Atualize URLs** no arquivo `data/config.js`
+4. **Implemente autenticação** OAuth2 com Microsoft Graph
+5. **Configure notificações** via Teams/Email
+6. **Ative backup automático** dos dados
 
 ## 📊 Dados Mock
 

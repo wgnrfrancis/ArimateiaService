@@ -115,7 +115,7 @@ async function handleCadastro(e) {
         let errorMessage = 'Erro ao criar cadastro';
         
         if (error.message.includes('CORS')) {
-            errorMessage = 'Erro de conexão. Verifique se o Google Apps Script está configurado corretamente.';
+            errorMessage = 'Erro de conexão. Verifique se o Power Automate está configurado corretamente.';
         } else if (error.message.includes('Failed to fetch')) {
             errorMessage = 'Erro de rede. Verifique sua conexão com a internet.';
         } else if (error.message.includes('Email já cadastrado')) {
@@ -137,7 +137,7 @@ async function handleCadastro(e) {
 
 async function testarConexao() {
     try {
-        console.log('🧪 Testando conexão com Google Apps Script...');
+        console.log('🧪 Testando conexão com Power Automate...');
         
         const result = await flowManager.sendToScript({
             action: 'test'

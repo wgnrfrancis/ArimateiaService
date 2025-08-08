@@ -1,55 +1,82 @@
-// Google Apps Script integration module for Balcão da Cidadania
-// Version: 1.0.0
+// Power Automate integration module for Balcão da Cidadania
+// Version: 3.0.0 - Power Automate Edition
 // Dependencies: CONFIG, authManager, Helpers
 
 'use strict';
 
 /**
- * Extensão da classe FlowManager com métodos específicos da aplicação
- * Esta classe adiciona funcionalidades específicas ao FlowManager base
+ * FlowManager Power Automate - Comunicação exclusiva com Power Automate Flows
+ * Esta classe gerencia toda comunicação com os Power Automate Flows
  */
 class FlowExtensions {
     constructor() {
-        this.scriptUrl = window.CONFIG?.API?.BASE_URL || null;
-        this.retryAttempts = window.CONFIG?.API?.RETRY_ATTEMPTS || 3;
-        this.retryDelay = 1000;
-        this.regioesIgrejas = null; // Cache das regiões/igrejas
+        this.config = window.CONFIG || {};
+        this.baseUrl = this.config.API?.BASE_URL || null;
+        this.retryAttempts = this.config.API?.RETRY_ATTEMPTS || 3;
+        this.retryDelay = this.config.API?.RETRY_DELAY || 2000;
+        this.cache = new Map(); // Cache local para otimização
         
-        if (!this.scriptUrl) {
-            console.log('⚠️ URL do Google Apps Script não configurada - usando modo fallback');
+        // Configuração de monitoramento
+        this.monitoring = {
+            enabled: this.config.POWER_AUTOMATE?.MONITORING?.enabled || false,
+            logLevel: this.config.POWER_AUTOMATE?.MONITORING?.logLevel || 'INFO',
+            startTime: Date.now()
+        };
+        
+        if (!this.baseUrl) {
+            console.warn('⚠️ URL do Power Automate não configurada');
+        } else {
+            console.log('🚀 FlowManager Power Automate inicializado');
+            console.log('🌐 Base URL:', this.baseUrl);
         }
     }
 
     /**
-     * Enviar dados para Google Apps Script com retry e error handling
+     * Método principal para comunicação com Power Automate
      * @param {Object} data - Dados a serem enviados
-     * @returns {Promise<Object>} Resposta do servidor
+     * @returns {Promise<Object>} Resposta do Power Automate
      */
     async sendToScript(data) {
-        console.log('🌐 Enviando para Google Apps Script...');
-        console.log('📍 URL:', this.scriptUrl);
-        console.log('📦 Dados:', data);
+        console.log('🔄 [PA] Enviando para Power Automate...');
+        this.logDebug('Dados enviados:', data);
 
-        if (!this.scriptUrl) {
-            return { success: false, error: 'URL do Google Apps Script não configurada' };
+        if (!this.baseUrl) {
+            return { success: false, error: 'URL do Power Automate não configurada' };
         }
 
         try {
+            const startTime = Date.now();
+            
+            // Preparar payload com metadados
             const payload = {
                 ...data,
-                timestamp: new Date().toISOString(),
-                clientOrigin: window.location.origin,
-                version: window.CONFIG?.SYSTEM?.version || '2.0.0'
+                metadata: {
+                    timestamp: new Date().toISOString(),
+                    clientOrigin: window.location.origin,
+                    version: this.config.SYSTEM?.version || '3.0.0',
+                    userAgent: navigator.userAgent,
+                    sessionId: this.generateSessionId()
+                }
             };
 
-            const response = await this.makeRequestWithRetry(payload);
-            return this.processResponse(response);
+            // Fazer requisição com retry
+            const response = await this.makeRequestWithRetry(payload, data.action);
+            const result = await this.processResponse(response);
+            
+            // Log de performance
+            const duration = Date.now() - startTime;
+            this.logPerformance(data.action, duration, result.success);
+            
+            return result;
 
         } catch (error) {
-            console.error('❌ Erro na requisição:', error);
+            console.error('❌ [PA] Erro na requisição:', error);
+            this.logError(data.action, error);
+            
             return { 
                 success: false, 
-                error: `Erro de conexão: ${error.message}` 
+                error: `Erro de conexão Power Automate: ${error.message}`,
+                errorCode: 'PA_CONNECTION_ERROR'
             };
         }
     }
@@ -57,34 +84,48 @@ class FlowExtensions {
     /**
      * Fazer requisição com retry automático
      * @param {Object} payload - Dados a serem enviados
+     * @param {string} action - Ação sendo executada
      * @returns {Promise<Response>} Resposta da requisição
      */
-    async makeRequestWithRetry(payload) {
+    async makeRequestWithRetry(payload, action) {
         let lastError;
+        const actionConfig = this.config.getActionConfig?.(action);
+        const timeout = actionConfig?.timeout || this.config.API?.TIMEOUT || 45000;
         
         for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
             try {
-                console.log(`🔄 Tentativa ${attempt}/${this.retryAttempts}`);
+                console.log(`🔄 [PA] Tentativa ${attempt}/${this.retryAttempts} para ação: ${action}`);
                 
-                // Preparar dados como JSON para Google Apps Script
-                const jsonData = JSON.stringify(payload);
+                // Determinar URL (gateway ou flow específico)
+                const flowUrl = this.config.getFlowUrl?.(action) || this.baseUrl;
                 
-                console.log('📦 Enviando dados JSON:', jsonData);
-                
-                const response = await fetch(this.scriptUrl, {
+                // Preparar headers
+                const headers = {
+                    ...this.config.API?.HEADERS,
+                    'X-Arimateia-Action': action,
+                    'X-Arimateia-Attempt': attempt.toString(),
+                    'X-Arimateia-Timestamp': Date.now().toString()
+                };
+
+                // Controller para timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+                const response = await fetch(flowUrl, {
                     method: 'POST',
-                    mode: 'cors', // ✅ CORREÇÃO: Usar CORS explicitamente
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: jsonData,
+                    mode: 'cors',
+                    headers: headers,
+                    body: JSON.stringify(payload),
                     redirect: 'follow',
-                    cache: 'no-cache' // ✅ Evitar cache de requisições
+                    cache: 'no-cache',
+                    signal: controller.signal
                 });
 
-                // ✅ CORREÇÃO: Aceitar response.ok OU status 200-299
+                clearTimeout(timeoutId);
+
+                // Verificar se resposta é válida
                 if (response.ok || (response.status >= 200 && response.status < 300)) {
+                    this.logDebug(`✅ [PA] Sucesso na tentativa ${attempt}`);
                     return response;
                 }
                 
@@ -92,11 +133,12 @@ class FlowExtensions {
 
             } catch (error) {
                 lastError = error;
-                console.warn(`⚠️ Tentativa ${attempt} falhou:`, error.message);
+                this.logDebug(`⚠️ [PA] Tentativa ${attempt} falhou:`, error.message);
                 
                 if (attempt < this.retryAttempts) {
-                    console.log(`⏳ Aguardando ${this.retryDelay}ms antes da próxima tentativa...`);
-                    await this.sleep(this.retryDelay);
+                    const delay = this.calculateRetryDelay(attempt);
+                    this.logDebug(`⏳ [PA] Aguardando ${delay}ms antes da próxima tentativa...`);
+                    await this.sleep(delay);
                 }
             }
         }
@@ -105,43 +147,31 @@ class FlowExtensions {
     }
 
     /**
-     * Processar resposta do servidor
+     * Processar resposta do Power Automate
      * @param {Response} response - Resposta da requisição
      * @returns {Promise<Object>} Dados processados
      */
     async processResponse(response) {
-        // ✅ CORREÇÃO: Verificar se response é válido
         if (!response) {
             throw new Error('Resposta inválida ou nula');
         }
 
-        if (response.type === 'opaque') {
-            console.log('📄 Resposta no-cors (assumindo sucesso)');
-            return { success: true, message: 'Requisição enviada com sucesso' };
-        }
-
         try {
-            // ✅ CORREÇÃO: Verificar se response tem conteúdo
-            if (!response.ok && response.status !== 200) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
             const responseText = await response.text();
-            console.log('📄 Resposta recebida (texto):', responseText.substring(0, 200) + '...');
+            this.logDebug('📄 [PA] Resposta recebida:', responseText.substring(0, 200) + '...');
 
-            // ✅ CORREÇÃO: Verificar se há conteúdo para fazer parse
             if (!responseText || responseText.trim() === '') {
-                console.warn('⚠️ Resposta vazia do servidor');
+                console.warn('⚠️ [PA] Resposta vazia do Power Automate');
                 return {
                     success: false,
-                    error: 'Resposta vazia do servidor'
+                    error: 'Resposta vazia do Power Automate'
                 };
             }
 
             const result = JSON.parse(responseText);
-            console.log('✅ Resposta processada com sucesso:', result);
+            this.logDebug('✅ [PA] Resposta processada:', result);
             
-            // ✅ CORREÇÃO: Garantir que o resultado tenha estrutura mínima
+            // Garantir estrutura mínima
             if (typeof result !== 'object') {
                 throw new Error('Resposta não é um objeto JSON válido');
             }
@@ -149,12 +179,12 @@ class FlowExtensions {
             return result;
 
         } catch (parseError) {
-            console.error('❌ Erro ao processar resposta:', parseError);
-            console.error('📄 Resposta que causou erro:', response);
+            console.error('❌ [PA] Erro ao processar resposta:', parseError);
             
             return {
                 success: false,
-                error: 'Erro ao processar resposta do servidor: ' + parseError.message,
+                error: 'Erro ao processar resposta do Power Automate: ' + parseError.message,
+                errorCode: 'PA_PARSE_ERROR',
                 responseStatus: response.status,
                 responseStatusText: response.statusText
             };
@@ -162,8 +192,25 @@ class FlowExtensions {
     }
 
     /**
-     * Sleep/delay function
-     * @param {number} ms - Milliseconds to sleep
+     * Calcular delay para retry com backoff exponencial
+     * @param {number} attempt - Número da tentativa
+     * @returns {number} Delay em milliseconds
+     */
+    calculateRetryDelay(attempt) {
+        const config = this.config.POWER_AUTOMATE?.RETRY_CONFIG;
+        const baseDelay = config?.delay || this.retryDelay;
+        const maxDelay = config?.maxDelay || 10000;
+        
+        if (config?.backoff === 'exponential') {
+            return Math.min(baseDelay * Math.pow(2, attempt - 1), maxDelay);
+        }
+        
+        return baseDelay;
+    }
+
+    /**
+     * Função sleep para delays
+     * @param {number} ms - Milliseconds para aguardar
      * @returns {Promise} Promise que resolve após o delay
      */
     sleep(ms) {
@@ -171,13 +218,53 @@ class FlowExtensions {
     }
 
     /**
-     * Enviar dados sem mostrar loading (para ações silenciosas)
-     * @param {Object} data - Dados a serem enviados
-     * @returns {Promise<Object>} Resposta do servidor
+     * Gerar ID de sessão único
+     * @returns {string} ID da sessão
      */
-    async sendToScriptSilent(data) {
-        return this.sendToScript(data);
+    generateSessionId() {
+        return `pa_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     }
+
+    // ===== MÉTODOS DE CACHE =====
+
+    /**
+     * Verificar cache antes de fazer requisição
+     * @param {string} key - Chave do cache
+     * @returns {Object|null} Dados do cache ou null
+     */
+    getFromCache(key) {
+        if (!this.config.POWER_AUTOMATE?.CACHE?.enabled) return null;
+        
+        const cached = this.cache.get(key);
+        if (!cached) return null;
+        
+        const duration = this.config.POWER_AUTOMATE?.CACHE?.duration || 300000; // 5 min
+        if (Date.now() - cached.timestamp > duration) {
+            this.cache.delete(key);
+            return null;
+        }
+        
+        this.logDebug(`📋 [PA] Cache hit para: ${key}`);
+        return cached.data;
+    }
+
+    /**
+     * Salvar dados no cache
+     * @param {string} key - Chave do cache
+     * @param {Object} data - Dados para cache
+     */
+    setCache(key, data) {
+        if (!this.config.POWER_AUTOMATE?.CACHE?.enabled) return;
+        
+        this.cache.set(key, {
+            data: data,
+            timestamp: Date.now()
+        });
+        
+        this.logDebug(`💾 [PA] Cache salvo para: ${key}`);
+    }
+
+    // ===== MÉTODOS DE AUTENTICAÇÃO =====
 
     /**
      * Validar usuário (login)
@@ -186,41 +273,41 @@ class FlowExtensions {
      * @returns {Promise<Object>} Resultado da validação
      */
     async validateUser(email, password) {
-        console.log('🔐 Validando usuário:', email);
+        console.log('🔐 [PA] Validando usuário:', email);
         
         try {
-            const data = await this.sendToScript({
+            const result = await this.sendToScript({
                 action: 'validateUser',
                 email: email,
-                senha: password  // ✅ CORRIGIDO: Mudado de "password" para "senha"
+                senha: password
             });
 
-            if (data.success && data.user) {
-                console.log('✅ Usuário validado:', data.user);
+            if (result.success && result.user) {
+                console.log('✅ [PA] Usuário validado:', result.user);
                 return {
                     success: true,
                     user: {
-                        id: data.user.id,
-                        name: data.user.name,
-                        email: data.user.email,
-                        telefone: data.user.telefone,
-                        cargo: data.user.role,
-                        igreja: data.user.igreja,
-                        regiao: data.user.regiao,
-                        status: data.user.status,
-                        ultimoAcesso: data.user.ultimoAcesso
+                        id: result.user.id,
+                        name: result.user.name,
+                        email: result.user.email,
+                        telefone: result.user.telefone,
+                        cargo: result.user.role,
+                        igreja: result.user.igreja,
+                        regiao: result.user.regiao,
+                        status: result.user.status,
+                        ultimoAcesso: result.user.ultimoAcesso
                     },
-                    message: data.message
+                    message: result.message
                 };
             } else {
                 return {
                     success: false,
-                    error: data.error || 'Erro na validação'
+                    error: result.error || 'Erro na validação'
                 };
             }
 
         } catch (error) {
-            console.error('❌ Erro na validação:', error);
+            console.error('❌ [PA] Erro na validação:', error);
             return {
                 success: false,
                 error: error.message || 'Erro na validação do usuário'
@@ -228,97 +315,7 @@ class FlowExtensions {
         }
     }
 
-    /**
-     * Verificar se usuário existe
-     * @param {string} email - Email para verificar
-     * @returns {Promise<Object>} Resultado da verificação
-     */
-    async checkUserExists(email) {
-        try {
-            const result = await this.sendToScript({
-                action: 'checkUserExists',
-                data: JSON.stringify({ email: email })
-            });
-            return result;
-        } catch (error) {
-            console.error('Check user exists error:', error);
-            return { success: false, exists: false, error: error.message };
-        }
-    }
-
-    /**
-     * Buscar regiões e igrejas da planilha
-     * @returns {Promise<Object>} Dados das regiões e igrejas
-     */
-    async getRegioesIgrejas() {
-        try {
-            if (this.regioesIgrejas) {
-                return { success: true, data: this.regioesIgrejas };
-            }
-
-            const result = await this.sendToScript({
-                action: 'getIgrejasRegioes'
-            });
-
-            if (result.success && result.data) {
-                this.regioesIgrejas = result.data;
-                return result;
-            } else {
-                throw new Error(result.error || 'Erro ao buscar regiões e igrejas');
-            }
-
-        } catch (error) {
-            console.error('❌ Erro ao buscar regiões/igrejas:', error);
-            // Fallback para CONFIG
-            return {
-                success: true,
-                data: {
-                    regioes: window.CONFIG?.REGIONS || [],
-                    igrejasPorRegiao: {
-                        'Norte': window.CONFIG?.CHURCHES?.slice(0, 3) || [],
-                        'Sul': window.CONFIG?.CHURCHES?.slice(3, 6) || [],
-                        'Centro': window.CONFIG?.CHURCHES?.slice(6, 9) || [],
-                        'Leste': window.CONFIG?.CHURCHES?.slice(9, 12) || [],
-                        'Oeste': window.CONFIG?.CHURCHES?.slice(12) || []
-                    }
-                },
-                fallback: true
-            };
-        }
-    }
-
-    /**
-     * Buscar igrejas por região específica
-     * @param {string} regiao - Nome da região
-     * @returns {Promise<Object>} Lista de igrejas
-     */
-    async getIgrejasByRegiao(regiao) {
-        try {
-            const regioesData = await this.getRegioesIgrejas();
-            
-            if (regioesData.success && regioesData.data?.igrejasPorRegiao?.[regiao]) {
-                const igrejas = regioesData.data.igrejasPorRegiao[regiao];
-                return {
-                    success: true,
-                    data: igrejas
-                };
-            } else {
-                return {
-                    success: false,
-                    error: 'Região não encontrada',
-                    data: []
-                };
-            }
-
-        } catch (error) {
-            console.error('❌ Erro ao buscar igrejas por região:', error);
-            return {
-                success: false,
-                error: error.message,
-                data: []
-            };
-        }
-    }
+    // ===== MÉTODOS DE USUÁRIOS =====
 
     /**
      * Criar novo usuário
@@ -327,9 +324,9 @@ class FlowExtensions {
      */
     async createUser(userData) {
         try {
-            console.log('👤 Criando usuário:', userData);
+            console.log('👤 [PA] Criando usuário:', userData);
 
-            // Validações
+            // Validações locais
             if (!userData.nome || userData.nome.trim().length < 2) {
                 throw new Error('Nome deve ter pelo menos 2 caracteres');
             }
@@ -369,19 +366,48 @@ class FlowExtensions {
             return result;
 
         } catch (error) {
-            console.error('❌ Erro ao criar usuário:', error);
+            console.error('❌ [PA] Erro ao criar usuário:', error);
             return { success: false, error: error.message };
         }
     }
 
     /**
-     * Validar email
-     * @param {string} email - Email para validação
-     * @returns {boolean} True se válido
+     * Verificar se usuário existe
+     * @param {string} email - Email para verificar
+     * @returns {Promise<Object>} Resultado da verificação
      */
-    validateEmail(email) {
-        return Helpers?.validateEmail(email) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    async checkUserExists(email) {
+        try {
+            const result = await this.sendToScript({
+                action: 'checkUserExists',
+                data: JSON.stringify({ email: email })
+            });
+            return result;
+        } catch (error) {
+            console.error('❌ [PA] Erro ao verificar usuário:', error);
+            return { success: false, exists: false, error: error.message };
+        }
     }
+
+    /**
+     * Buscar usuários
+     * @param {Object} filters - Filtros para busca
+     * @returns {Promise<Object>} Lista de usuários
+     */
+    async getUsers(filters = {}) {
+        try {
+            const result = await this.sendToScript({
+                action: 'getUsers',
+                data: JSON.stringify(filters)
+            });
+            return result;
+        } catch (error) {
+            console.error('❌ [PA] Erro ao buscar usuários:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    // ===== MÉTODOS DE CHAMADOS =====
 
     /**
      * Criar novo chamado
@@ -395,7 +421,7 @@ class FlowExtensions {
                 throw new Error('Usuário não autenticado');
             }
 
-            // Validações
+            // Validações locais
             if (!ticketData.nome || ticketData.nome.trim().length < 2) {
                 throw new Error('Nome do cidadão deve ter pelo menos 2 caracteres');
             }
@@ -428,7 +454,7 @@ class FlowExtensions {
             return result;
 
         } catch (error) {
-            console.error('Create ticket error:', error);
+            console.error('❌ [PA] Erro ao criar chamado:', error);
             return { success: false, error: error.message };
         }
     }
@@ -446,7 +472,7 @@ class FlowExtensions {
             });
             return result;
         } catch (error) {
-            console.error('Get tickets error:', error);
+            console.error('❌ [PA] Erro ao buscar chamados:', error);
             return { success: false, error: error.message };
         }
     }
@@ -479,25 +505,154 @@ class FlowExtensions {
             return result;
 
         } catch (error) {
-            console.error('Update ticket error:', error);
+            console.error('❌ [PA] Erro ao atualizar chamado:', error);
             return { success: false, error: error.message };
         }
     }
 
+    // ===== MÉTODOS DE CONFIGURAÇÃO =====
+
     /**
-     * Buscar usuários
-     * @param {Object} filters - Filtros para busca
-     * @returns {Promise<Object>} Lista de usuários
+     * Buscar regiões e igrejas
+     * @returns {Promise<Object>} Dados das regiões e igrejas
      */
-    async getUsers(filters = {}) {
+    async getRegioesIgrejas() {
+        try {
+            // Verificar cache primeiro
+            const cacheKey = this.config.POWER_AUTOMATE?.CACHE?.keys?.regions || 'pa_regions';
+            const cached = this.getFromCache(cacheKey);
+            if (cached) {
+                return { success: true, data: cached };
+            }
+
+            const result = await this.sendToScript({
+                action: 'getIgrejasRegioes'
+            });
+
+            if (result.success && result.data) {
+                this.setCache(cacheKey, result.data);
+                return result;
+            } else {
+                throw new Error(result.error || 'Erro ao buscar regiões e igrejas');
+            }
+
+        } catch (error) {
+            console.error('❌ [PA] Erro ao buscar regiões/igrejas:', error);
+            // Fallback para CONFIG
+            return {
+                success: true,
+                data: {
+                    regioes: this.config.REGIONS || [],
+                    igrejasPorRegiao: {
+                        'Norte': this.config.CHURCHES?.slice(0, 3) || [],
+                        'Sul': this.config.CHURCHES?.slice(3, 6) || [],
+                        'Centro': this.config.CHURCHES?.slice(6, 9) || [],
+                        'Leste': this.config.CHURCHES?.slice(9, 12) || [],
+                        'Oeste': this.config.CHURCHES?.slice(12, 15) || []
+                    }
+                },
+                fallback: true
+            };
+        }
+    }
+
+    /**
+     * Buscar categorias
+     * @returns {Promise<Object>} Lista de categorias
+     */
+    async getCategories() {
+        try {
+            // Verificar cache primeiro
+            const cacheKey = this.config.POWER_AUTOMATE?.CACHE?.keys?.categories || 'pa_categories';
+            const cached = this.getFromCache(cacheKey);
+            if (cached) {
+                return { success: true, data: cached };
+            }
+
+            const result = await this.sendToScript({
+                action: 'getCategories'
+            });
+
+            if (result.success && result.data) {
+                this.setCache(cacheKey, result.data);
+                return result;
+            }
+
+            // Fallback para CONFIG
+            return {
+                success: true,
+                data: this.config.CATEGORIES || [],
+                fallback: true
+            };
+        } catch (error) {
+            console.error('❌ [PA] Erro ao buscar categorias:', error);
+            return {
+                success: true,
+                data: this.config.CATEGORIES || [],
+                fallback: true
+            };
+        }
+    }
+
+    /**
+     * Buscar profissionais
+     * @returns {Promise<Object>} Lista de profissionais
+     */
+    async getProfessionals() {
         try {
             const result = await this.sendToScript({
-                action: 'getUsers',
-                data: JSON.stringify(filters)
+                action: 'getProfessionals'
             });
             return result;
         } catch (error) {
-            console.error('Get users error:', error);
+            console.error('❌ [PA] Erro ao buscar profissionais:', error);
+            return { 
+                success: true, 
+                data: [],
+                fallback: true 
+            };
+        }
+    }
+
+    /**
+     * Buscar voluntários
+     * @returns {Promise<Object>} Lista de voluntários
+     */
+    async getVolunteers() {
+        try {
+            const result = await this.sendToScript({
+                action: 'getVolunteers'
+            });
+            return result;
+        } catch (error) {
+            console.error('❌ [PA] Erro ao buscar voluntários:', error);
+            return { 
+                success: true, 
+                data: [],
+                fallback: true 
+            };
+        }
+    }
+
+    // ===== MÉTODOS DE RELATÓRIOS =====
+
+    /**
+     * Obter dados do dashboard
+     * @param {Object} filters - Filtros para busca
+     * @returns {Promise<Object>} Dados do dashboard
+     */
+    async getDashboardData(filters = {}) {
+        try {
+            const result = await this.sendToScript({
+                action: 'getDashboardData',
+                data: JSON.stringify({
+                    filters: filters,
+                    period: filters.period || '30days'
+                })
+            });
+            return result;
+        } catch (error) {
+            console.error('❌ [PA] Erro ao buscar dados do dashboard:', error);
             return { success: false, error: error.message };
         }
     }
@@ -516,13 +671,13 @@ class FlowExtensions {
             });
             return result;
         } catch (error) {
-            console.error('Get user stats error:', error);
+            console.error('❌ [PA] Erro ao buscar estatísticas:', error);
             return { success: false, error: error.message };
         }
     }
 
     /**
-     * Testar conexão com Google Apps Script
+     * Testar conexão com Power Automate
      * @returns {Promise<Object>} Resultado do teste
      */
     async testConnection() {
@@ -532,103 +687,45 @@ class FlowExtensions {
             });
             return result;
         } catch (error) {
-            console.error('Test connection error:', error);
+            console.error('❌ [PA] Erro no teste de conexão:', error);
             return { success: false, error: error.message };
         }
     }
 
+    // ===== MÉTODOS UTILITÁRIOS =====
+
     /**
-     * Obter dados do dashboard
-     * @param {Object} filters - Filtros para busca
-     * @returns {Promise<Object>} Dados do dashboard
+     * Validar email
+     * @param {string} email - Email para validação
+     * @returns {boolean} True se válido
      */
-    /**
-     * Obter dados do dashboard
-     * @param {Object} filters - Filtros para busca
-     * @returns {Promise<Object>} Dados do dashboard
-     */
-    async getDashboardData(filters = {}) {
-        try {
-            const result = await this.sendToScript({
-                action: 'getDashboardData',
-                data: JSON.stringify({
-                    filters: filters,
-                    period: filters.period || '30days'
-                })
-            });
-            return result;
-        } catch (error) {
-            console.error('Get dashboard data error:', error);
-            return { success: false, error: error.message };
+    validateEmail(email) {
+        return Helpers?.validateEmail(email) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    // ===== MÉTODOS DE LOGGING =====
+
+    logDebug(message, data = null) {
+        if (!this.monitoring.enabled) return;
+        if (this.monitoring.logLevel === 'DEBUG') {
+            console.log(`🔍 [PA-DEBUG] ${message}`, data || '');
         }
     }
 
-    /**
-     * Obter categorias
-     * @returns {Promise<Object>} Lista de categorias
-     */
-    async getCategories() {
-        try {
-            const result = await this.sendToScript({
-                action: 'getCategories'
-            });
-            return result;
-        } catch (error) {
-            console.error('Get categories error:', error);
-            // Fallback para CONFIG
-            return {
-                success: true,
-                data: window.CONFIG?.CATEGORIES || [
-                    'DOCUMENTACAO',
-                    'JURIDICO', 
-                    'SAUDE',
-                    'ASSISTENCIA_SOCIAL',
-                    'EDUCACAO',
-                    'PREVIDENCIA',
-                    'TRABALHO',
-                    'OUTROS'
-                ]
-            };
-        }
+    logError(action, error) {
+        if (!this.monitoring.enabled) return;
+        console.error(`❌ [PA-ERROR] Ação: ${action}, Erro:`, error);
     }
 
-    /**
-     * Obter voluntários
-     * @returns {Promise<Object>} Lista de voluntários
-     */
-    async getVolunteers() {
-        try {
-            const result = await this.sendToScript({
-                action: 'getVolunteers'
-            });
-            return result;
-        } catch (error) {
-            console.error('Get volunteers error:', error);
-            return { 
-                success: true, 
-                data: [],
-                fallback: true 
-            };
-        }
-    }
-
-    /**
-     * Obter profissionais
-     * @returns {Promise<Object>} Lista de profissionais
-     */
-    async getProfessionals() {
-        try {
-            const result = await this.sendToScript({
-                action: 'getProfessionals'
-            });
-            return result;
-        } catch (error) {
-            console.error('Get professionals error:', error);
-            return { 
-                success: true, 
-                data: [],
-                fallback: true 
-            };
+    logPerformance(action, duration, success) {
+        if (!this.monitoring.enabled || !this.config.POWER_AUTOMATE?.MONITORING?.trackPerformance) return;
+        
+        const status = success ? '✅' : '❌';
+        console.log(`⏱️ [PA-PERF] ${status} ${action}: ${duration}ms`);
+        
+        // Alerta para operações muito lentas
+        if (duration > 10000) {
+            console.warn(`🐌 [PA-PERF] Operação lenta detectada: ${action} (${duration}ms)`);
         }
     }
 }
@@ -641,5 +738,5 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = FlowExtensions;
 }
 
-console.log('✅ Flow.js carregado com sucesso');
-
+console.log('✅ FlowManager Power Automate carregado com sucesso');
+console.log('🔄 Versão Power Automate:', window.CONFIG?.SYSTEM?.version || '3.0.0');
