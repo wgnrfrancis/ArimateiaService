@@ -59,7 +59,7 @@ async function handleCadastro(e) {
     try {
         Helpers.showLoading('Criando cadastro...');
         
-        console.log('📤 Enviando dados para cadastro via Power Automate:', {
+        console.log('📤 Enviando dados para cadastro via Google Apps Script:', {
             nomeCompleto: data.nomeCompleto,
             email: data.email,
             telefone: data.telefone,
@@ -68,19 +68,16 @@ async function handleCadastro(e) {
             cargo: 'VOLUNTARIO'
         });
         
-        // Usar Power Automate para criar usuário
-        const result = await window.flowManager.sendToFlow('CRIAR_USUARIO', {
-            usuario: {
-                nomeCompleto: data.nomeCompleto,
-                email: data.email,
-                senha: data.senha,
-                telefone: data.telefone,
-                cargo: 'VOLUNTARIO',
-                igreja: data.igreja,
-                regiao: data.regiao,
-                dataCadastro: new Date().toISOString(),
-                status: 'ATIVO'
-            }
+        // Usar Google Apps Script para criar usuário
+        const result = await window.flowManager.sendToScript({
+            action: 'newUser',
+            nomeCompleto: data.nomeCompleto,
+            email: data.email,
+            senha: data.senha,
+            telefone: data.telefone,
+            cargo: 'VOLUNTARIO',
+            igreja: data.igreja,
+            regiao: data.regiao
         });
 
         Helpers.hideLoading();
@@ -119,7 +116,7 @@ async function handleCadastro(e) {
         let errorMessage = 'Erro ao criar cadastro';
         
         if (error.message.includes('CORS')) {
-            errorMessage = 'Erro de conexão. Verifique se o Power Automate está configurado corretamente.';
+            errorMessage = 'Erro de conexão. Verifique se o Google Apps Script está configurado corretamente.';
         } else if (error.message.includes('Failed to fetch')) {
             errorMessage = 'Erro de rede. Verifique sua conexão com a internet.';
         } else if (error.message.includes('Email já cadastrado')) {
@@ -141,16 +138,16 @@ async function handleCadastro(e) {
 
 async function testarConexao() {
     try {
-        console.log('🧪 Testando conexão com Power Automate...');
+        console.log('🧪 Testando conexão com Google Apps Script...');
         
-        const result = await window.flowManager.sendToFlow('OBTER_CONFIGURACOES', {
-            tipo: 'test'
+        const result = await window.flowManager.sendToScript({
+            action: 'test'
         });
         
-        console.log('✅ Teste de conexão Power Automate:', result);
+        console.log('✅ Teste de conexão Google Apps Script:', result);
         return result.success;
     } catch (error) {
-        console.error('❌ Erro no teste de conexão Power Automate:', error);
+        console.error('❌ Erro no teste de conexão Google Apps Script:', error);
         return false;
     }
 }
@@ -159,15 +156,14 @@ async function loadRegioesFromSheet() {
     try {
         Helpers.showLoading('Carregando regiões...');
         
-        console.log('🔍 Buscando regiões e igrejas via Power Automate...');
+        console.log('🔍 Buscando regiões e igrejas via Google Apps Script...');
         
         // Usar o flowManager para buscar dados da aba IGREJAS_REGIOES
-        const result = await window.flowManager.sendToFlow('OBTER_IGREJAS', {
-            aba: 'IGREJAS_REGIOES',
-            colunas: ['ID', 'NOME_IGREJA', 'REGIAO']
+        const result = await window.flowManager.sendToScriptSilent({
+            action: 'getIgrejasRegioes'
         });
         
-        console.log('📋 Resultado obtido do Power Automate:', result);
+        console.log('📋 Resultado obtido do Google Apps Script:', result);
         
         if (result.success && result.data) {
             const data = result.data;
@@ -176,43 +172,29 @@ async function loadRegioesFromSheet() {
             // Limpar opções existentes (exceto a primeira)
             regiaoSelect.innerHTML = '<option value="">Selecione a região</option>';
             
-            // Processar dados da planilha
-            const regioesUnicas = [...new Set(data.map(item => item.REGIAO))].filter(r => r);
-            const igrejasPorRegiao = {};
-            
-            // Agrupar igrejas por região
-            data.forEach(item => {
-                if (item.REGIAO && item.NOME_IGREJA) {
-                    if (!igrejasPorRegiao[item.REGIAO]) {
-                        igrejasPorRegiao[item.REGIAO] = [];
-                    }
-                    igrejasPorRegiao[item.REGIAO].push({
-                        id: item.ID,
-                        nome: item.NOME_IGREJA
-                    });
-                }
-            });
-            
-            // Adicionar regiões ao select
-            regioesUnicas.forEach(regiao => {
-                const option = document.createElement('option');
-                option.value = regiao;
-                option.textContent = regiao;
-                regiaoSelect.appendChild(option);
-            });
-            
-            // Armazenar dados para uso na seleção hierárquica
-            window.igrejasData = igrejasPorRegiao;
-            
-            console.log(`✅ Carregadas ${regioesUnicas.length} regiões e ${data.length} igrejas do OneDrive`);
-            Helpers.showToast('Regiões carregadas do OneDrive!', 'success');
-            
+            // Adicionar regiões da planilha
+            if (data.regioes && data.regioes.length > 0) {
+                data.regioes.forEach(regiao => {
+                    const option = document.createElement('option');
+                    option.value = regiao;
+                    option.textContent = regiao;
+                    regiaoSelect.appendChild(option);
+                });
+                
+                // Armazenar dados para uso na seleção hierárquica
+                window.igrejasData = data.igrejasPorRegiao;
+                
+                console.log(`✅ Carregadas ${data.regioes.length} regiões e ${data.total?.igrejas || 0} igrejas do Google Sheets`);
+                Helpers.showToast('Regiões carregadas do Google Sheets!', 'success');
+            } else {
+                throw new Error('Nenhuma região encontrada na planilha');
+            }
         } else {
-            throw new Error(result.error || 'Erro na resposta do Power Automate');
+            throw new Error(result.error || 'Erro na resposta do Google Apps Script');
         }
         
     } catch (error) {
-        console.error('⚠️ Erro ao carregar da planilha OneDrive:', error);
+        console.error('⚠️ Erro ao carregar da planilha Google Sheets:', error);
         console.log('🔄 Usando fallback do config.js...');
         
         // Fallback para regiões do config.js

@@ -1,426 +1,276 @@
-// Power Automate integration module for Balcão da Cidadania
-// Version: 4.0.0 - Power Automate Complete Integration
-// Dependencies: CONFIG, authManager, Helpers
+/**
+ * Google Apps Script Flow Manager
+ * Gerencia todas as comunicações com o Google Apps Script
+ * Version: 1.0.0
+ */
 
 'use strict';
 
-/**
- * PowerAutomateManager - Comunicação completa com Power Automate Flows
- * Esta classe gerencia toda comunicação com os Microsoft Power Automate Flows
- */
-class PowerAutomateManager {
+class GoogleAppsScriptManager {
     constructor() {
-        this.config = window.CONFIG?.POWER_AUTOMATE || {};
-        this.cache = new Map();
-        this.retryDelay = 1000;
-        this.maxRetries = 3;
+        this.webAppUrl = null;
+        this.spreadsheetId = null;
+        this.actions = {};
+        this.isReady = false;
         
-        // Configuração de monitoramento
-        this.monitoring = {
-            enabled: true,
-            logLevel: 'INFO',
-            startTime: Date.now()
-        };
-        
-        console.log('🚀 PowerAutomateManager inicializado');
-        console.log('🌐 Endpoints configurados:', Object.keys(this.config.ENDPOINTS || {}));
+        this.init();
     }
 
     /**
-     * Método principal para enviar dados para Power Automate
-     * @param {string} endpoint - Nome do endpoint
-     * @param {Object} data - Dados a serem enviados
-     * @returns {Promise<Object>} Resposta do Power Automate
+     * Inicializa o manager com configurações
      */
-    async sendToFlow(endpoint, data) {
-        const url = this.config.ENDPOINTS?.[endpoint];
-        if (!url) {
-            throw new Error(`Endpoint ${endpoint} não configurado`);
+    init() {
+        try {
+            if (typeof window.CONFIG !== 'undefined' && window.CONFIG.GOOGLE_APPS_SCRIPT) {
+                this.webAppUrl = window.CONFIG.GOOGLE_APPS_SCRIPT.WEB_APP_URL;
+                this.spreadsheetId = window.CONFIG.GOOGLE_APPS_SCRIPT.SPREADSHEET_ID;
+                this.actions = window.CONFIG.GOOGLE_APPS_SCRIPT.ACTIONS || {};
+                
+                if (this.webAppUrl && this.spreadsheetId) {
+                    this.isReady = true;
+                    console.log('✅ GoogleAppsScriptManager inicializado');
+                } else {
+                    console.error('❌ Configuração incompleta do Google Apps Script');
+                }
+            } else {
+                console.error('❌ Configuração do Google Apps Script não encontrada');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao inicializar GoogleAppsScriptManager:', error);
+        }
+    }
+
+    /**
+     * Envia dados para o Google Apps Script
+     */
+    async sendToScript(action, data = {}) {
+        if (!this.isReady) {
+            throw new Error('Google Apps Script não está configurado');
         }
 
-        const requestData = {
-            action: endpoint.toLowerCase(),
-            timestamp: new Date().toISOString(),
-            ...data
-        };
-
         try {
-            console.log(`🚀 Enviando para ${endpoint}:`, requestData);
-            
-            const response = await fetch(url, {
+            const payload = {
+                action: action,
+                ...data
+            };
+
+            console.log('🚀 Enviando para Google Apps Script:', action, payload);
+
+            const response = await fetch(this.webAppUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'User-Agent': 'BalcaoCidadania/4.0.0'
                 },
-                body: JSON.stringify(requestData)
+                body: JSON.stringify(payload)
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errorText}`);
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             const result = await response.json();
-            console.log(`✅ Resposta de ${endpoint}:`, result);
-            
+            console.log('📥 Resposta do Google Apps Script:', result);
+
             return result;
+
         } catch (error) {
-            console.error(`❌ Erro em ${endpoint}:`, error);
-            throw error;
+            console.error('❌ Erro na comunicação com Google Apps Script:', error);
+            throw new Error(`Erro ao comunicar com Google Apps Script: ${error.message}`);
         }
     }
 
     /**
-     * Método compatível com versão anterior (sendToScript)
-     * @param {Object} data - Dados no formato antigo
-     * @returns {Promise<Object>} Resposta formatada
+     * Valida credenciais do usuário
      */
-    async sendToScript(data) {
-        console.log('🔄 [Compatibilidade] Convertendo chamada sendToScript para Power Automate...');
-        
+    async validateUser(email, password) {
         try {
-            // Mapear ações antigas para novos endpoints
-            const actionMap = {
-                'login': 'VALIDAR_LOGIN',
-                'create_chamado': 'CRIAR_CHAMADO',
-                'list_chamados': 'LISTAR_CHAMADOS',
-                'update_chamado': 'ATUALIZAR_CHAMADO',
-                'create_user': 'CRIAR_USUARIO',
-                'get_config': 'OBTER_CONFIGURACOES',
-                'test': 'OBTER_CONFIGURACOES'
-            };
+            const response = await this.sendToScript(this.actions.VALIDAR_USUARIO, {
+                email: email,
+                senha: password
+            });
 
-            const endpoint = actionMap[data.action];
-            if (!endpoint) {
-                throw new Error(`Ação não mapeada: ${data.action}`);
+            if (response.success) {
+                return {
+                    success: true,
+                    data: response.data,
+                    message: response.message
+                };
+            } else {
+                return {
+                    success: false,
+                    message: response.message || 'Email ou senha incorretos'
+                };
             }
-
-            // Converter dados para novo formato
-            const convertedData = this.convertLegacyData(data);
-            const result = await this.sendToFlow(endpoint, convertedData);
-            
-            // Converter resposta para formato antigo se necessário
-            return this.convertLegacyResponse(result);
-            
         } catch (error) {
-            console.error('❌ Erro na compatibilidade:', error);
-            return { success: false, error: error.message };
+            console.error('❌ Erro na validação do usuário:', error);
+            return {
+                success: false,
+                message: 'Erro ao validar credenciais'
+            };
         }
     }
 
     /**
-     * Converter dados do formato antigo para novo
-     * @param {Object} legacyData - Dados no formato antigo
-     * @returns {Object} Dados no novo formato
+     * Cria novo usuário
      */
-    convertLegacyData(legacyData) {
-        const { action, ...otherData } = legacyData;
-        
-        switch (action) {
-            case 'login':
-                return {
-                    email: otherData.email,
-                    senha: otherData.password || otherData.senha
-                };
-            case 'create_chamado':
-                return {
-                    chamado: otherData
-                };
-            case 'list_chamados':
-                return {
-                    filtros: otherData.filtros || {}
-                };
-            case 'update_chamado':
-                return {
-                    chamado_id: otherData.id,
-                    updates: otherData.updates || otherData
-                };
-            case 'create_user':
-                return {
-                    usuario: otherData
-                };
-            default:
-                return otherData;
+    async createUser(userData) {
+        try {
+            const response = await this.sendToScript(this.actions.CRIAR_USUARIO, userData);
+
+            return {
+                success: response.success,
+                message: response.message,
+                data: response.data
+            };
+        } catch (error) {
+            console.error('❌ Erro ao criar usuário:', error);
+            return {
+                success: false,
+                message: 'Erro ao criar usuário'
+            };
         }
     }
 
     /**
-     * Converter resposta para formato antigo se necessário
-     * @param {Object} response - Resposta do Power Automate
-     * @returns {Object} Resposta formatada
+     * Busca igrejas e regiões
      */
-    convertLegacyResponse(response) {
-        // Manter compatibilidade com código existente
-        if (response.success === undefined && response.user) {
-            return { success: true, ...response };
+    async getChurchesAndRegions() {
+        try {
+            const response = await this.sendToScript(this.actions.GET_IGREJAS_REGIOES);
+
+            if (response.success) {
+                return {
+                    success: true,
+                    data: response.data
+                };
+            } else {
+                return {
+                    success: false,
+                    message: response.message || 'Erro ao carregar igrejas e regiões'
+                };
+            }
+        } catch (error) {
+            console.error('❌ Erro ao buscar igrejas e regiões:', error);
+            return {
+                success: false,
+                message: 'Erro ao carregar dados'
+            };
         }
-        return response;
     }
 
     /**
-     * Validar login do usuário
-     * @param {string} email - Email do usuário
-     * @param {string} senha - Senha do usuário
-     * @returns {Promise<Object>} Resultado do login
+     * Cria novo chamado
      */
-    async validarLogin(email, senha) {
-        return await this.sendToFlow('VALIDAR_LOGIN', {
-            email: email.toLowerCase().trim(),
-            senha: senha
-        });
-    }
+    async createTicket(ticketData) {
+        try {
+            const response = await this.sendToScript(this.actions.CRIAR_CHAMADO, ticketData);
 
-    /**
-     * Criar novo chamado
-     * @param {Object} dadosChamado - Dados do chamado
-     * @returns {Promise<Object>} Resultado da criação
-     */
-    async criarChamado(dadosChamado) {
-        return await this.sendToFlow('CRIAR_CHAMADO', {
-            chamado: dadosChamado
-        });
-    }
-
-    /**
-     * Listar chamados com filtros
-     * @param {Object} filtros - Filtros para busca
-     * @returns {Promise<Object>} Lista de chamados
-     */
-    async listarChamados(filtros = {}) {
-        const cacheKey = `chamados_${JSON.stringify(filtros)}`;
-        
-        // Verificar cache
-        if (this.cache.has(cacheKey)) {
-            console.log('📋 Usando dados do cache para listar chamados');
-            return this.cache.get(cacheKey);
+            return {
+                success: response.success,
+                message: response.message,
+                data: response.data
+            };
+        } catch (error) {
+            console.error('❌ Erro ao criar chamado:', error);
+            return {
+                success: false,
+                message: 'Erro ao criar chamado'
+            };
         }
-
-        const result = await this.sendToFlow('LISTAR_CHAMADOS', {
-            filtros: filtros
-        });
-
-        // Cachear resultado por 30 segundos
-        this.cache.set(cacheKey, result);
-        setTimeout(() => this.cache.delete(cacheKey), 30000);
-
-        return result;
     }
 
     /**
-     * Atualizar chamado existente
-     * @param {string} chamadoId - ID do chamado
-     * @param {Object} updates - Dados para atualização
-     * @returns {Promise<Object>} Resultado da atualização
+     * Busca chamados com filtros
      */
-    async atualizarChamado(chamadoId, updates) {
-        // Limpar cache relacionado
-        this.clearChamadosCache();
-        
-        return await this.sendToFlow('ATUALIZAR_CHAMADO', {
-            chamado_id: chamadoId,
-            updates: updates
-        });
-    }
+    async getTickets(filters = {}) {
+        try {
+            const response = await this.sendToScript(this.actions.GET_CHAMADOS, { filtros: filters });
 
-    /**
-     * Criar novo usuário
-     * @param {Object} dadosUsuario - Dados do usuário
-     * @returns {Promise<Object>} Resultado da criação
-     */
-    async criarUsuario(dadosUsuario) {
-        return await this.sendToFlow('CRIAR_USUARIO', {
-            usuario: dadosUsuario
-        });
-    }
-
-    /**
-     * Obter configurações do sistema
-     * @param {string} tipo - Tipo de configuração
-     * @returns {Promise<Object>} Configurações
-     */
-    async obterConfiguracoes(tipo = 'todas') {
-        const cacheKey = `config_${tipo}`;
-        
-        // Verificar cache (válido por 5 minutos)
-        if (this.cache.has(cacheKey)) {
-            console.log('⚙️ Usando configurações do cache');
-            return this.cache.get(cacheKey);
+            if (response.success) {
+                return {
+                    success: true,
+                    data: response.data
+                };
+            } else {
+                return {
+                    success: false,
+                    message: response.message || 'Erro ao carregar chamados'
+                };
+            }
+        } catch (error) {
+            console.error('❌ Erro ao buscar chamados:', error);
+            return {
+                success: false,
+                message: 'Erro ao carregar chamados'
+            };
         }
-
-        const result = await this.sendToFlow('OBTER_CONFIGURACOES', {
-            tipo: tipo
-        });
-
-        // Cachear configurações
-        this.cache.set(cacheKey, result);
-        setTimeout(() => this.cache.delete(cacheKey), 300000); // 5 minutos
-
-        return result;
     }
 
     /**
-     * Testar conexão com Power Automate
-     * @returns {Promise<Object>} Status da conexão
+     * Busca usuários
+     */
+    async getUsers() {
+        try {
+            const response = await this.sendToScript(this.actions.GET_USUARIOS);
+
+            if (response.success) {
+                return {
+                    success: true,
+                    data: response.data
+                };
+            } else {
+                return {
+                    success: false,
+                    message: response.message || 'Erro ao carregar usuários'
+                };
+            }
+        } catch (error) {
+            console.error('❌ Erro ao buscar usuários:', error);
+            return {
+                success: false,
+                message: 'Erro ao carregar usuários'
+            };
+        }
+    }
+
+    /**
+     * Testa conexão com Google Apps Script
      */
     async testConnection() {
         try {
-            console.log('🧪 Testando conexão com Power Automate...');
-            
-            const startTime = Date.now();
-            const result = await this.obterConfiguracoes('test');
-            const duration = Date.now() - startTime;
-            
-            console.log(`✅ Conexão OK (${duration}ms)`);
-            return { 
-                success: true, 
-                message: 'Conexão OK',
-                duration: duration,
-                timestamp: new Date().toISOString()
-            };
-        } catch (error) {
-            console.error('❌ Falha na conexão:', error);
-            return { 
-                success: false, 
-                message: error.message,
-                timestamp: new Date().toISOString()
-            };
-        }
-    }
-
-    /**
-     * Limpar cache de chamados
-     */
-    clearChamadosCache() {
-        for (const key of this.cache.keys()) {
-            if (key.startsWith('chamados_')) {
-                this.cache.delete(key);
-            }
-        }
-        console.log('🗑️ Cache de chamados limpo');
-    }
-
-    /**
-     * Limpar todo o cache
-     */
-    clearCache() {
-        this.cache.clear();
-        console.log('🗑️ Cache completo limpo');
-    }
-
-    /**
-     * Obter estatísticas do sistema
-     * @returns {Object} Estatísticas
-     */
-    getStats() {
-        const uptime = Date.now() - this.monitoring.startTime;
-        return {
-            uptime: uptime,
-            cacheSize: this.cache.size,
-            endpointsConfigured: Object.keys(this.config.ENDPOINTS || {}).length,
-            lastActivity: new Date().toISOString()
-        };
-    }
-
-    /**
-     * Log de debug
-     * @param {string} message - Mensagem
-     * @param {*} data - Dados adicionais
-     */
-    logDebug(message, data = null) {
-        if (this.monitoring.logLevel === 'DEBUG') {
-            console.log(`🐛 [PA Debug] ${message}`, data);
-        }
-    }
-
-    /**
-     * Log de informação
-     * @param {string} message - Mensagem
-     * @param {*} data - Dados adicionais
-     */
-    logInfo(message, data = null) {
-        if (['INFO', 'DEBUG'].includes(this.monitoring.logLevel)) {
-            console.log(`ℹ️ [PA Info] ${message}`, data);
-        }
-    }
-}
-
-// ===== COMPATIBILIDADE COM VERSÃO ANTERIOR =====
-
-/**
- * FlowManager - Wrapper para compatibilidade
- * Mantém a interface antiga funcionando
- */
-class FlowManager extends PowerAutomateManager {
-    constructor() {
-        super();
-        console.log('🔄 FlowManager (modo compatibilidade) inicializado');
-    }
-
-    // Métodos de compatibilidade já implementados na classe pai
-    
-    /**
-     * Método de compatibilidade para validateUser (interface em inglês)
-     * @param {string} email - Email do usuário
-     * @param {string} password - Senha do usuário
-     * @returns {Promise<Object>} Resultado do login
-     */
-    async validateUser(email, password) {
-        console.log('🔄 [Compatibilidade] validateUser -> validarLogin');
-        return await this.validarLogin(email, password);
-    }
-}
-
-// ===== INICIALIZAÇÃO =====
-
-// Substituir instância global
-if (window.flowManager) {
-    console.log('♻️ Substituindo flowManager por PowerAutomateManager');
-}
-
-window.flowManager = new FlowManager();
-window.powerAutomateManager = window.flowManager; // Alias
-
-// ===== EVENTOS =====
-
-// Listener para quando a página carrega
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('📄 DOM carregado - PowerAutomateManager pronto');
-    
-    // Testar conexão se configurado
-    if (window.CONFIG?.POWER_AUTOMATE?.TEST_ON_LOAD) {
-        window.flowManager.testConnection()
-            .then(result => {
-                if (result.success) {
-                    console.log('✅ Teste de conexão automático: OK');
-                } else {
-                    console.warn('⚠️ Teste de conexão automático: FALHOU');
-                }
-            })
-            .catch(error => {
-                console.error('❌ Erro no teste automático:', error);
+            const response = await fetch(this.webAppUrl, {
+                method: 'GET'
             });
+
+            if (response.ok) {
+                console.log('✅ Conexão com Google Apps Script funcionando');
+                return true;
+            } else {
+                console.error('❌ Erro na conexão com Google Apps Script');
+                return false;
+            }
+        } catch (error) {
+            console.error('❌ Erro ao testar conexão:', error);
+            return false;
+        }
     }
-});
-
-// Listener para erros globais
-window.addEventListener('error', (event) => {
-    if (event.message.includes('PowerAutomate') || event.message.includes('flow')) {
-        console.error('❌ Erro global relacionado ao Power Automate:', event.error);
-    }
-});
-
-// ===== EXPORTAÇÃO =====
-
-// Disponibilizar classes no escopo global
-window.PowerAutomateManager = PowerAutomateManager;
-window.FlowManager = FlowManager;
-
-// Para módulos ES6 (se necessário)
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { PowerAutomateManager, FlowManager };
 }
 
-console.log('🎯 Power Automate integration carregado completamente');
-console.log('📊 Estatísticas:', window.flowManager.getStats());
+// Inicializar o manager globalmente
+let flowManager;
+
+// Aguarda o DOM estar pronto e as configurações carregadas
+document.addEventListener('DOMContentLoaded', () => {
+    // Aguarda um pouco para garantir que CONFIG está disponível
+    setTimeout(() => {
+        flowManager = new GoogleAppsScriptManager();
+        
+        // Testa a conexão
+        if (flowManager.isReady) {
+            flowManager.testConnection();
+        }
+    }, 100);
+});
+
+// Exporta para uso global
+window.GoogleAppsScriptManager = GoogleAppsScriptManager;

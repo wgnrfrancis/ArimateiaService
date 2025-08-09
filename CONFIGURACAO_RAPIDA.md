@@ -1,41 +1,47 @@
-# ⚡ Configuração Rápida - Power Automate
+# ⚡ Configuração Rápida - Google Apps Script
 
 ## 🔧 Passos Essenciais para Funcionamento
 
 ### 1. **Configurar URLs no config.js**
-Edite o arquivo `data/config.js` e substitua as URLs pelos seus Power Automate Flows:
+Edite o arquivo `data/config.js` e configure o Google Apps Script:
 
 ```javascript
-POWER_AUTOMATE: {
-    ENDPOINTS: {
-        VALIDAR_LOGIN: 'SUA_URL_AQUI',
-        CRIAR_CHAMADO: 'SUA_URL_AQUI',
-        LISTAR_CHAMADOS: 'SUA_URL_AQUI', 
-        ATUALIZAR_CHAMADO: 'SUA_URL_AQUI',
-        CRIAR_USUARIO: 'SUA_URL_AQUI',
-        OBTER_IGREJAS: 'SUA_URL_AQUI'
+GOOGLE_APPS_SCRIPT: {
+    WEB_APP_URL: 'SUA_URL_DO_GOOGLE_APPS_SCRIPT_AQUI',
+    SPREADSHEET_ID: 'SEU_ID_DA_PLANILHA_GOOGLE_SHEETS_AQUI',
+    ACTIONS: {
+        VALIDAR_USUARIO: 'validarUsuario',
+        CRIAR_USUARIO: 'criarUsuario',
+        GET_IGREJAS_REGIOES: 'getIgrejasRegioes',
+        CRIAR_CHAMADO: 'criarChamado',
+        GET_CHAMADOS: 'getChamados',
+        GET_USUARIOS: 'getUsuarios'
     }
 }
 ```
 
-### 2. **Planilha OneDrive Configurada**
-- **URL Atual**: https://igrejauniversaldorei-my.sharepoint.com/:x:/g/personal/wagduarte_universal_org/EWjS3RVFYzZMiwuVhdxYoeYBOKTYSFe3P7a29TS9zn5qgw
-- **Aba IGREJAS_REGIOES** deve ter colunas:
-  - `ID` (número)
-  - `NOME_IGREJA` (texto)
-  - `REGIAO` (texto)
+### 2. **Google Sheets Configurado**
+- **Planilha Principal**: BalcaoCidadania_DB
+- **Abas Necessárias**:
+  - `USUARIOS` - Dados dos usuários
+  - `CHAMADOS` - Tickets/chamados
+  - `IGREJAS` - Lista de igrejas
+  - `REGIOES` - Regiões disponíveis
+  - `ATIVIDADES` - Log de atividades
 
 ### 3. **Funcionalidades Habilitadas**
-✅ **Sistema de Login** - Autenticação via Power Automate
-✅ **Cadastro de Voluntários** - Busca igrejas por região do OneDrive
-✅ **Gestão de Chamados** - CRUD completo via Power Automate  
+✅ **Sistema de Login** - Autenticação via Google Apps Script
+✅ **Cadastro de Voluntários** - Busca igrejas por região do Google Sheets
+✅ **Gestão de Chamados** - CRUD completo via Google Apps Script  
 ✅ **Dashboard Dinâmico** - Baseado no cargo do usuário
 ✅ **Interface Responsiva** - Mobile/Desktop/Tablet
 
 ### 4. **Arquivos Removidos (Limpeza)**
-🗑️ Removidos arquivos obsoletos:
-- `# Code Citations.md`
-- `MODELO_PLANILHAS_GOOGLE_SHEETS.md`
+🗑️ Removidos arquivos Power Automate obsoletos:
+- `POWER_AUTOMATE_CODIGOS_COMPLETOS.md`
+- `MODELO_PLANILHAS_POWER_AUTOMATE.md` 
+- `MIGRACAO_POWER_AUTOMATE.md`
+- `CONFIGURACAO_URLS_POWER_AUTOMATE.md`
 - `performance-demo.html`
 - `PERFORMANCE_PROFILING.md`
 - `scripts/performance-integration.js`
@@ -43,16 +49,17 @@ POWER_AUTOMATE: {
 - `scripts/flow-power-automate-clean.js`
 
 ### 5. **Próximos Passos**
-1. **Criar os Power Automate Flows** (use `CONFIGURACAO_URLS_POWER_AUTOMATE.md`)
-2. **Testar o sistema** acessando `http://localhost:8000`
-3. **Configurar autenticação Microsoft** (opcional)
-4. **Validar integração** com planilha OneDrive
+1. **Configurar Google Apps Script** (use `CONFIGURACAO_GOOGLE_APPS_SCRIPT.md`)
+2. **Criar planilha Google Sheets** com a estrutura necessária
+3. **Testar o sistema** acessando `http://localhost:8000`
+4. **Inserir dados iniciais** nas planilhas
+5. **Validar integração** com Google Apps Script
 
 ## 📊 Status do Projeto
 - 🟢 **Frontend**: 100% Pronto
-- 🟢 **Integração Power Automate**: Configurado
-- 🟡 **Flows Power Automate**: Aguardando criação
-- 🟡 **Planilha OneDrive**: Estrutura pronta, dados pendentes
+- 🟢 **Integração Google Apps Script**: Configurado
+- 🟡 **Google Apps Script**: Aguardando implantação
+- 🟡 **Google Sheets**: Estrutura documentada, aguardando criação
 
 ## 🚀 Testando
 ```bash

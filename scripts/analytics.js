@@ -74,10 +74,10 @@ class AnalyticsManager {
         });
     }
 
-    // Load data from Google Sheets
+    // Load data from Google Apps Script
     async loadData() {
         try {
-            // Load real data from Google Sheets
+            // Load real data from Google Apps Script
             const chamadosResponse = await flowManager.getTickets({ period: this.currentPeriod });
             const usuariosResponse = await flowManager.getUsers();
             

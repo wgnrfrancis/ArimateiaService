@@ -1,42 +1,34 @@
 /**
  * Sistema de Configuração - Balcão da Cidadania
- * Configuração exclusiva para Power Automate
- * Version: 3.0.0 - Power Automate Edition
+ * Configuração para Google Apps Script
+ * Version: 3.0.0 - Google Apps Script Edition
  */
 
 'use strict';
 
-// Configurações principais do sistema para Power Automate
+// Configurações principais do sistema para Google Apps Script
 window.CONFIG = {
     // Informações do sistema
     SYSTEM: {
         name: 'Balcão da Cidadania',
-        version: '3.0.0-PowerAutomate',
+        version: '3.0.0-GoogleAppsScript',
         organization: 'Igreja Evangélica Pentecostal Arimateia',
-        description: 'Sistema de gestão para atendimento social e cidadania - Power Automate Edition',
+        description: 'Sistema de gestão para atendimento social e cidadania - Google Apps Script Edition',
         supportEmail: 'suporte@arimateia.org.br',
         supportPhone: '(11) 99999-0000'
     },
 
-    // URLs da API Power Automate
+    // URLs da API Google Apps Script
     API: {
-        // Power Automate Flow URLs - CONFIGURAÇÃO ATIVA
-        BASE_URL: 'https://prod-xx.westus2.logic.azure.com:443/workflows/arimateia-api-gateway/triggers/manual/paths/invoke',
+        // Google Apps Script Web App URL - CONFIGURAÇÃO ATIVA
+        BASE_URL: 'https://script.google.com/macros/s/AKfycbxsTSKVi7fdARhyGDWrIdKbpe2K-56OLa0g2LCpaiYd4m1V3ChDYl68J_s3V2eN-u82/exec',
+        WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbxsTSKVi7fdARhyGDWrIdKbpe2K-56OLa0g2LCpaiYd4m1V3ChDYl68J_s3V2eN-u82/exec',
         
-        // Flows específicos (use se não usar gateway)
-        FLOWS: {
-            AUTH: 'https://prod-xx.westus2.logic.azure.com:443/workflows/arimateia-auth/triggers/manual/paths/invoke',
-            USERS: 'https://prod-xx.westus2.logic.azure.com:443/workflows/arimateia-users/triggers/manual/paths/invoke',
-            TICKETS: 'https://prod-xx.westus2.logic.azure.com:443/workflows/arimateia-tickets/triggers/manual/paths/invoke',
-            CONFIG: 'https://prod-xx.westus2.logic.azure.com:443/workflows/arimateia-config/triggers/manual/paths/invoke',
-            REPORTS: 'https://prod-xx.westus2.logic.azure.com:443/workflows/arimateia-reports/triggers/manual/paths/invoke'
-        },
-        
-        // Headers específicos para Power Automate
+        // Headers específicos para Google Apps Script
         HEADERS: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'User-Agent': 'ArimateiaService/3.0.0-PA'
+            'User-Agent': 'ArimateiaService/3.0.0-GAS'
         },
         
         ENDPOINTS: {
@@ -52,61 +44,24 @@ window.CONFIG = {
             notifications: '/notifications'
         },
         
-        TIMEOUT: 45000, // 45 segundos (Power Automate pode ser mais lento)
+        TIMEOUT: 45000, // 45 segundos (Google Apps Script pode ser mais lento)
         RETRY_ATTEMPTS: 3,
         RETRY_DELAY: 2000 // 2 segundos entre tentativas
     },
 
-    // Mapeamento de ações para Power Automate
-    ACTION_MAPPING: {
-        // Autenticação
-        'validateUser': { flow: 'AUTH', method: 'POST', endpoint: '/validate' },
+    // Google Apps Script Configuration
+    GOOGLE_APPS_SCRIPT: {
+        // URL do Google Apps Script Web App - CONFIGURADO
+        WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbxsTSKVi7fdARhyGDWrIdKbpe2K-56OLa0g2LCpaiYd4m1V3ChDYl68J_s3V2eN-u82/exec',
+        SPREADSHEET_ID: '1awSUcZPlvM0Ci5ecKWCG4uwDbR3ZT5ZeDOuVdOIGMuc',
+        SPREADSHEET_URL: 'https://docs.google.com/spreadsheets/d/1awSUcZPlvM0Ci5ecKWCG4uwDbR3ZT5ZeDOuVdOIGMuc/edit',
         
-        // Usuários
-        'newUser': { flow: 'USERS', method: 'POST', endpoint: '/create' },
-        'getUsers': { flow: 'USERS', method: 'GET', endpoint: '/list' },
-        'checkUserExists': { flow: 'USERS', method: 'GET', endpoint: '/check' },
-        'updateUser': { flow: 'USERS', method: 'PUT', endpoint: '/update' },
+        // Configurações específicas
+        TIMEOUT: 30000, // 30 segundos
+        RETRY_ATTEMPTS: 3,
+        RETRY_DELAY: 2000, // 2 segundos
         
-        // Chamados
-        'newTicket': { flow: 'TICKETS', method: 'POST', endpoint: '/create' },
-        'updateTicket': { flow: 'TICKETS', method: 'PUT', endpoint: '/update' },
-        'getTickets': { flow: 'TICKETS', method: 'GET', endpoint: '/list' },
-        'deleteTicket': { flow: 'TICKETS', method: 'DELETE', endpoint: '/delete' },
-        
-        // Configurações
-        'getIgrejasRegioes': { flow: 'CONFIG', method: 'GET', endpoint: '/churches-regions' },
-        'getCategories': { flow: 'CONFIG', method: 'GET', endpoint: '/categories' },
-        'getProfessionals': { flow: 'CONFIG', method: 'GET', endpoint: '/professionals' },
-        'getVolunteers': { flow: 'CONFIG', method: 'GET', endpoint: '/volunteers' },
-        
-        // Relatórios
-        'getDashboardData': { flow: 'REPORTS', method: 'GET', endpoint: '/dashboard' },
-        'getUserStats': { flow: 'REPORTS', method: 'GET', endpoint: '/user-stats' },
-        'generateReport': { flow: 'REPORTS', method: 'POST', endpoint: '/generate' },
-        
-        // Teste
-        'testConnection': { flow: 'CONFIG', method: 'GET', endpoint: '/test' }
-    },
-
-    // Power Automate Configuration
-    POWER_AUTOMATE: {
-        // URLs dos Power Automate Flows (substitua pelas suas URLs reais)
-        BASE_URL: 'https://prod-xx.westus.logic.azure.com/workflows',
-        SHAREPOINT_URL: 'https://igrejauniversaldorei-my.sharepoint.com/sites/BalcaoCidadania',
-        ONEDRIVE_URL: 'https://igrejauniversaldorei-my.sharepoint.com/:x:/g/personal/wagduarte_universal_org/EWjS3RVFYzZMiwuVhdxYoeYBOKTYSFe3P7a29TS9zn5qgw',
-        
-        // URLs dos Flows específicos - CONFIGURAR COM SUAS URLs REAIS
-        ENDPOINTS: {
-            VALIDAR_LOGIN: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_LOGIN/triggers/manual/paths/invoke',
-            CRIAR_CHAMADO: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_CHAMADO/triggers/manual/paths/invoke',
-            LISTAR_CHAMADOS: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_LISTAR/triggers/manual/paths/invoke',
-            ATUALIZAR_CHAMADO: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_UPDATE/triggers/manual/paths/invoke',
-            EXCLUIR_CHAMADO: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_DELETE/triggers/manual/paths/invoke',
-            CRIAR_USUARIO: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_USER/triggers/manual/paths/invoke',
-            OBTER_CONFIGURACOES: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_CONFIG/triggers/manual/paths/invoke',
-            OBTER_IGREJAS: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_IGREJAS/triggers/manual/paths/invoke'
-        },
+        // Abas da planilha
         ABAS: {
             CHAMADOS: 'CHAMADOS',
             OBSERVACOES_CHAMADOS: 'OBSERVACOES_CHAMADOS',
@@ -120,6 +75,21 @@ window.CONFIG = {
             ELEICOES_DEPUTADOS: 'ELEICOES_DEPUTADOS',
             ELEICOES_VEREADORES: 'ELEICOES_VEREADORES',
             ELEICOES_CONSELHO: 'ELEICOES_CONSELHO'
+        },
+        
+        // Ações disponíveis no Apps Script
+        ACTIONS: {
+            VALIDAR_USUARIO: 'validarUsuario',
+            CRIAR_USUARIO: 'criarUsuario',
+            GET_IGREJAS_REGIOES: 'getIgrejasRegioes',
+            CRIAR_CHAMADO: 'criarChamado',
+            GET_CHAMADOS: 'getChamados',
+            GET_USUARIOS: 'getUsuarios',
+            GET_CATEGORIES: 'getCategories',
+            GET_CHURCHES: 'getChurches',
+            GET_REGIONS: 'getRegions',
+            GENERATE_REPORT: 'generateReport',
+            TEST_CONNECTION: 'test'
         }
     },
 
@@ -580,53 +550,13 @@ window.CONFIG.getTimeoutForAction = function(action) {
     return 60000; // 60s padrão
 };
 
-// Configurações específicas do Power Automate
-window.CONFIG.POWER_AUTOMATE = {
-    // Configuração de retry específica
-    RETRY_CONFIG: {
-        attempts: 3,
-        delay: 2000,
-        backoff: 'exponential',
-        maxDelay: 10000
-    },
-    
-    // Timeout específico por tipo de operação
-    TIMEOUTS: {
-        auth: 30000,
-        read: 45000,
-        write: 60000,
-        report: 120000
-    },
-    
-    // Configuração de cache
-    CACHE: {
-        enabled: true,
-        duration: 5 * 60 * 1000, // 5 minutos
-        keys: {
-            regions: 'pa_regions',
-            churches: 'pa_churches',
-            categories: 'pa_categories',
-            professionals: 'pa_professionals',
-            volunteers: 'pa_volunteers'
-        }
-    },
-    
-    // Monitoramento e logging
-    MONITORING: {
-        enabled: true,
-        logLevel: 'INFO', // DEBUG, INFO, WARN, ERROR
-        trackPerformance: true,
-        trackErrors: true
-    }
-};
-
-// Configurações de autenticação específicas para Power Automate
+// Configurações de autenticação específicas para Google Apps Script
 window.CONFIG.AUTH = {
     SESSION_TIMEOUT: 8 * 60 * 60 * 1000, // 8 horas em ms
     MAX_LOGIN_ATTEMPTS: 3,
     LOCKOUT_DURATION: 15 * 60 * 1000, // 15 minutos em ms
     PASSWORD_MIN_LENGTH: 6,
-    STORAGE_KEY: 'arimateia_session_pa'
+    STORAGE_KEY: 'arimateia_session_gas'
 };
 
 // Funções utilitárias de configuração

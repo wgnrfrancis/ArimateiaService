@@ -103,10 +103,10 @@ class AuthManager {
             
             if (window.flowManager && typeof window.flowManager.validateUser === 'function') {
                 try {
-                    console.log('🌐 Validando via Power Automate...');
+                    console.log('🌐 Validando via Google Apps Script...');
                     result = await window.flowManager.validateUser(email, password);
                 } catch (error) {
-                    console.error('❌ Erro no Power Automate:', error.message);
+                    console.error('❌ Erro no Google Apps Script:', error.message);
                     throw error; // Re-lançar erro em produção
                 }
             } else {

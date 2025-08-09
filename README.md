@@ -1,13 +1,13 @@
 # Balcão da Cidadania - Sistema de Atendimento
 
-Sistema de gestão para atendimento ao cidadão desenvolvido para a Igreja Evangélica Pentecostal Arimateia, **100% integrado com Microsoft Power Automate e OneDrive**.
+Sistema de gestão para atendimento ao cidadão desenvolvido para a Igreja Evangélica Pentecostal Arimateia, **100% integrado com Google Apps Script e Google Sheets**.
 
 ## 🚀 Como Executar
 
 ### Pré-requisitos
 - Navegador web moderno (Chrome, Firefox, Safari, Edge)
 - Servidor web local (opcional, mas recomendado)
-- **Microsoft Power Automate configurado**
+- **Google Apps Script configurado**
 - **Planilha OneDrive/SharePoint com estrutura específica**
 
 ### Execução Local
@@ -28,29 +28,24 @@ Sistema de gestão para atendimento ao cidadão desenvolvido para a Igreja Evang
    ```
    Depois acesse: `http://localhost:8000`
 
-## 🔗 Configuração Power Automate
+## 🔗 Configuração Google Apps Script
 
-### URLs dos Flows Necessários:
-Configure as seguintes URLs no arquivo `data/config.js`:
+### URLs Configuradas:
+O sistema já está configurado com as seguintes URLs no arquivo `data/config.js`:
 
 ```javascript
-POWER_AUTOMATE: {
-    ENDPOINTS: {
-        VALIDAR_LOGIN: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_LOGIN/triggers/manual/paths/invoke',
-        CRIAR_CHAMADO: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_CHAMADO/triggers/manual/paths/invoke',
-        LISTAR_CHAMADOS: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_LISTAR/triggers/manual/paths/invoke',
-        ATUALIZAR_CHAMADO: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_UPDATE/triggers/manual/paths/invoke',
-        CRIAR_USUARIO: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_USER/triggers/manual/paths/invoke',
-        OBTER_IGREJAS: 'https://prod-xx.westus.logic.azure.com/workflows/FLOW_ID_IGREJAS/triggers/manual/paths/invoke'
-    }
+GOOGLE_APPS_SCRIPT: {
+    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbxsTSKVi7fdARhyGDWrIdKbpe2K-56OLa0g2LCpaiYd4m1V3ChDYl68J_s3V2eN-u82/exec',
+    SPREADSHEET_ID: '1awSUcZPlvM0Ci5ecKWCG4uwDbR3ZT5ZeDOuVdOIGMuc',
+    SPREADSHEET_URL: 'https://docs.google.com/spreadsheets/d/1awSUcZPlvM0Ci5ecKWCG4uwDbR3ZT5ZeDOuVdOIGMuc/edit'
 }
 ```
 
-### Planilha OneDrive:
-- **URL da Planilha**: https://igrejauniversaldorei-my.sharepoint.com/:x:/g/personal/wagduarte_universal_org/EWjS3RVFYzZMiwuVhdxYoeYBOKTYSFe3P7a29TS9zn5qgw
-- **Aba IGREJAS_REGIOES**: Contém as colunas `ID`, `NOME_IGREJA`, `REGIAO`
+### Google Sheets:
+- **URL da Planilha**: https://docs.google.com/spreadsheets/d/1awSUcZPlvM0Ci5ecKWCG4uwDbR3ZT5ZeDOuVdOIGMuc/edit
+- **Abas Necessárias**: `USUARIOS`, `CHAMADOS`, `IGREJAS`, `REGIOES`, `ATIVIDADES`
 
-Ver documentação completa: `MIGRACAO_POWER_AUTOMATE.md` e `CONFIGURACAO_URLS_POWER_AUTOMATE.md`
+Ver documentação completa: `CONFIGURACAO_GOOGLE_APPS_SCRIPT.md`
 
 ## 🔐 Credenciais de Acesso
 
@@ -124,33 +119,26 @@ BalcaoCidadania/
 
 ## 🔧 Configuração
 
-### Estrutura de Dados - Power Automate
+### Estrutura de Dados - Google Apps Script
 
-O sistema utiliza uma planilha no OneDrive com 12 abas específicas para integração via Power Automate:
+O sistema utiliza uma planilha no Google Sheets com abas específicas para integração via Google Apps Script:
 
-1. **CHAMADOS** - Armazena todos os atendimentos
-2. **OBSERVACOES_CHAMADOS** - Histórico detalhado de cada chamado
-3. **CHAMADOS_EXCLUIDOS** - Exclusão lógica de registros
-4. **USUARIOS** - Gerenciamento de voluntários e administradores
-5. **CATEGORIAS_SERVICOS** - Categorias de atendimento
-6. **IGREJAS_REGIOES** - Dados das 56 igrejas e regiões
-7. **RELATORIOS_MENSAIS** - Consolidação mensal automática
-8. **PROFISSIONAIS_LIBERAIS** - Profissionais voluntários
-9. **ACESSORES** - Assessores parlamentares
-10. **ELEICOES_DEPUTADOS** - Dados eleitorais para deputados
-11. **ELEICOES_VEREADORES** - Dados eleitorais para vereadores
-12. **ELEICOES_CONSELHO** - Dados para conselho regional
+1. **USUARIOS** - Gerenciamento de voluntários e administradores
+2. **CHAMADOS** - Armazena todos os atendimentos
+3. **IGREJAS** - Dados das igrejas cadastradas
+4. **REGIOES** - Regiões disponíveis
+5. **ATIVIDADES** - Log de atividades do sistema
 
-Ver arquivo `MODELO_PLANILHAS_POWER_AUTOMATE.md` para estrutura detalhada.
+Ver arquivo `CONFIGURACAO_GOOGLE_APPS_SCRIPT.md` para estrutura detalhada.
 
 ### Configuração em Produção:
 
-1. **Crie a planilha** no OneDrive/SharePoint com a estrutura definida
-2. **Configure Power Automate Flows** para cada endpoint de API
-3. **Atualize URLs** no arquivo `data/config.js`
-4. **Implemente autenticação** OAuth2 com Microsoft Graph
-5. **Configure notificações** via Teams/Email
-6. **Ative backup automático** dos dados
+1. **Crie a planilha** no Google Sheets com a estrutura definida
+2. **Configure Google Apps Script** com o código fornecido
+3. **Implemente a Web App** e obtenha a URL
+4. **Atualize URLs** no arquivo `data/config.js` (já configurado)
+5. **Teste as funcionalidades** do sistema
+6. **Configure permissões** adequadas na planilha
 
 ## 📊 Dados Mock
 
